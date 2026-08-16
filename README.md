@@ -166,6 +166,138 @@ apesar de se apresentarem como abertos — e essa distinção é a razão de o c
 
 ---
 
+### A lista publicável
+
+`censo/CENSO.md` é a superfície de leitura, **gerada** de `censo/ecossistema.json`:
+
+```console
+$ python censo/gerar.py             # escreve censo/CENSO.md
+$ python censo/gerar.py --conferir  # não escreve; sai 1 se estiver fora de sincronia
+```
+
+**E ela quase não tem selo, de propósito.** Selar cada número de um arquivo gerado seria check
+espelho: os dois lados sairiam do mesmo JSON, e o par passaria verde **travando** o defeito em vez
+de achá-lo. A pergunta certa para um artefato derivado não é *"o número está certo?"* — é **"isto
+ainda corresponde à fonte?"**. Por isso o `CENSO.md` carrega **um** selo só, de `natureza=relacao`:
+ele não anda quando alguém acrescenta um projeto, só anda se alguém editou o publicado à mão ou
+mexeu na fonte sem regerar. Divergir ali manda **parar**, não resselar.
+
+---
+
+## `forja/` — o compilador de agente, e ele emite gate, não prompt
+
+Uma spec declarativa entra. **Sete artefatos saem** — e três deles não são texto para o modelo ler.
+
+```console
+$ python -m forja forja/exemplos/revisor-de-licenca.toml
+  ✓ build/revisor-de-licenca/.claude/agents/revisor-de-licenca.md
+  ✓ build/revisor-de-licenca/AGENTS.md
+  ✓ build/revisor-de-licenca/revisor-de-licenca.system.md
+  ✓ build/revisor-de-licenca/hooks/cerca_revisor_de_licenca.py
+  ✓ build/revisor-de-licenca/golden/revisor-de-licenca.md
+  ✓ build/revisor-de-licenca/LACUNAS.md
+  ✓ build/revisor-de-licenca/RECEITA.md
+```
+
+<!-- aferido: forja.artefatos=7 natureza=contagem em=2026-08-16 vence=nunca fonte=forja/__main__.py -->
+<!-- aferido: forja.modulos=6 natureza=contagem em=2026-08-16 vence=nunca fonte=forja/ -->
+
+| Artefato | Para quem | O que ele é |
+|---|---|---|
+| `.claude/agents/<slug>.md` | Claude Code | subagente com frontmatter e prompt |
+| `AGENTS.md` | qualquer harness | o formato que ninguém é dono |
+| `<slug>.system.md` | SDK / harness próprio | system prompt cru |
+| **`hooks/cerca_<slug>.py`** | o runtime | **código que nega antes de a ferramenta rodar** |
+| **`golden/<slug>.md`** | quem verifica | **a pergunta que confere a RESPOSTA, não o código** |
+| **`LACUNAS.md`** | quem lê a resposta | **o que este agente não mede** |
+| `RECEITA.md` | auditoria | de que spec saiu o quê, e quando |
+
+**Prompt bonito sem esses três é um agente sem gate com uma descrição melhor.** É por isso que a
+forja existe, e é a única diferença que importa entre ela e um gerador de texto.
+
+### Oito recusas, e todas falham fechadas
+
+A forja **não emite** quando não consegue decidir. Ausente e vazio significam a mesma coisa, e as
+duas barram — porque tratar ausente como permissivo é como toda cerca vira porta dos fundos.
+
+| | Recusa quando | Por quê |
+|---|---|---|
+| `R1` | pede rede e não declara `dominios_permitidos` | fronteira escrita em prosa não é fronteira |
+| `R2` | pede escrita e não declara `saida_cercada` | *"escrevo num caminho só"* é intenção, não cerca |
+| `R3` | `nunca_usar` vazio | sem anti-descrição o orquestrador despacha por tema |
+| `R4` | `lacunas` vazio | agente sem limite declarado é lido como sem limite |
+| `R5` | zero caso de golden set | nada pergunta se a **resposta** está certa |
+| `R6` | golden derivado de dentro da saída do agente | check espelho: os dois lados, a mesma fonte |
+| `R7` | `toca_alvo` sem autorização de engajamento | comando fora do alvo autorizado é incidente |
+| `R8` | slug inválido | ele vira nome de arquivo em quatro harnesses |
+
+<!-- aferido: forja.recusas=8 natureza=contagem em=2026-08-16 vence=nunca fonte=forja/spec.py -->
+
+Toda recusa traz o **conserto escrito**. Recusa sem saída treina quem a lê a contorná-la.
+
+### O guarda emitido nega de verdade
+
+Não é um comentário pedindo boa-fé ao modelo. É um `PreToolUse` que roda como processo, lê o evento
+no stdin e responde `deny` — e o autoteste o prova **rodando o subprocesso**, não lendo o código:
+
+- domínio fora da cerca → `deny`, com o conserto na razão;
+- domínio dentro da cerca → passa (uma cerca que nega tudo é indistinguível de uma quebrada, e a
+  primeira coisa que alguém faz com ela é desligá-la);
+- `github.com.mau.site` **não** cai sob `github.com` — a comparação é por rótulo de domínio, e não
+  por `endswith` de string, que deixa passar exatamente o sufixo que o atacante escolhe;
+- evento ilegível → `deny`. **A hora em que o guarda quebra é a hora em que alguém está passando.**
+
+### A vacina de vírus de ideia entra sem perguntar
+
+Todo artefato de prompt sai com um parágrafo curto — o mesmo que `arXiv:2608.10218` (*Mind Viruses:
+Self-Propagating Ideas in Multi-Agent LLM Systems*, Anthropic, 2026-08-10) mediu como conferindo
+**imunidade quase total** à propagação de ideia entre agentes.
+
+O canal medido pelo paper não é exótico: os vírus *"se espalham escrevendo a si mesmos nos arquivos
+de memória e de configuração dos agentes, e instruindo cada novo hospedeiro a copiá-los adiante"*.
+Memória, spec, arquivo de boot, roster — **todo projeto de agente sério tem os quatro.**
+
+O texto é o `defensive_v2.md` do repositório do próprio paper (`frotaur/mindvirus-viruschain`, MIT),
+citado com fonte. ⚠️ **"Quase total" não é total: é vacina, não muralha** — e o próprio paper avisa
+que essas proteções serão testadas conforme os sistemas multiagente crescerem.
+
+### O que a forja consulta antes de aconselhar
+
+Quando a spec declara `precisa = ["memoria"]`, a forja **abre o Censo** e devolve as peças reais,
+com licença, veredito de OSI e aviso de colisão — em vez de recomendar de cabeça:
+
+```console
+### `controle`
+- **AgentGuard** — ⛔ sem canônico
+  - ◻️ licença não verificada — confira antes de usar (`varia por projeto`)
+  - ⚠️ **`AgentGuard` identifica 6 projetos independentes.** Instalar pelo nome é
+    loteria — use a URL, não o nome.
+```
+
+É a parte que serve à régua: *a tia da limpeza não precisa do sétimo framework — ela precisa saber
+**qual dos seis**, e se o que leram sobre ele ainda vale.* E o bilionário precisa da mesma coisa,
+pelo mesmo motivo; só que ele chama de auditoria.
+
+**Censo ausente nunca vira censo vazio.** *"Não consultei"* e *"não existe peça"* dizem coisas
+opostas, e confundi-las é a forma mais barata de inventar um fato.
+
+---
+
+## Os controles negativos
+
+```console
+$ python autoteste.py
+33 passaram · 0 reprovaram
+```
+
+<!-- aferido: nucleo.checks=36 natureza=contagem em=2026-08-16 vence=nunca fonte=autoteste.py -->
+
+**Cada check reintroduz o defeito que ele existe para pegar.** Um check que só confirma o caminho
+feliz passa igual se o mecanismo for removido — ele não prova nada, e o custo dele é dar a alguém a
+sensação de que está coberto.
+
+---
+
 ## Licença
 
 MIT. De propósito, e a escolha é derivada: se o critério é que **tanto o bilionário quanto a tia da

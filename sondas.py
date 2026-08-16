@@ -98,3 +98,60 @@ def vereditos() -> int:
     from aferido import __main__ as cli
 
     return len(cli.ORDEM)
+
+
+@sonda("nucleo.checks", origem="ocorrências de `@check(` em autoteste.py")
+def checks_do_autoteste() -> int:
+    return (RAIZ / "autoteste.py").read_text(encoding="utf-8").count("@check(")
+
+
+# --------------------------------------------------------------- o censo ----
+
+
+@sonda(
+    "censo.gerado_em_dia",
+    origem="1 se censo/CENSO.md == censo/gerar.py:gerar(), senão 0",
+)
+def censo_em_dia() -> int:
+    """A ÚNICA pergunta legítima sobre um artefato gerado.
+
+    Selar cada número do CENSO.md seria check espelho: os dois lados sairiam do
+    mesmo JSON. A pergunta certa não é *"o número está certo?"* — é *"este
+    publicado ainda corresponde à fonte?"*, e essa é de RELAÇÃO: ela não anda
+    quando alguém escreve no censo, só anda se alguém editou o publicado à mão
+    ou mexeu na fonte sem regerar. Divergir ali manda parar, não resselar.
+    """
+    import sys
+
+    sys.path.insert(0, str(RAIZ))
+    from censo import gerar as g
+
+    return int(g.PUBLICADO.exists() and g.PUBLICADO.read_text(encoding="utf-8") == g.gerar())
+
+
+# ---------------------------------------------------------------- a forja ---
+
+
+@sonda("forja.modulos", origem="arquivos .py em forja/")
+def modulos_da_forja() -> int:
+    return len(list((RAIZ / "forja").glob("*.py")))
+
+
+@sonda("forja.recusas", origem="regras R distintas levantadas em forja/spec.py")
+def recusas() -> int:
+    import re
+
+    fonte = (RAIZ / "forja" / "spec.py").read_text(encoding="utf-8")
+    # `R0` é a falta de campo obrigatório e não é uma das oito regras de fronteira.
+    return len({m for m in re.findall(r'raise Recusa\(\s*"(R\d)"', fonte)} - {"R0"})
+
+
+@sonda("forja.artefatos", origem="len(compilar(spec)) sobre a spec de exemplo")
+def artefatos() -> int:
+    import sys
+
+    sys.path.insert(0, str(RAIZ))
+    from forja import ler
+    from forja.__main__ import compilar
+
+    return len(compilar(ler(RAIZ / "forja" / "exemplos" / "revisor-de-licenca.toml")))

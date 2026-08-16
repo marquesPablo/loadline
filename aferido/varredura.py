@@ -10,6 +10,7 @@ porque um campo de config com caminho a executar é convite escrito.
 
 from __future__ import annotations
 
+import ast
 import importlib.util
 import sys
 from datetime import date
@@ -28,17 +29,59 @@ DIRETIVA_ESPECIME = "aferido-ignorar-arquivo"
 _CERCA = "```"
 
 
-def _regioes_de_especime(linhas: list[str], markdown: bool) -> set[int]:
+def _linhas_de_literal(texto: str) -> set[int]:
+    """Linhas de um `.py` que estão DENTRO de uma string literal.
+
+    Esta é a regra que separa o código que **declara** um selo do código que o
+    **emite**. Um selo num comentário (`# aferido: x=1`) é uma afirmação de
+    verdade: alguém escreveu aquele número e ele se recompute. Um selo dentro
+    de uma string é outra coisa inteira — é o gerador montando o texto que o
+    USUÁRIO vai escrever, ou a documentação ensinando a sintaxe.
+
+    Sem isto, todo emissor de selo sabota a si mesmo: `f"<!-- aferido:
+    x={n} -->"` é lido como se afirmasse que `x` vale a string `{n}`. É a mesma
+    família de defeito que o controle negativo que sabota a si mesmo, e ela
+    reaparece em toda ferramenta que gera a própria sintaxe.
+
+    Usa `ast` — stdlib — em vez de heurística de aspas. Um regex que tentasse
+    achar string literal erraria em aspas aninhadas e em f-string com
+    expressão, e erraria calado, que é o pior modo de errar aqui.
+
+    ⚠️ **Arquivo que não parseia não vira espécime.** Devolver tudo faria um
+    `.py` quebrado passar verde, calado. Devolver nada faz o selo ser julgado e,
+    se estiver malformado, a rodada reprova alto. Falhar barulhento é a direção
+    certa.
+    """
+    try:
+        arvore = ast.parse(texto)
+    except SyntaxError:
+        return set()
+
+    dentro: set[int] = set()
+    for no in ast.walk(arvore):
+        if isinstance(no, ast.Constant) and isinstance(no.value, str):
+            dentro.update(range(no.lineno, (no.end_lineno or no.lineno) + 1))
+        elif isinstance(no, ast.JoinedStr):  # f-string
+            dentro.update(range(no.lineno, (no.end_lineno or no.lineno) + 1))
+    return dentro
+
+
+def _regioes_de_especime(linhas: list[str], markdown: bool, python: bool = False) -> set[int]:
     """Linhas (1-based) que são espécime e não afirmação.
 
-    Duas regras, ambas declaradas e nenhuma adivinhada:
+    Três regras, todas declaradas e nenhuma adivinhada:
       1. arquivo com a diretiva `aferido-ignorar-arquivo` — o arquivo inteiro;
       2. em Markdown, o que está dentro de cerca de código — uma cerca É a
          marca universal de "isto é ilustração", e ler ilustração como
-         afirmação inventa fatos que ninguém escreveu.
+         afirmação inventa fatos que ninguém escreveu;
+      3. em Python, o que está dentro de string literal — ver
+         `_linhas_de_literal`. Comentário continua sendo julgado; a cerca é
+         sobre a string, não sobre o arquivo.
     """
     if any(DIRETIVA_ESPECIME in linha for linha in linhas):
         return set(range(1, len(linhas) + 1))
+    if python:
+        return _linhas_de_literal("\n".join(linhas))
     if not markdown:
         return set()
 
@@ -96,7 +139,12 @@ def varrer(raiz: str | Path, hoje: date | None = None) -> Relatorio:
 
         relatorio.arquivos_lidos += 1
         linhas = texto.splitlines()
-        especimes = _regioes_de_especime(linhas, markdown=caminho.suffix.lower() in (".md", ".markdown"))
+        sufixo = caminho.suffix.lower()
+        especimes = _regioes_de_especime(
+            linhas,
+            markdown=sufixo in (".md", ".markdown"),
+            python=sufixo == ".py",
+        )
         if especimes:
             relatorio.especimes.append(f"{caminho}: {len(especimes)} linhas de espécime, não julgadas")
 

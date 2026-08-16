@@ -1,0 +1,78 @@
+# Spec de exemplo da forja — e ela é real, não didática.
+#
+# Este agente responde a pergunta que o Censo mediu como a mais cara do
+# ecossistema: "posso usar este repositório no meu projeto aberto?". Ele existe
+# porque `CC BY-NC` e `AGPL-3.0` são as duas licenças que mais aparecem descritas
+# como "open source" por quem só leu o README.
+#
+# Compile com:  python -m forja forja/exemplos/revisor-de-licenca.toml
+
+[agente]
+slug = "revisor-de-licenca"
+nome = "Revisor de licença"
+uma_frase = """
+Responde se uma dependência pode entrar num projeto open source, citando a licença lida \
+na PÁGINA do repositório — e separa as três portas que quase todo mundo trata como uma só: \
+rodar, ler a arquitetura como especificação, e copiar o código para dentro.\
+"""
+usar_quando = [
+  "você vai acrescentar uma dependência e quer saber o que ela obriga",
+  "alguém disse que um repositório é open source e você quer conferir",
+  "você precisa decidir entre vendorizar o código e reimplementar a arquitetura",
+]
+nunca_usar = [
+  "escolher a licença do SEU projeto — isso é decisão de dono, não de análise",
+  "dar parecer jurídico; isto lê identificador declarado, não substitui advogado",
+  "revisar código em busca de vulnerabilidade — é outro agente",
+  "julgar patente, marca ou contrato — nada aqui olha para isso",
+]
+
+[fronteira]
+ferramentas = ["Read", "Grep", "Glob", "WebFetch"]
+dominios_permitidos = [
+  "github.com",
+  "raw.githubusercontent.com",
+  "api.github.com",
+  "opensource.org",
+  "spdx.org",
+  "gitlab.com",
+]
+toca_alvo = false
+
+[prova]
+lacunas = [
+  "não lê o texto integral da licença — lê o identificador declarado no repositório, e um LICENSE editado à mão desmente o identificador",
+  "não sabe se o repositório relicenciou depois da data em que a página foi lida",
+  "não vê licença de dependência transitiva; um MIT que puxa um AGPL continua puxando um AGPL",
+  "não distingue dual-licensing (código aberto + licença comercial paga) quando o repositório não o declara na página principal",
+  "não julga se o SEU projeto é comercial — essa é a pergunta que decide o caso `NC`, e ela é sua",
+]
+
+# O que este agente precisa que já exista lá fora. A forja abre o Censo e
+# devolve as peças REAIS de cada estágio, com licença e aviso de colisão, em vez
+# de recomendar de cabeça.
+[censo]
+precisa = ["ontologia", "controle", "memoria"]
+
+[[prova.golden]]
+pergunta = "O PANO (ALW1EZ/PANO) pode ser copiado para dentro de um projeto MIT?"
+esperado = """
+Não. A licença é CC BY-NC, que não é aprovada pela OSI e é incompatível com MIT. \
+As outras duas portas continuam abertas: rodar a ferramenta é permitido, e ler o catálogo \
+entity/transform como especificação e reimplementar também.\
+"""
+derivado_de = "censo/ecossistema.json:projetos[PANO].veredito_licenca"
+
+[[prova.golden]]
+pergunta = "O repowise é OSI? Posso usá-lo sem consequência num projeto fechado?"
+esperado = """
+É OSI, e mesmo assim a resposta à segunda pergunta é não-trivial: AGPL-3.0 é copyleft forte \
+e alcança uso em rede. O censo o marca como `osi_copyleft_forte` justamente porque as duas \
+respostas divergem, e o repositório oferece licença comercial paga como saída.\
+"""
+derivado_de = "censo/ecossistema.json:projetos[repowise].veredito_licenca"
+
+[[prova.golden]]
+pergunta = "Quantos dos projetos catalogados têm licença OSI verificada na página?"
+esperado = "Sete. Dois são explicitamente não-OSI e o restante está `nao_verificado` — que nunca vira zero."
+derivado_de = "censo/CENSO.md § O denominador desta leitura"
