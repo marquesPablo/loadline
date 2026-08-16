@@ -1,0 +1,100 @@
+"""As sondas deste projeto — de onde cada número do README é recomputado.
+
+natureza: correcao — sonda que estoura vira `SEM_PROVA` no relatório, com o
+erro por extenso. Ela nunca devolve um palpite.
+
+⚠️ **A regra que faz o par valer alguma coisa:** o número do README é escrito
+à mão, em prosa. A sonda o recomputa do `censo/ecossistema.json`, que é dado.
+São dois artefatos independentes — mexer num sem mexer no outro reprova, que é
+exatamente o ponto. Se a sonda lesse o próprio README, o par passaria verde
+travando o defeito: é check espelho, e ele não verifica nada.
+
+⚠️ **E há um limite honesto, declarado de propósito:** a verdade última das
+entradas do censo está *na web*, e nenhuma sonda offline a alcança. Por isso
+todo selo do censo carrega `vence=`. A sonda prova a **coerência interna**; o
+`vence` é o que obriga alguém a sair da máquina e reconferir o mundo lá fora.
+Confundir as duas coisas seria dizer que um JSON coerente é um fato verdadeiro.
+"""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+from aferido import sonda
+
+RAIZ = Path(__file__).parent
+CENSO = RAIZ / "censo" / "ecossistema.json"
+
+
+def _censo() -> dict:
+    return json.loads(CENSO.read_text(encoding="utf-8"))
+
+
+@sonda("censo.projetos", origem="len(projetos) em censo/ecossistema.json")
+def total_de_projetos() -> int:
+    return len(_censo()["projetos"])
+
+
+@sonda("censo.com_repo_canonico", origem="projetos com campo `repo` não-nulo")
+def com_repo() -> int:
+    return sum(1 for p in _censo()["projetos"] if p.get("repo"))
+
+
+@sonda("censo.sem_repo_canonico", origem="projetos sem `repo` e sem `paper`")
+def sem_repo() -> int:
+    return sum(1 for p in _censo()["projetos"] if not p.get("repo") and not p.get("paper"))
+
+
+@sonda("censo.licenca.*", origem="contagem por `veredito_licenca` em censo/ecossistema.json")
+def por_veredito_de_licenca(metrica: str, _selo) -> int:
+    alvo = metrica.rsplit(".", 1)[-1]
+    return sum(1 for p in _censo()["projetos"] if p.get("veredito_licenca") == alvo)
+
+
+@sonda("censo.sem_llm", origem="projetos com `sem_llm: true`")
+def sem_llm() -> int:
+    return sum(1 for p in _censo()["projetos"] if p.get("sem_llm") is True)
+
+
+@sonda("censo.clonados_ou_executados", origem="denominador declarado no censo")
+def clonados() -> int:
+    return _censo()["denominador"]["clonados_ou_executados"]
+
+
+@sonda("colisao.nomes", origem="projetos com `colide_com` não-vazio")
+def nomes_em_colisao() -> int:
+    return sum(1 for p in _censo()["projetos"] if p.get("colide_com"))
+
+
+@sonda("colisao.*", origem="len(colide_com) + 1 se houver repo canônico, por nome")
+def tamanho_do_cacho(metrica: str, _selo) -> int:
+    alvo = metrica.rsplit(".", 1)[-1].lower()
+    for projeto in _censo()["projetos"]:
+        if projeto["nome"].lower().replace(" ", "-") == alvo:
+            return len(projeto.get("colide_com", [])) + (1 if projeto.get("repo") else 0)
+    raise LookupError(f"`{alvo}` não é um nome do censo")
+
+
+@sonda("nucleo.modulos", origem="arquivos .py em aferido/")
+def modulos_do_nucleo() -> int:
+    return len(list((RAIZ / "aferido").glob("*.py")))
+
+
+@sonda("nucleo.dependencias", origem="linhas não-vazias de requisitos.txt (ausente = 0)")
+def dependencias() -> int:
+    arquivo = RAIZ / "requisitos.txt"
+    if not arquivo.exists():
+        return 0
+    return sum(
+        1
+        for linha in arquivo.read_text(encoding="utf-8").splitlines()
+        if linha.strip() and not linha.strip().startswith("#")
+    )
+
+
+@sonda("nucleo.vereditos", origem="len(ORDEM) em aferido/__main__.py")
+def vereditos() -> int:
+    from aferido import __main__ as cli
+
+    return len(cli.ORDEM)
