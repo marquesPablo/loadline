@@ -21,6 +21,7 @@ from pathlib import Path
 from aferido import (
     CONGELADO,
     DERIVOU,
+    PROSA_MUDA,
     SEM_PROVA,
     VALE,
     VENCIDO,
@@ -40,6 +41,12 @@ except (AttributeError, ValueError, OSError):
 HOJE = date(2026, 8, 16)
 _falhas: list[str] = []
 _passes = 0
+
+#: Checks que EXISTEM e NÃO rodam nesta corrida, com o motivo de cada um.
+#: Está vazio hoje, e é declarado mesmo assim: o denominador de uma suíte é
+#: `executados + fora`, e uma suíte que só imprime quantos passaram esconde
+#: exatamente o check que alguém desligou. Fora do denominador é fora à vista.
+FORA: list[tuple[str, str]] = []
 
 
 def check(letra: str, o_que: str):
@@ -648,6 +655,90 @@ def _ak():
     )
 
 
+@check("AL", "o confronto prosa × selo ACUSA o número da frase que nenhum selo cobre")
+def _al():
+    """O defeito real deste repositório entre 2026-08-16 e 2026-08-20, reintroduzido.
+
+    O selo diz 36, a sonda mede 36, e o veredito do selo é VALE — como sempre foi.
+    O que mudou é que a FRASE, três linhas acima, passou a ser lida.
+    """
+    registro.limpar()
+    sonda("nucleo.checks")(lambda: 36)
+    fonte = """```console
+$ python autoteste.py
+33 passaram
+```
+<!-- aferido: nucleo.checks=36 natureza=contagem em=2026-08-16 vence=nunca -->
+"""
+    with tempfile.TemporaryDirectory() as tmp:
+        (Path(tmp) / "leia.md").write_text(fonte, encoding="utf-8")
+        r = varrer(Path(tmp), hoje=HOJE)
+
+    mudos = [a for a in r.achados if a.veredito == PROSA_MUDA]
+    assert any(a.escrito == "33" for a in mudos), (
+        "a frase diz 33 e o selo diz 36, e nada acusou — é o buraco que o "
+        f"PROSA_MUDA existe para fechar. Achados: {[str(a) for a in r.achados]}"
+    )
+    assert any(a.veredito == VALE for a in r.achados), (
+        "o selo em si tem de continuar VALE: é exatamente por isso que o defeito "
+        "sobreviveu quatro dias — o verificador olhava só o comentário"
+    )
+    assert r.reprova, "com a frase errada, a corrida tem de reprovar"
+
+
+@check("AM", "o confronto NÃO morde artigo, pronome, nem prosa sem número")
+def _am():
+    """Um detector que grita no texto certo é desligado na primeira semana.
+
+    ⚠️ `nenhum` NÃO entra nesta lista de perdão, e a ausência é deliberada:
+    *"Nenhum dos quinze foi clonado"* afirma zero tão literalmente quanto o
+    dígito, e é uma das frases seladas deste README. Quem quiser negação
+    enfática escreve sem o numeral — foi o que esta própria fixture teve de
+    fazer depois de reprovar por dizer *"sem número nenhum"*.
+    """
+    registro.limpar()
+    sonda("x.y")(lambda: 1)
+    fonte = """Um registro do ecossistema, e os dois lados saem da mesma fonte.
+<!-- aferido: x.y=1 natureza=contagem em=2026-08-16 vence=nunca -->
+
+Prosa inteira que descreve o mecanismo e não afirma quantidade.
+<!-- aferido: x.y=1 natureza=contagem em=2026-08-16 vence=nunca -->
+"""
+    with tempfile.TemporaryDirectory() as tmp:
+        (Path(tmp) / "leia.md").write_text(fonte, encoding="utf-8")
+        r = varrer(Path(tmp), hoje=HOJE)
+
+    mudos = [a for a in r.achados if a.veredito == PROSA_MUDA]
+    assert not mudos, (
+        "`Um registro` é artigo e `os dois lados` é pronome — nenhum dos dois "
+        f"afirma quantidade. Falsos positivos: {[str(a) for a in mudos]}"
+    )
+
+
+@check("AN", "`eco=nao` dispensa o bloco, e a dispensa sai NOMEADA no relatório")
+def _an():
+    """Dispensa silenciosa é furo. Dispensa declarada é exceção."""
+    registro.limpar()
+    sonda("nucleo.checks")(lambda: 36)
+    fonte = """33 passaram, e este número é ilustração, não afirmação.
+<!-- aferido: nucleo.checks=36 eco=nao natureza=contagem em=2026-08-16 vence=nunca -->
+"""
+    with tempfile.TemporaryDirectory() as tmp:
+        (Path(tmp) / "leia.md").write_text(fonte, encoding="utf-8")
+        r = varrer(Path(tmp), hoje=HOJE)
+
+    assert not [a for a in r.achados if a.veredito == PROSA_MUDA], (
+        "`eco=nao` tem de dispensar o bloco do confronto"
+    )
+    assert r.dispensados_do_eco, (
+        "a dispensa tem de aparecer no relatório — uma exceção que não se vê "
+        "é indistinguível de um mecanismo que não roda"
+    )
+    assert "eco" not in [a.metrica for a in r.achados], (
+        "`eco` é chave reservada; lê-la como métrica pediria uma sonda para ela"
+    )
+
+
 def main() -> int:
     print("autoteste do aferido — cada check reintroduz o defeito que ele pega\n")
     ordem = sorted(
@@ -656,7 +747,14 @@ def main() -> int:
     )
     del ordem  # os checks já rodaram na importação, por decoração
 
+    executados = _passes + len(_falhas)
     print()
+    print(
+        f"{executados + len(FORA)} checks declarados · {executados} executados"
+        f" · {len(FORA)} fora do denominador"
+    )
+    for letra, motivo in FORA:
+        print(f"  fora: {letra} — {motivo}")
     print(f"{_passes} passaram · {len(_falhas)} reprovaram")
     if _falhas:
         print("\nREPROVOU:")

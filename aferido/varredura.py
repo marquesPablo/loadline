@@ -1,4 +1,4 @@
-"""Varre arquivos, lê os selos e monta o relatório com denominador.
+"""Varre arquivos, lê os selos, confronta a prosa, e monta o relatório com denominador.
 
 natureza: correcao — arquivo ilegível vira linha no relatório, nunca uma
 exceção que derruba a rodada e deixa o resto sem medir.
@@ -16,8 +16,9 @@ import sys
 from datetime import date
 from pathlib import Path
 
-from .selo import SeloMalformado, ler_linha
-from .veredito import Relatorio, julgar
+from .eco import PROSA_MUDA, confrontar
+from .selo import Selo, SeloMalformado, ler_linha
+from .veredito import Achado, Relatorio, julgar
 
 EXTENSOES = (".md", ".markdown", ".txt", ".py", ".rst", ".toml", ".yaml", ".yml")
 IGNORAR = {".git", "node_modules", "__pycache__", ".venv", "venv", "dist", "build", ".mypy_cache"}
@@ -149,6 +150,7 @@ def varrer(raiz: str | Path, hoje: date | None = None) -> Relatorio:
             relatorio.especimes.append(f"{caminho}: {len(especimes)} linhas de espécime, não julgadas")
 
         tinha_selo = False
+        do_arquivo: list[Selo] = []
         for n, linha in enumerate(linhas, start=1):
             if n in especimes:
                 continue
@@ -161,7 +163,27 @@ def varrer(raiz: str | Path, hoje: date | None = None) -> Relatorio:
             if selo is None:
                 continue
             tinha_selo = True
+            do_arquivo.append(selo)
             relatorio.achados.extend(julgar(selo, hoje=hoje))
+
+        # O confronto prosa × selo é só de PROSA: em `.py` o que está ao redor
+        # de um selo é código, e cobrar eco de número em código acusaria todo
+        # literal vizinho. A estreiteza é declarada, não esquecida.
+        if sufixo in (".md", ".markdown", ".txt", ".rst"):
+            discrepancias, dispensados = confrontar(do_arquivo, linhas, str(caminho))
+            for selo, numero, no_selo in discrepancias:
+                relatorio.achados.append(
+                    Achado(
+                        PROSA_MUDA,
+                        "/".join(sorted(selo.metricas)) or "—",
+                        numero,
+                        ", ".join(sorted(no_selo)) or "—",
+                        selo,
+                        selo.natureza,
+                    )
+                )
+            for selo in dispensados:
+                relatorio.dispensados_do_eco.append(f"{selo.arquivo}:{selo.linha}")
 
         if not tinha_selo:
             relatorio.arquivos_sem_selo.append(str(caminho))

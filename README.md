@@ -37,11 +37,23 @@ Fui atrás de dezenas de ferramentas do ecossistema de agentes e passei todas po
 | Build determinístico | é **reprodutível** |
 | **`aferido`** | **isto que está escrito continua sendo verdade hoje?** |
 
-As quatro primeiras existem, maduras, com dono grande. A quinta não tinha ninguém.
+As quatro primeiras existem, maduras, com dono grande.
+
+**A quinta tem vizinhos, e eles merecem ser nomeados** — conferido em 2026-08-20:
+
+| Vizinho | O que faz | Onde ele para |
+|---|---|---|
+| [`drift`](https://www.driftdev.sh/) | ancora spec markdown no código com tree-sitter e falha o CI | compara doc × código **agora**; não tem noção de prazo |
+| `Provena` | trilha com hash encadeado e **checagem de frescor com limiar de idade** | governa **fonte de contexto** em runtime (RAG, ferramenta, memória, MCP), não asserção escrita em prosa |
+| [`freshprobe`](https://github.com/Sudhan30/freshprobe) | sonda endpoint para frescor de cache, latência, TLS | é endpoint, não documento |
+
+**O que continua sem dono é mais estreito do que "a quinta linha", e mais afiado:** ninguém junta as duas metades — **(a)** um prazo de validade na asserção com **(b)** a regra de que a sonda **não pode ler a fonte que produziu o número escrito**. O `drift` não tem (a). O `Provena` tem (a) sobre outro objeto e não tem (b). **A regra anti-espelho é a metade que não existe em lugar nenhum**, e sem ela o par passa verde travando o defeito em vez de achá-lo.
+
+⚠️ Este parágrafo já disse *"a quinta não tinha ninguém"*. Era forte demais, e caiu quando alguém foi conferir. Fica escrito que caiu: um registro que existe para cobrar denominador não pode abrir com um claim sem denominador.
 
 ---
 
-## Os cinco vereditos
+## Os seis vereditos
 
 | | Significa | O que fazer |
 |---|---|---|
@@ -50,8 +62,30 @@ As quatro primeiras existem, maduras, com dono grande. A quinta não tinha ningu
 | `VENCIDO` | passou do `vence`, mesmo batendo | reconferir e resselar |
 | `SEM_PROVA` | não há sonda para a métrica | escrever a sonda, ou tirar o número |
 | `CONGELADO` | histórico declarado, com motivo | nada; não se recomputa |
+| **`PROSA_MUDA`** | **a FRASE afirma um número que o selo do bloco não cobre** | **corrigir a frase, ou nomear a grandeza no selo** |
 
-<!-- aferido: nucleo.vereditos=5 natureza=relacao em=2026-08-16 vence=nunca fonte=aferido/__main__.py -->
+<!-- aferido: nucleo.vereditos=6 natureza=relacao em=2026-08-20 vence=nunca fonte=aferido/__main__.py -->
+
+### `PROSA_MUDA` — o buraco que os outros cinco deixavam
+
+Os cinco primeiros olham o **valor dentro do comentário**. Nenhum olhava a **frase ao lado dele**.
+Quem resela mexe no comentário, que é o que reprova, e esquece o texto, que é o que a pessoa lê:
+
+```markdown
+33 passaram · 0 reprovaram
+<!-- aferido: nucleo.checks=36 natureza=contagem em=2026-08-16 vence=nunca -->
+```
+
+O selo diz 36. A sonda mede 36. **`VALE`.** E a linha de cima diz 33, para sempre.
+
+Isto não é hipótese: **é o estado deste repositório entre 2026-08-16 e 2026-08-20**, achado ao
+rodar a ferramenta contra ela mesma. O conserto foi o veredito acima, e o número na frase.
+
+A regra morde numa direção só: **número afirmado na prosa que nenhum selo do bloco explica.**
+Prosa sem número não é acusada — não há o que contradizer. Artigo e pronome ficam de fora
+(*"os dois lados"* retoma, não conta), e data, versão, percentual e identificador com
+dois-pontos são endereço, não asserção. Um selo pode declarar `eco=nao` e sair do confronto —
+e a dispensa aparece **nomeada** no relatório, que é a diferença entre uma exceção e um furo.
 
 ### `DERIVOU` sozinho não diz nada
 
@@ -96,10 +130,10 @@ $ git clone <este repo> && cd aferido
 $ python -m aferido .
 ```
 
-Não há passo dois. **Zero dependências** — só a stdlib do Python.
+Não há segundo passo. **Zero dependências** — só a stdlib do Python.
 
 <!-- aferido: nucleo.dependencias=0 natureza=relacao em=2026-08-16 vence=nunca fonte=requisitos.txt -->
-<!-- aferido: nucleo.modulos=6 natureza=contagem em=2026-08-16 vence=nunca fonte=aferido/ -->
+<!-- aferido: nucleo.modulos=7 natureza=contagem em=2026-08-20 vence=nunca fonte=aferido/ -->
 
 Sem LLM, sem embedding, sem banco vetorial, sem chave de API, sem serviço. Uma afirmação ou é
 recomputável por uma função, ou não é afirmável. Isso não é minimalismo estético: um verificador que
@@ -140,7 +174,7 @@ cinco. **Não falta um sétimo AgentGuard. Falta o registro — e falta ele venc
 
 ### O denominador do censo, declarado
 
-Doze dos quinze têm repositório canônico identificado e lido. Dois não têm canônico nenhum — e essa
+Doze dos quinze têm repositório canônico identificado e lido. Dois não têm repositório canônico — e essa
 ausência **é** o achado, não uma falha da busca. Um é paper, não repositório.
 
 <!-- aferido: censo.com_repo_canonico=12 natureza=contagem em=2026-08-16 vence=90d fonte=censo/ecossistema.json -->
@@ -226,10 +260,10 @@ duas barram — porque tratar ausente como permissivo é como toda cerca vira po
 | `R2` | pede escrita e não declara `saida_cercada` | *"escrevo num caminho só"* é intenção, não cerca |
 | `R3` | `nunca_usar` vazio | sem anti-descrição o orquestrador despacha por tema |
 | `R4` | `lacunas` vazio | agente sem limite declarado é lido como sem limite |
-| `R5` | zero caso de golden set | nada pergunta se a **resposta** está certa |
+| `R5` | golden set vazio | nada pergunta se a **resposta** está certa |
 | `R6` | golden derivado de dentro da saída do agente | check espelho: os dois lados, a mesma fonte |
 | `R7` | `toca_alvo` sem autorização de engajamento | comando fora do alvo autorizado é incidente |
-| `R8` | slug inválido | ele vira nome de arquivo em quatro harnesses |
+| `R8` | slug inválido | ele vira nome de arquivo e de pasta em todo artefato emitido |
 
 <!-- aferido: forja.recusas=8 natureza=contagem em=2026-08-16 vence=nunca fonte=forja/spec.py -->
 
@@ -283,14 +317,28 @@ opostas, e confundi-las é a forma mais barata de inventar um fato.
 
 ---
 
+## O que este projeto NÃO mede
+
+Oito lacunas declaradas em [`LACUNAS.md`](LACUNAS.md) — de *"a sonda prova coerência interna,
+nunca a verdade do mundo"* até *"não há marca para o número que foi **escolhido**, e não medido"*.
+
+<!-- aferido: nucleo.lacunas=8 natureza=contagem em=2026-08-20 vence=nunca fonte=LACUNAS.md -->
+
+Toda ferramenta publica o que passou e o que falhou. Quase nenhuma publica **o que nunca olhou** —
+e é essa terceira lista que decide se um verde significa alguma coisa. O número acima é escrito
+aqui e recomputado de lá: dois artefatos, que é o que faz o par valer.
+
+---
+
 ## Os controles negativos
 
 ```console
 $ python autoteste.py
-33 passaram · 0 reprovaram
+39 checks declarados · 39 executados · 0 fora do denominador
+PASSOU
 ```
 
-<!-- aferido: nucleo.checks=36 natureza=contagem em=2026-08-16 vence=nunca fonte=autoteste.py -->
+<!-- aferido: nucleo.checks=39 nucleo.fora=0 natureza=contagem em=2026-08-20 vence=nunca fonte=autoteste.py -->
 
 **Cada check reintroduz o defeito que ele existe para pegar.** Um check que só confirma o caminho
 feliz passa igual se o mecanismo for removido — ele não prova nada, e o custo dele é dar a alguém a

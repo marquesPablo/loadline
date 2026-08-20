@@ -105,6 +105,40 @@ def checks_do_autoteste() -> int:
     return (RAIZ / "autoteste.py").read_text(encoding="utf-8").count("@check(")
 
 
+@sonda("nucleo.lacunas", origem="seções `## N ·` de LACUNAS.md")
+def lacunas_declaradas() -> int:
+    """O número mora no README; a fonte é o LACUNAS.md. Dois artefatos.
+
+    Selar a contagem DENTRO do próprio LACUNAS.md seria check espelho: os dois
+    lados sairiam do mesmo arquivo, e o par passaria verde travando o defeito.
+    """
+    import re
+
+    texto = (RAIZ / "LACUNAS.md").read_text(encoding="utf-8")
+    return len(re.findall(r"^## \d+ ·", texto, re.MULTILINE))
+
+
+@sonda("nucleo.fora", origem="len(FORA) lido por `ast` em autoteste.py, sem executar")
+def checks_fora_do_denominador() -> int:
+    """Quantos checks EXISTEM e não rodam. Zero hoje, e declarado mesmo assim.
+
+    ⚠️ Lido por `ast`, nunca importando o módulo: importar `autoteste` roda a
+    suíte inteira, e uma sonda que executa o que ela mede é lenta e circular.
+    """
+    import ast
+
+    arvore = ast.parse((RAIZ / "autoteste.py").read_text(encoding="utf-8"))
+    for no in arvore.body:
+        alvo = None
+        if isinstance(no, ast.AnnAssign) and isinstance(no.target, ast.Name):
+            alvo = no.target.id
+        elif isinstance(no, ast.Assign) and no.targets and isinstance(no.targets[0], ast.Name):
+            alvo = no.targets[0].id
+        if alvo == "FORA" and isinstance(no.value, (ast.List, ast.Tuple)):
+            return len(no.value.elts)
+    raise LookupError("`FORA` não é uma lista literal no topo de autoteste.py")
+
+
 # --------------------------------------------------------------- o censo ----
 
 

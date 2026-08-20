@@ -5,8 +5,8 @@ nada de segurança; erro aqui vira exceção visível, nunca artefato pela metad
 
 ⚠️ **Por que o CENSO.md quase não tem selo, e isso é de propósito.**
 
-Ele é ARTEFATO GERADO. Selar cada número dele seria check espelho (`ADR-012` do
-P3G4ZUZ): os dois lados sairiam do mesmo JSON, e o par passaria verde travando o
+Ele é ARTEFATO GERADO. Selar cada número dele seria check espelho:
+os dois lados sairiam do mesmo JSON, e o par passaria verde travando o
 defeito em vez de achá-lo. A pergunta certa para um artefato derivado não é *"o
 número está certo?"* — é **"este artefato ainda corresponde à fonte?"**.
 

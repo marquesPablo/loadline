@@ -10,6 +10,7 @@ uma afirmação ou é recomputável por uma função, ou não é afirmável.
 from .registro import SemSonda, achar, explicar, medir, sonda
 from .selo import Selo, SeloMalformado, escrever, ler_linha, ler_texto
 from .varredura import varrer
+from .eco import PROSA_MUDA
 from .veredito import (
     CONGELADO,
     DERIVOU,
@@ -43,5 +44,6 @@ __all__ = [
     "VENCIDO",
     "SEM_PROVA",
     "CONGELADO",
+    "PROSA_MUDA",
     "__version__",
 ]

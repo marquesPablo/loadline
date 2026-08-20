@@ -20,11 +20,12 @@ Chaves reservadas (não são métrica):
     vence     Nd | Nm | nunca      — validade; sem isto o selo nunca expira
     fonte     caminho ou URL       — de onde a métrica é recomputada
     motivo    texto                — obrigatório em `congelado:`
+    eco       nao                  — dispensa o bloco do confronto prosa × selo
 
 Todo o resto é `metrica=valor`, e é isso que o verificador recomputa.
 
-A diferença entre `contagem` e `relacao` é o coração da coisa, e vem de fora
-deste projeto (P3G4ZUZ, ADR-036): grandeza de CONTAGEM anda quando alguém
+A diferença entre `contagem` e `relacao` é o coração da coisa, e ela foi
+aprendida caro antes deste projeto: grandeza de CONTAGEM anda quando alguém
 escreve — divergir é normal, resele e siga. Grandeza de RELAÇÃO só anda se o
 medidor ou o corpus quebrou — divergir é DEFEITO, e resselar esconde o bug.
 """
@@ -35,7 +36,7 @@ import re
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 
-RESERVADAS = frozenset({"natureza", "em", "vence", "fonte", "motivo"})
+RESERVADAS = frozenset({"natureza", "em", "vence", "fonte", "motivo", "eco"})
 NATUREZAS = frozenset({"contagem", "relacao"})
 
 # `<!-- aferido: ... -->` em Markdown/HTML, `# aferido: ...` em código.
@@ -65,6 +66,7 @@ class Selo:
     vence: str | None = None
     fonte: str | None = None
     motivo: str | None = None
+    eco: str | None = None
     arquivo: str = ""
     linha: int = 0
     bruto: str = ""
@@ -151,6 +153,7 @@ def ler_linha(texto: str, arquivo: str = "", linha: int = 0) -> Selo | None:
         vence=campos.get("vence"),
         fonte=campos.get("fonte"),
         motivo=campos.get("motivo"),
+        eco=campos.get("eco"),
         arquivo=arquivo,
         linha=linha,
         bruto=m.group(0),

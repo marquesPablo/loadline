@@ -20,9 +20,9 @@ from datetime import date
 
 from .registro import explicar
 from .varredura import carregar_sondas, varrer
-from .veredito import CONGELADO, DERIVOU, SEM_PROVA, VALE, VENCIDO
+from .veredito import CONGELADO, DERIVOU, PROSA_MUDA, SEM_PROVA, VALE, VENCIDO
 
-ORDEM = (DERIVOU, VENCIDO, SEM_PROVA, CONGELADO, VALE)
+ORDEM = (DERIVOU, PROSA_MUDA, VENCIDO, SEM_PROVA, CONGELADO, VALE)
 
 
 def _console_em_utf8() -> None:
