@@ -8,10 +8,12 @@ uma afirmação ou é recomputável por uma função, ou não é afirmável.
 """
 
 from .registro import SemSonda, achar, explicar, medir, sonda
-from .selo import Selo, SeloMalformado, escrever, ler_linha, ler_texto
+from .selo import TIPOS, Selo, SeloMalformado, escrever, ler_linha, ler_texto
 from .varredura import varrer
-from .eco import PROSA_MUDA
+from .eco import PROSA_MUDA, Afirmacao, afirmacoes_sem_selo
+from .selar import selar
 from .veredito import (
+    ARBITRADO,
     CONGELADO,
     DERIVOU,
     SEM_PROVA,
@@ -39,11 +41,16 @@ __all__ = [
     "Achado",
     "Relatorio",
     "varrer",
+    "selar",
+    "Afirmacao",
+    "afirmacoes_sem_selo",
+    "TIPOS",
     "VALE",
     "DERIVOU",
     "VENCIDO",
     "SEM_PROVA",
     "CONGELADO",
+    "ARBITRADO",
     "PROSA_MUDA",
     "__version__",
 ]

@@ -48,17 +48,29 @@ O projeto responde *"este número ainda bate?"* e *"esta frase o repete certo?"*
 a métrica era a certa, se a sonda mede o que diz medir, ou se a afirmação importava. Isso é
 julgamento, e ele continua sendo de quem escreve.
 
-## 7 · Não há marca para o número que foi ESCOLHIDO, e não medido
-
-Hoje o vocabulário tem duas marcas — `aferido:` (recomputável) e `congelado:` (histórico) — e **as
-duas pressupõem que o número um dia foi medido**. Não existe marca para o número que ninguém pode
-medir e alguém arbitrou: limiar, teto, prazo, `vence=90d`.
-
-Todo limiar deste arquivo é um número escolhido vestido de número medido, **inclusive os `vence=` do
-próprio censo**. É a lacuna mais funda da lista, e é a próxima coisa a nascer.
-
-## 8 · O denominador dos vizinhos é de uma data, não de sempre
+## 7 · O denominador dos vizinhos é de uma data, não de sempre
 
 A comparação com `drift`, `Provena` e `freshprobe` no `README.md` foi feita em **2026-08-20**, lendo
 página pública. Nenhum dos três foi clonado, instalado ou executado. Eles podem ter mudado desde
 então, e nada aqui reconfere isso sozinho — é a lacuna nº 1 aplicada a este próprio argumento.
+
+## 8 · O nome da métrica que o `--selar` escreve é um CHUTE
+
+Ele sai da palavra logo depois do número na frase — *"12 endpoints"* vira `endpoints=12`. É a mesma
+leitura que um humano faz, e erra pelos mesmos motivos: ordem inversa (*"endpoints: 12"*), a palavra
+seguinte ser preposição, ou o número não ter substantivo nenhum ao lado. Nesses casos sai
+`SUA_METRICA`, e nomes repetidos no mesmo arquivo ganham sufixo.
+
+**Isto é sugestão para renomear, nunca afirmação de que a ferramenta entendeu o que o número
+significa** — e a diferença entre as duas está escrita na saída de toda rodada que escreve.
+
+## Fechadas
+
+Uma lacuna sai desta lista quando o mecanismo que a fechava passa a existir e a ter controle
+negativo. O registro fica, porque a lista encolher em silêncio seria a mesma família de defeito que
+este arquivo existe para impedir.
+
+- **`Não há marca para o número que foi ESCOLHIDO, e não medido`** — fechada em 2026-08-20 pela
+  marca `arbitrado:`, que exige o dono (`por=`) e vence como qualquer outro selo. Era descrita aqui
+  como *"a lacuna mais funda da lista, e a próxima coisa a nascer"*. Controles negativos: as letras
+  `AO`, `AP` e `AQ` do autoteste.

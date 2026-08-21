@@ -1,0 +1,71 @@
+# Copie para `.github/workflows/readme.yml`.
+#
+# Este job comenta no pull request em vez de reprovar. É deliberado: a primeira
+# semana de adoção não pode ser uma parede vermelha, ou a resposta do time é
+# desligar o job — e um gate desligado é pior que um gate ausente, porque
+# alguém ainda acha que ele está lá.
+#
+# Quando o time estiver pronto, troque `continue-on-error: true` por `false` e
+# sele a decisão, com dono e com `derruba=`. O selo pronto para copiar está em
+# `selos.md`, na seção «O prazo é escolha, e ela tem dono».
+
+name: readme-que-nao-mente
+
+on:
+  pull_request:
+    paths: ["**/*.md"]
+  schedule:
+    # O `vence=` só morde se alguém rodar. Sem esta linha, um número que
+    # envelheceu espera o próximo PR que toque um `.md` — e o texto mais
+    # esquecido é justamente o que ninguém toca.
+    - cron: "0 6 1 * *"
+
+jobs:
+  aferir:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # `repo.commits` e `repo.contribuidores` leem o histórico
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: instalar o aferido
+        run: |
+          git clone --depth 1 https://github.com/SEU-USUARIO/aferido.git /tmp/aferido
+          echo "PYTHONPATH=/tmp/aferido" >> "$GITHUB_ENV"
+
+      - name: conferir o que a documentação afirma
+        id: aferir
+        continue-on-error: true
+        run: |
+          python -m aferido . | tee relatorio.txt
+          echo "codigo=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+
+      - name: comentar no PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const corpo = fs.readFileSync('relatorio.txt', 'utf8');
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '### aferido\n\n```\n' + corpo.slice(0, 60000) + '\n```',
+            });
+
+      - name: decidir
+        run: |
+          case "${{ steps.aferir.outputs.codigo }}" in
+            0) echo "tudo conferido e no prazo" ;;
+            1) echo "::warning::alguma coisa escrita não bate mais — veja o comentário no PR" ;;
+            2) echo "::warning::há afirmação que nenhum selo cobre — rode \`python -m aferido . --selar\`" ;;
+            *) echo "::error::o aferido não pôde rodar"; exit 1 ;;
+          esac

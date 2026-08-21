@@ -189,3 +189,61 @@ def artefatos() -> int:
     from forja.__main__ import compilar
 
     return len(compilar(ler(RAIZ / "forja" / "exemplos" / "revisor-de-licenca.toml")))
+
+
+# ------------------------------------------------------------ a prateleira ---
+# As operações prontas medem o repositório de quem adota. Estas medem a
+# prateleira em si — porque um índice que afirma "quatro operações" e nunca é
+# recomputado é exatamente o defeito que este projeto existe para pegar, e
+# publicá-lo sem selo seria a versão mais literal possível de casa de ferreiro.
+
+
+def _operacoes() -> list["Path"]:
+    pasta = RAIZ / "operacoes"
+    if not pasta.is_dir():
+        return []
+    return sorted(p for p in pasta.iterdir() if p.is_dir() and (p / "RECEITA.md").is_file())
+
+
+#: Os cinco arquivos que toda operação tem, sempre com o mesmo nome. A lista é
+#: fechada: se você aprendeu uma operação, aprendeu todas.
+ANATOMIA = ("RECEITA.md", "sondas.py", "agente.toml", "selos.md", "ci.yml")
+
+
+@sonda("operacoes.total", origem="subpastas de operacoes/ que contêm RECEITA.md")
+def operacoes_prontas() -> int:
+    return len(_operacoes())
+
+
+@sonda(
+    "operacoes.arquivos_por_operacao",
+    origem="tamanho de ANATOMIA, se e somente se TODA operação tiver os cinco",
+)
+def anatomia_completa() -> int:
+    """De RELAÇÃO: ela não anda quando alguém escreve uma operação nova.
+
+    Ela só anda se alguma operação ficou incompleta — e aí a resposta certa é
+    parar e completá-la, nunca resselar o número para baixo. Uma prateleira em
+    que cada gaveta tem uma forma diferente é uma prateleira que ninguém aprende.
+    """
+    operacoes = _operacoes()
+    if not operacoes:
+        raise LookupError("nenhuma operação em operacoes/ — a prateleira não existe neste clone")
+    faltando = [
+        f"{op.name}/{arquivo}"
+        for op in operacoes
+        for arquivo in ANATOMIA
+        if not (op / arquivo).is_file()
+    ]
+    if faltando:
+        raise LookupError(f"operação incompleta: {', '.join(faltando)}")
+    return len(ANATOMIA)
+
+
+@sonda("operacao.*.sondas", origem="chamadas de @sonda( no sondas.py da operação nomeada")
+def sondas_de_uma_operacao(metrica: str, _selo) -> int:
+    alvo = metrica.split(".")[1]
+    for operacao in _operacoes():
+        if operacao.name.startswith(alvo):
+            return (operacao / "sondas.py").read_text(encoding="utf-8").count("@sonda(")
+    raise LookupError(f"`{alvo}` não é o começo do nome de nenhuma operação em operacoes/")

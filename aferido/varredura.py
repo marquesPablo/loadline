@@ -16,7 +16,7 @@ import sys
 from datetime import date
 from pathlib import Path
 
-from .eco import PROSA_MUDA, confrontar
+from .eco import PROSA_MUDA, afirmacoes_sem_selo, confrontar
 from .selo import Selo, SeloMalformado, ler_linha
 from .veredito import Achado, Relatorio, julgar
 
@@ -170,6 +170,13 @@ def varrer(raiz: str | Path, hoje: date | None = None) -> Relatorio:
         # de um selo é código, e cobrar eco de número em código acusaria todo
         # literal vizinho. A estreiteza é declarada, não esquecida.
         if sufixo in (".md", ".markdown", ".txt", ".rst"):
+            # A lista 3 — o que NENHUM selo cobre. Ela roda em todo arquivo de
+            # prosa, tenha ele selo ou não; num repositório recém-clonado ela é
+            # a única coisa que a ferramenta tem a dizer, e é o motivo de a
+            # primeira rodada ter deixado de devolver verde (ADR-107).
+            relatorio.sem_prova_nenhuma.extend(
+                afirmacoes_sem_selo(linhas, do_arquivo, str(caminho), especimes)
+            )
             discrepancias, dispensados = confrontar(do_arquivo, linhas, str(caminho))
             for selo, numero, no_selo in discrepancias:
                 relatorio.achados.append(

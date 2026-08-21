@@ -19,6 +19,7 @@ from datetime import date
 from pathlib import Path
 
 from aferido import (
+    ARBITRADO,
     CONGELADO,
     DERIVOU,
     PROSA_MUDA,
@@ -29,6 +30,7 @@ from aferido import (
     julgar,
     ler_linha,
     registro,
+    selar,
     sonda,
     varrer,
 )
@@ -737,6 +739,259 @@ def _an():
     assert "eco" not in [a.metrica for a in r.achados], (
         "`eco` é chave reservada; lê-la como métrica pediria uma sonda para ela"
     )
+
+
+# ------------------------------------------- ADR-107: a terceira marca e a lista 3
+
+
+@check("AO", "`arbitrado:` sem `por=` é MALFORMADO — escolha sem dono é palpite")
+def _ao():
+    try:
+        _selo("<!-- arbitrado: retry.max=3 em=2026-08-16 vence=90d -->")
+    except SeloMalformado as exc:
+        assert "por=" in str(exc), f"a recusa tem de dizer o que falta, e disse: {exc}"
+    else:
+        raise AssertionError(
+            "`arbitrado:` sem `por=` passou — um número escolhido e anônimo é "
+            "exatamente o que esta marca existe para desmascarar"
+        )
+
+
+@check("AP", "`arbitrado:` no prazo é verde, e NÃO chama sonda nenhuma")
+def _ap():
+    registro.limpar()  # nenhuma sonda registrada: se ele medir, estoura
+    selo = _selo('<!-- arbitrado: retry.max=3 por="plataforma" em=2026-08-16 vence=90d -->')
+    achados = julgar(selo, hoje=HOJE)
+    assert [a.veredito for a in achados] == [ARBITRADO], (
+        f"escolha no prazo tem de ser ARBITRADO, e veio {[a.veredito for a in achados]}"
+    )
+    assert achados[0].verde, "ARBITRADO é verde: alguém assinou, e o prazo não venceu"
+    assert achados[0].medido is None, (
+        "número arbitrado não tem medida — inventar uma seria a mentira que a marca persegue"
+    )
+
+
+@check("AQ", "`arbitrado:` VENCIDO reprova — escolha sem prazo é escolha esquecida")
+def _aq():
+    selo = _selo('<!-- arbitrado: teto=10 por="board" em=2026-08-16 vence=30d -->')
+    achados = julgar(selo, hoje=date(2026, 12, 1))
+    assert [a.veredito for a in achados] == [VENCIDO], (
+        f"escolha fora do prazo tem de vencer, e veio {[a.veredito for a in achados]}"
+    )
+    assert not achados[0].verde, (
+        "se escolha vencida ficasse verde, bastaria chamar de arbitrado todo número "
+        "incômodo para nunca mais olhar para ele"
+    )
+
+
+@check("AR", "repositório SEM SELO NENHUM sai com código 2, e não com 0")
+def _ar():
+    # Este é o defeito que o ADR-107 existe para consertar, reintroduzido: até
+    # ele, esta mesma árvore devolvia `PASSA` e código 0, com as afirmações
+    # dentro. Era `não medido` virando `zero` na ferramenta que proíbe isso.
+    with tempfile.TemporaryDirectory() as tmp:
+        (Path(tmp) / "README.md").write_text(
+            """# x
+
+Temos 12 endpoints e 3 servicos.
+""",
+            encoding="utf-8",
+        )
+        r = varrer(Path(tmp), hoje=HOJE)
+
+    assert not r.achados, "não há selo nenhum: não pode haver achado de selo"
+    assert not r.reprova, "nada foi conferido, logo nada pode REPROVAR"
+    assert r.sem_prova_nenhuma, (
+        "a lista 3 tem de acusar `12` e `3` — sem ela a rodada devolve verde "
+        "sobre um arquivo cheio de números que ninguém pode conferir"
+    )
+    assert {a.numero for a in r.sem_prova_nenhuma} == {"12", "3"}, (
+        f"a lista 3 achou {sorted(a.numero for a in r.sem_prova_nenhuma)}"
+    )
+    assert r.codigo_de_saida == 2, f"código de saída tinha de ser 2, e veio {r.codigo_de_saida}"
+    assert r.veredito_da_corrida == "SEM DENOMINADOR", r.veredito_da_corrida
+
+
+@check("AS", "o que o `--selar` escreve volta a ser lido pelo próprio leitor")
+def _as():
+    with tempfile.TemporaryDirectory() as tmp:
+        alvo = Path(tmp) / "README.md"
+        alvo.write_text(
+            """# x
+
+Temos 12 endpoints.
+""",
+            encoding="utf-8",
+        )
+
+        antes = varrer(Path(tmp), hoje=HOJE)
+        escritos, problemas = selar(antes.sem_prova_nenhuma, hoje=HOJE)
+        assert not problemas, f"selar não podia falhar aqui: {problemas}"
+        assert len(escritos) == 1, f"um selo, uma linha afirmante — vieram {len(escritos)}"
+        assert "arbitrado:" in escritos[0].texto, (
+            "tem de emitir `arbitrado:` e nunca `aferido:` — ninguém mediu nada, e "
+            "emitir a outra marca seria a ferramenta inventando que houve medição"
+        )
+        assert "por=?" in escritos[0].texto, (
+            "o `por=?` sai por escrito para o humano preencher; a ferramenta não "
+            "sabe quem escolheu, e fingir que sabe é a mesma família de defeito"
+        )
+
+        depois = varrer(Path(tmp), hoje=HOJE)
+
+    assert [a.veredito for a in depois.achados] == [ARBITRADO], (
+        f"o selo escrito tem de voltar como ARBITRADO, e veio {[a.veredito for a in depois.achados]}"
+    )
+    assert not depois.sem_prova_nenhuma, "depois de selar, a lista 3 tem de esvaziar"
+    assert depois.codigo_de_saida == 0, (
+        f"anotado e no prazo é verde — veio {depois.codigo_de_saida}"
+    )
+
+    # E a segunda passada não pode duplicar: o lugar já tem dono.
+    with tempfile.TemporaryDirectory() as tmp2:
+        alvo2 = Path(tmp2) / "README.md"
+        alvo2.write_text(
+            """# x
+
+Temos 12 endpoints.
+""",
+            encoding="utf-8",
+        )
+        r1 = varrer(Path(tmp2), hoje=HOJE)
+        selar(r1.sem_prova_nenhuma, hoje=HOJE)
+        r2 = varrer(Path(tmp2), hoje=HOJE)
+        de_novo, _ = selar(r2.sem_prova_nenhuma, hoje=HOJE)
+    assert not de_novo, "selar duas vezes não pode escrever de novo onde já há selo"
+
+
+@check("AT", "o reconhecedor de BLOCO enxerga as três marcas, não duas")
+def _at():
+    # Defeito real, achado em 2026-08-20 ao implementar a terceira marca: o
+    # `_PADRAO` de `selo.py` ganhou `arbitrado` e a cópia da alternação em
+    # `eco.py` ficou para trás. O bloco parou de terminar no selo novo, dois
+    # parágrafos viraram um, e o confronto prosa × selo acusou o segundo selo
+    # pelos números do primeiro. Ninguém teria visto: o alarme era falso, não
+    # ausente. Hoje as duas saem da mesma tupla, e este check trava isso.
+    fonte = """# t
+
+Temos 12 endpoints.
+<!-- arbitrado: endpoints=12 por="a" em=2026-08-16 vence=90d -->
+Temos 40 testes.
+<!-- arbitrado: testes=40 por="a" em=2026-08-16 vence=90d -->
+"""
+    with tempfile.TemporaryDirectory() as tmp:
+        (Path(tmp) / "leia.md").write_text(fonte, encoding="utf-8")
+        r = varrer(Path(tmp), hoje=HOJE)
+
+    mudas = [a for a in r.achados if a.veredito == PROSA_MUDA]
+    assert not mudas, (
+        "cada selo cobre o SEU parágrafo. Acusação aqui quer dizer que o "
+        f"reconhecedor de bloco não enxergou a marca nova e fundiu os dois: {mudas}"
+    )
+    assert r.codigo_de_saida == 0, f"tudo coberto e no prazo é verde — veio {r.codigo_de_saida}"
+
+
+
+# --------------------------------------------------------------- prateleira ---
+# As operações prontas são o que alguém copia para o repositório DELE. Um exemplo
+# quebrado aqui não é um exemplo feio: é uma operação que não roda na primeira vez
+# que alguém tenta, e a primeira vez é a única que a maioria das pessoas dá.
+
+RAIZ_DA_CASA = Path(__file__).parent
+
+
+@check("AU", "toda operação da prateleira compila na forja, e spec sem anti-descrição é RECUSADA")
+def _au():
+    from forja import ler
+    from forja.spec import Recusa, validar
+
+    specs = sorted((RAIZ_DA_CASA / "operacoes").glob("*/agente.toml"))
+    assert specs, "a prateleira não tem nenhuma operação com `agente.toml`"
+    for caminho in specs:
+        ler(caminho)  # levanta `Recusa` se a spec não passar nas oito
+
+    # O defeito, reintroduzido. Sem isto, o laço acima passaria igual se as oito
+    # recusas fossem removidas da forja — ele só confirmaria o caminho feliz, e
+    # a prateleira inteira poderia envelhecer para fora do próprio gate.
+    spec = ler(specs[0])
+    spec.nunca_usar = []
+    try:
+        validar(spec)
+    except Recusa as exc:
+        assert exc.regra == "R3", f"a recusa certa é R3, veio {exc.regra}"
+    else:
+        raise AssertionError(
+            "uma spec da prateleira sem `nunca_usar` COMPILOU — as oito recusas não estão vivas"
+        )
+
+
+@check("AV", "os sondas.py da prateleira podem ser concatenados: nenhum padrão colide")
+def _av():
+    # A `operacoes/README.md` promete que `cat op1/sondas.py op2/sondas.py` funciona.
+    # Uma promessa dessas envelhece calada: basta alguém escolher um nome de métrica
+    # que já existe noutra operação, e a sonda mais nova SOMBREIA a mais velha sem
+    # erro nenhum — o registro aceita padrão repetido e desempata por especificidade.
+    import importlib.util
+
+    registro.limpar()
+    declaradas = 0
+    for indice, caminho in enumerate(sorted((RAIZ_DA_CASA / "operacoes").glob("*/sondas.py"))):
+        declaradas += caminho.read_text(encoding="utf-8").count("@sonda(")
+        spec = importlib.util.spec_from_file_location(f"sondas_op_{indice}", caminho)
+        modulo = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(modulo)
+
+    padroes = [p for p, _ in registro.explicar()]
+    assert len(padroes) == declaradas, (
+        f"{declaradas} sondas declaradas nos arquivos, {len(padroes)} registradas"
+    )
+    repetidos = {p for p in padroes if padroes.count(p) > 1}
+    assert not repetidos, f"padrão de métrica em duas operações — concatenar sombreia: {repetidos}"
+
+    # O defeito, reintroduzido: uma colisão de propósito tem de ser vista pela
+    # mesma regra que acabou de dar verde.
+    sonda(padroes[0], origem="colisão plantada")(lambda: 0)
+    depois = [p for p, _ in registro.explicar()]
+    assert {p for p in depois if depois.count(p) > 1} == {padroes[0]}, (
+        "a regra não enxerga um padrão repetido — ela estava dando verde por não olhar"
+    )
+    registro.limpar()
+
+
+@check("AW", "a sonda da anatomia ESTOURA quando uma operação fica incompleta")
+def _aw():
+    # Cinco arquivos por operação, sempre com o mesmo nome: é o que faz alguém
+    # aprender uma e saber as quatro. A sonda é de RELAÇÃO — ela não anda quando
+    # nasce operação nova, só anda se alguma ficou pela metade.
+    import importlib.util
+
+    registro.limpar()
+    origem = importlib.util.spec_from_file_location(
+        "sondas_da_casa", RAIZ_DA_CASA / "sondas.py"
+    )
+    casa = importlib.util.module_from_spec(origem)
+    origem.loader.exec_module(casa)
+
+    assert registro.medir("operacoes.arquivos_por_operacao", None) == len(casa.ANATOMIA), (
+        "alguma operação da prateleira não tem os cinco arquivos"
+    )
+
+    with tempfile.TemporaryDirectory() as tmp:
+        incompleta = Path(tmp) / "operacoes" / "faltando-um"
+        incompleta.mkdir(parents=True)
+        for nome in casa.ANATOMIA[:-1]:
+            (incompleta / nome).write_text("x", encoding="utf-8")
+        casa.RAIZ = Path(tmp)
+        try:
+            valor = registro.medir("operacoes.arquivos_por_operacao", None)
+        except LookupError:
+            pass  # é o que tem de acontecer: vira SEM_PROVA, com o nome do que falta
+        else:
+            raise AssertionError(
+                f"uma operação sem `{casa.ANATOMIA[-1]}` devolveu {valor} em vez de estourar"
+            )
+    registro.limpar()
+
 
 
 def main() -> int:

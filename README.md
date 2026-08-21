@@ -53,7 +53,86 @@ As quatro primeiras existem, maduras, com dono grande.
 
 ---
 
-## Os seis vereditos
+## Três listas, e a terceira é a que decide se um verde vale alguma coisa
+
+Toda rodada devolve três, em qualquer repositório, **sem você ter escrito uma linha de
+configuração**:
+
+```console
+$ aferido .
+⚠️  NINGUÉM CONSEGUE CONFERIR ISTO — são suspeitas, não defeitos.
+      SEM PROVA  README.md:3   "Temos 12 endpoints e 3 servicos."  → ninguém confere 12
+      SEM PROVA  README.md:4   "Suportamos Python 3.9+ e temos 40 testes."  → ninguém confere 40
+      SEM PROVA  AGENTS.md:3   "Este repo tem 5 test suites."  → ninguém confere 5
+------------------------------------------------------------------------
+0 métricas em 2 arquivos · 2 arquivos sem selo nenhum · 4 afirmações que ninguém confere
+
+SEM DENOMINADOR                                                     (exit 2)
+```
+
+| | Lista | O que é |
+|---|---|---|
+| ✅ | **conferido e bate** | uma sonda recomputou, ou alguém declarou a escolha/história e o prazo não venceu |
+| ❌ | **conferido e NÃO bate** | `DERIVOU`, `VENCIDO`, `SEM_PROVA`, `PROSA_MUDA` |
+| ⚠️ | **ninguém consegue conferir isto** | toda afirmação numérica que **nenhum selo cobre** |
+
+**A lista 3 é de suspeitas, não de defeitos.** Um número que ninguém confere não é um número errado
+— é um número sobre o qual esta ferramenta não tem nada a dizer, e dizer isso alto é o oposto de
+devolver verde.
+
+**Três códigos de saída, e o terceiro é o ponto:**
+
+```
+0   tudo verde
+1   REPROVA — alguma coisa conferida não bate
+2   SEM DENOMINADOR — nada reprova, e há afirmação que ninguém confere
+```
+
+O `2` separa *"suas anotações estão erradas"* de *"você ainda não anotou nada"*. Antes ele não
+existia, e as duas devolviam `0`: um repositório que nunca anotou nada saía **`PASSA`, verde no
+CI**, com as afirmações dentro. Era *não medido* virando *zero* — dentro da ferramenta que existe
+para proibir exatamente isso.
+
+### `--selar` — a anotação é a SAÍDA da primeira rodada, não o pedágio dela
+
+```console
+$ aferido . --selar
+escrevi 3 selo(s) em 2 arquivo(s), todos como `arbitrado:` — ninguém mediu nada ainda.
+  README.md:3  <!-- arbitrado: endpoints=12 servicos=3 por=? em=2026-08-20 vence=90d -->
+  AGENTS.md:3  <!-- arbitrado: test=5 por=? em=2026-08-20 vence=90d -->
+```
+
+Sem a bandeira, o projeto inteiro é somente-leitura. Com ela: emite `arbitrado:` e **nunca**
+`aferido:` (ninguém mediu nada, e emitir a outra marca seria a ferramenta inventando que houve
+medição); escreve `por=?` para o humano preencher; nunca sobrescreve selo existente; e nunca escreve
+dentro de cerca de código.
+
+### A terceira marca: `arbitrado:`
+
+`aferido:` e `congelado:` **pressupõem que o número um dia foi medido**. Limiar, teto, prazo,
+`vence=90d` — nada disso foi medido: **foi escolhido**. E um número escolhido sem dono é um palpite
+com cara de fato.
+
+```markdown
+O limite de retentativas é 3.
+<!-- arbitrado: retry.max=3 por="time de plataforma" em=2026-08-20 vence=180d
+     derruba="qualquer incidente em que 3 não bastou" -->
+```
+
+`por=` é **obrigatório** — sem ele o selo é malformado. `derruba=` é opcional, e é a parte mais
+valiosa: o que faria alguém escolher outro número. E `vence=` continua valendo, senão a marca vira a
+saída fácil para todo número incômodo.
+
+### Este repositório também sai em `SEM DENOMINADOR`, e isso fica escrito
+
+Rodar `aferido .` aqui devolve **exit 2**, com uma centena de afirmações que nenhum selo cobre — a
+maior parte na prosa que explica a própria ferramenta. Não está escondido, não está silenciado por
+exceção, e não vai ser: um projeto cuja tese é *"publique a terceira lista"* não pode publicar a de
+todo mundo menos a sua.
+
+---
+
+## Os sete vereditos
 
 | | Significa | O que fazer |
 |---|---|---|
@@ -62,9 +141,10 @@ As quatro primeiras existem, maduras, com dono grande.
 | `VENCIDO` | passou do `vence`, mesmo batendo | reconferir e resselar |
 | `SEM_PROVA` | não há sonda para a métrica | escrever a sonda, ou tirar o número |
 | `CONGELADO` | histórico declarado, com motivo | nada; não se recomputa |
+| **`ARBITRADO`** | **o número foi ESCOLHIDO, tem dono, e está no prazo** | **nada; e quando vencer, alguém reescolhe** |
 | **`PROSA_MUDA`** | **a FRASE afirma um número que o selo do bloco não cobre** | **corrigir a frase, ou nomear a grandeza no selo** |
 
-<!-- aferido: nucleo.vereditos=6 natureza=relacao em=2026-08-20 vence=nunca fonte=aferido/__main__.py -->
+<!-- aferido: nucleo.vereditos=7 natureza=relacao em=2026-08-20 vence=nunca fonte=aferido/__main__.py · ⚠️ RESSELO 2026-08-20 — esta é de RELAÇÃO, e a régua manda PARAR e investigar antes de resselar. A investigação: ela subiu porque uma DECISÃO a moveu, não porque o medidor quebrou. `ARBITRADO` nasceu como o veredito da terceira marca de selo, e o vocabulário é fechado de propósito — ele só anda quando alguém decide que ele ande, que é exatamente por que a natureza aqui é relação e não contagem. Conferido lendo o vocabulário e a decisão antes de resselar. -->
 
 ### `PROSA_MUDA` — o buraco que os outros cinco deixavam
 
@@ -133,11 +213,45 @@ $ python -m aferido .
 Não há segundo passo. **Zero dependências** — só a stdlib do Python.
 
 <!-- aferido: nucleo.dependencias=0 natureza=relacao em=2026-08-16 vence=nunca fonte=requisitos.txt -->
-<!-- aferido: nucleo.modulos=7 natureza=contagem em=2026-08-20 vence=nunca fonte=aferido/ -->
+<!-- aferido: nucleo.modulos=8 natureza=contagem em=2026-08-20 vence=nunca fonte=aferido/ -->
 
 Sem LLM, sem embedding, sem banco vetorial, sem chave de API, sem serviço. Uma afirmação ou é
 recomputável por uma função, ou não é afirmável. Isso não é minimalismo estético: um verificador que
 depende de um modelo não é um verificador, é uma segunda opinião.
+
+---
+
+## `operacoes/` — a prateleira, e é por onde quase todo mundo deve começar
+
+O núcleo acima é um motor. Sozinho, ele chega no seu repositório sem conhecer nenhuma métrica dele,
+e a primeira coisa que pede é trabalho: *escreva sua sonda*. **[`operacoes/`](operacoes/) é a
+carga** — trabalhos inteiros, pré-montados, que rodam no seu repositório sem uma linha de
+configuração.
+
+| Operação | A dor que ela resolve | Ajuste |
+|---|---|---:|
+| [`instrucao-que-nao-mente`](operacoes/instrucao-que-nao-mente/) | seu `AGENTS.md` manda rodar um comando que não existe mais, e manda editar uma pasta que foi deletada | **0 campos** |
+| [`readme-que-nao-mente`](operacoes/readme-que-nao-mente/) | o README afirma números que ninguém recomputa desde que foram escritos | **0 campos** |
+| [`fronteira-de-agente`](operacoes/fronteira-de-agente/) | você tem subagentes escritos à mão, e nenhum declara para onde pode falar nem onde pode escrever | **1 campo** |
+| [`dependencia-com-veredito`](operacoes/dependencia-com-veredito/) | entrou dependência nova e ninguém olhou a licença dela | **1 campo** |
+
+São 4 operações prontas, e a prateleira cresce por decisão, não por acúmulo.
+<!-- aferido: operacoes.total=4 natureza=contagem em=2026-08-21 vence=nunca fonte=operacoes/ -->
+
+```console
+$ cp operacoes/fronteira-de-agente/sondas.py  /caminho/do/seu/repo/sondas.py
+$ cd /caminho/do/seu/repo && python -m aferido .
+```
+
+Cada operação traz sempre os mesmos cinco arquivos — a receita com o que ajustar, as sondas prontas,
+a spec do agente que a forja compila com gate, os selos para colar, e o job de CI. Se você aprendeu
+uma, aprendeu todas.
+
+<!-- aferido: operacoes.arquivos_por_operacao=5 natureza=relacao em=2026-08-21 vence=nunca fonte=operacoes/ -->
+
+**E as sondas são o que faltava.** Elas leem código, manifesto, `git` e arquivo de configuração —
+nunca o `.md` onde o número está escrito. É a regra anti-espelho aplicada por padrão, em vez de
+deixada como exercício para quem adota.
 
 ---
 
@@ -334,11 +448,11 @@ aqui e recomputado de lá: dois artefatos, que é o que faz o par valer.
 
 ```console
 $ python autoteste.py
-39 checks declarados · 39 executados · 0 fora do denominador
+48 checks declarados · 48 executados · 0 fora do denominador
 PASSOU
 ```
 
-<!-- aferido: nucleo.checks=39 nucleo.fora=0 natureza=contagem em=2026-08-20 vence=nunca fonte=autoteste.py -->
+<!-- aferido: nucleo.checks=48 nucleo.fora=0 natureza=contagem em=2026-08-21 vence=nunca fonte=autoteste.py -->
 
 **Cada check reintroduz o defeito que ele existe para pegar.** Um check que só confirma o caminho
 feliz passa igual se o mecanismo for removido — ele não prova nada, e o custo dele é dar a alguém a

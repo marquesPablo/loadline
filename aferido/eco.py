@@ -51,8 +51,9 @@ NOMEADA no relatório, e é a diferença entre uma exceção e um furo.
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 
-from .selo import Selo
+from .selo import SELO_NA_LINHA, Selo
 
 PROSA_MUDA = "PROSA_MUDA"
 
@@ -60,8 +61,10 @@ PROSA_MUDA = "PROSA_MUDA"
 RUIDO = (
     re.compile(r"\d{4}-\d{2}-\d{2}"),          # data
     re.compile(r"\bv?\d+\.\d+(?:\.\d+)+\b"),   # versão
+    re.compile(r"\bv?\d+\.\d+\+"),             # faixa de versão: `3.9+`, `18.0+`
     re.compile(r"\w+:\S*\d\S*"),               # arXiv:2608.10218, README.md:12, http://…
     re.compile(r"\d+(?:[.,]\d+)?\s*%"),        # percentual — derivado, sem denominador aqui
+    re.compile(r"(?:n[ºo°]|#)\s*\d+", re.IGNORECASE),  # ordinal: `nº 1`, `#3` — endereço, não conta
 )
 
 #: Numeral por extenso conta como asserção — `seis projetos` não escapa por não
@@ -102,7 +105,9 @@ _PRONOMINAL = re.compile(
     re.IGNORECASE,
 )
 _PALAVRA = re.compile(r"[a-zà-ÿ]+", re.IGNORECASE)
-_SELO_NA_LINHA = re.compile(r"(?:<!--|#|//)\s*(?:aferido|congelado)\s*:", re.IGNORECASE)
+#: Importado, nunca reescrito: a lista de marcas mora em `selo.py` e uma cópia
+#: aqui já ficou para trás quando a terceira marca nasceu.
+_SELO_NA_LINHA = SELO_NA_LINHA
 _CERCA = "```"
 
 
@@ -150,6 +155,109 @@ def numeros_afirmados(texto: str) -> set[str]:
         if valor is not None:
             achados.add(valor)
     return achados
+
+
+@dataclass(frozen=True)
+class Afirmacao:
+    """Um número afirmado na prosa que NENHUM selo cobre — a lista 3.
+
+    É suspeita, não defeito. Um número que ninguém consegue conferir não é um
+    número errado; ele é um número sobre o qual a ferramenta não tem nada a
+    dizer, e dizer isso alto é o oposto de devolver `PASSA`.
+    """
+
+    arquivo: str
+    linha: int
+    numero: str
+    trecho: str
+    #: Nome de métrica SUGERIDO, tirado da palavra que segue o número na frase
+    #: (`"12 endpoints"` -> `endpoints`). É heurística declarada, para o humano
+    #: renomear — nunca uma afirmação de que a ferramenta sabe o que é aquilo.
+    nome: str
+
+    def __str__(self) -> str:
+        return (
+            f"SEM PROVA  {self.arquivo}:{self.linha}  "
+            f'"{self.trecho.strip()[:60]}" → ninguém confere {self.numero}'
+        )
+
+
+def afirmacoes_da_linha(texto: str) -> list[tuple[str, str]]:
+    """`(numero, nome_sugerido)` de uma linha, já sem o ruído de endereço.
+
+    O nome sai da primeira palavra depois do número — a mesma heurística que um
+    humano usa lendo *"12 endpoints"*. Quando não houver palavra, o nome sai
+    genérico: inventar um nome bonito para o que não se entendeu seria a mesma
+    família de mentira que o projeto persegue.
+    """
+    limpo = texto
+    for padrao in RUIDO:
+        limpo = padrao.sub(" ", limpo)
+    limpo = _PRONOMINAL.sub(" ", limpo)
+
+    achados: list[tuple[str, str]] = []
+    vistos: set[str] = set()
+    for m in _DIGITO.finditer(limpo):
+        numero = m.group(1)
+        if numero in vistos:
+            continue
+        vistos.add(numero)
+        achados.append((numero, _nome_depois(limpo, m.end())))
+    for m in _PALAVRA.finditer(limpo):
+        valor = POR_EXTENSO.get(m.group(0).lower())
+        if valor is None or valor in vistos:
+            continue
+        vistos.add(valor)
+        achados.append((valor, _nome_depois(limpo, m.end())))
+    return achados
+
+
+def _nome_depois(texto: str, posicao: int) -> str:
+    """A palavra logo depois do número, normalizada — ou um nome genérico."""
+    resto = _PALAVRA.search(texto, posicao)
+    if resto is None:
+        return "SUA_METRICA"
+    palavra = resto.group(0).lower()
+    # Preposição e artigo não nomeiam nada: `3 de 5` não vira `de=3`.
+    if palavra in {"de", "do", "da", "dos", "das", "em", "no", "na", "e", "ou",
+                   "a", "o", "os", "as", "para", "por", "com", "of", "in", "and"}:
+        return "SUA_METRICA"
+    return palavra
+
+
+def afirmacoes_sem_selo(
+    linhas: list[str], selos: list[Selo], arquivo: str, especimes: set[int] | None = None
+) -> list[Afirmacao]:
+    """A lista 3: números afirmados FORA de qualquer bloco selado.
+
+    Esta é a função que inverte o arranque a frio. O detector já existia — é o
+    mesmo `numeros_afirmados` que o confronto usa — e estava trancado atrás de
+    um `if`: ele só rodava DENTRO de um bloco que já tinha selo. Num repositório
+    que nunca anotou nada não há bloco nenhum, logo não havia o que confrontar,
+    logo a rodada devolvia verde sobre um arquivo cheio de números que ninguém
+    pode conferir.
+
+    O que muda aqui é só o alcance: as mesmas regras de ruído, o mesmo
+    tratamento de numeral por extenso e de pronome, apontados para o texto que
+    NÃO está coberto.
+    """
+    especimes = especimes or set()
+    cobertas: set[int] = set()
+    for selo in selos:
+        if not selo.metricas:
+            continue
+        ini, fim = bloco_selado(linhas, selo.linha)
+        if (ini, fim) != (0, 0):
+            cobertas.update(range(ini, fim + 1))
+        cobertas.add(selo.linha)
+
+    achadas: list[Afirmacao] = []
+    for n, linha in enumerate(linhas, start=1):
+        if n in cobertas or n in especimes or _SELO_NA_LINHA.search(linha):
+            continue
+        for numero, nome in afirmacoes_da_linha(linha):
+            achadas.append(Afirmacao(arquivo, n, numero, linha, nome))
+    return achadas
 
 
 def confrontar(

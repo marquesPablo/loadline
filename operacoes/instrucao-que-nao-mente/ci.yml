@@ -1,0 +1,64 @@
+# Copie para `.github/workflows/instrucao.yml`.
+#
+# O ponto deste job não é ficar verde. É distinguir TRÊS estados que quase todo
+# CI achata em dois — e o terceiro é o que decide se um verde vale alguma coisa:
+#
+#   0  tudo conferido e no prazo
+#   1  REPROVA        — alguma coisa conferida não bate
+#   2  SEM DENOMINADOR — nada reprova, e há afirmação que ninguém confere
+#
+# Um repositório que nunca anotou nada devolve 2, não 0. Tratar os dois como a
+# mesma coisa é `não medido` virando `zero`, que é exatamente o defeito que esta
+# ferramenta existe para proibir.
+
+name: instrucao-que-nao-mente
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  schedule:
+    # O `vence=` só morde se alguém rodar. Sem esta linha, um selo vencido
+    # espera o próximo commit — e o repositório mais parado é justamente o que
+    # tem mais documentação velha.
+    - cron: "0 6 * * 1"
+
+jobs:
+  aferir:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"   # `tomllib` é stdlib a partir daqui
+
+      - name: instalar o aferido
+        run: |
+          git clone --depth 1 https://github.com/SEU-USUARIO/aferido.git /tmp/aferido
+          echo "PYTHONPATH=/tmp/aferido" >> "$GITHUB_ENV"
+
+      - name: conferir o que os arquivos de instrução prometem
+        id: aferir
+        continue-on-error: true
+        run: python -m aferido .
+
+      - name: decidir
+        run: |
+          case "${{ steps.aferir.outcome }}" in
+            success) echo "tudo conferido e no prazo" ;;
+            *)
+              python -m aferido . || codigo=$?
+              case "${codigo:-0}" in
+                1) echo "::error::alguma coisa escrita não bate mais com o repositório"; exit 1 ;;
+                2) echo "::warning::há afirmação que nenhum selo cobre — rode \`python -m aferido . --selar\`"; exit 0 ;;
+                *) echo "::error::o aferido não pôde rodar"; exit 1 ;;
+              esac
+              ;;
+          esac
+
+# ⚠️ A linha do `exit 0` no caso `2` é uma ESCOLHA, e ela tem dono: quem adota.
+#    Deixar `SEM DENOMINADOR` passar no CI é razoável na primeira semana e é
+#    dívida a partir da segunda. Quando o time estiver pronto, troque por
+#    `exit 1` — e sele a decisão. O selo pronto para copiar está em `selos.md`,
+#    na seção «O mínimo», com o `por=` e o `derruba=` que ele exige.

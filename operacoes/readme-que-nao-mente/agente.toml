@@ -1,0 +1,82 @@
+# Operação 2 — o agente que decide o DESTINO de cada afirmação não conferida.
+#
+# A terceira lista devolve "ninguém confere isto" e para aí. A pergunta seguinte
+# tem três respostas possíveis, e escolher errado é como um repositório acumula
+# selo decorativo: um número que ninguém mede, com uma marca dizendo que mede.
+#
+# Compile com:  python -m forja operacoes/readme-que-nao-mente/agente.toml
+
+[agente]
+slug = "auditor-de-afirmacao"
+nome = "Auditor de afirmação"
+uma_frase = """
+Pega cada número afirmado na documentação que nenhum selo cobre e decide, com o motivo escrito, \
+para onde ele vai: `aferido:` quando já existe sonda que o recomputa de fonte independente, \
+`arbitrado:` quando o número foi ESCOLHIDO e precisa de dono e de prazo, ou fora do texto quando \
+ele não é conferível nem por medida nem por escolha.\
+"""
+usar_quando = [
+  "`python -m aferido .` devolveu SEM DENOMINADOR e você não sabe por onde começar",
+  "você rodou `--selar` e agora tem uma pilha de `arbitrado:` para triar",
+  "antes de publicar um README novo, para saber quais números vão envelhecer calados",
+  "quando alguém propõe um selo e você quer saber se ele é medida ou espelho",
+]
+nunca_usar = [
+  "escrever o selo — ele decide o destino e escreve a justificativa; quem escreve no arquivo é `--selar` ou a pessoa",
+  "escolher o valor de um número arbitrado; o valor é decisão de negócio e precisa de `por=`, que é um humano",
+  "escrever a sonda; ele diz que falta uma e qual seria a fonte independente, e a implementação é de quem conhece o repositório",
+  "auditar arquivos de instrução de agente — isso é a operação `instrucao-que-nao-mente`",
+  "julgar se a métrica IMPORTA para o negócio; ele responde se ela é conferível, que é outra pergunta",
+]
+
+[fronteira]
+ferramentas = ["Read", "Grep", "Glob"]
+toca_alvo = false
+
+[prova]
+lacunas = [
+  "não sabe o que a métrica significa para o negócio; ele decide conferibilidade, nunca relevância",
+  "não detecta que duas sondas leem a mesma fonte por caminhos diferentes — check espelho indireto passa por ele",
+  "não lê percentual, data, versão nem identificador; eles são retirados antes do confronto e não chegam até ele",
+  "não sabe se o `vence=` sugerido é o certo para o ritmo do repositório; qualquer prazo que ele proponha é palpite até alguém assumi-lo com `por=`",
+  "não distingue número em prosa de número em tabela gerada — um artefato derivado tratado como prosa vira selo espelho",
+]
+
+[[prova.golden]]
+pergunta = "O README diz «temos 84 testes» e existe a sonda `repo.testes`. Qual marca?"
+esperado = """
+`aferido:`, com `natureza=contagem`. A sonda recomputa de uma fonte independente — as funções de \
+teste no código-fonte — e o número escrito está em prosa no `.md`. Dois artefatos, dois lados: \
+mexer num sem mexer no outro reprova, que é o que faz o par valer alguma coisa.\
+"""
+derivado_de = "operacoes/readme-que-nao-mente/sondas.py:testes — o `origem=` declarado da sonda"
+
+[[prova.golden]]
+pergunta = "O README diz «o limite de retentativas é 3». Qual marca?"
+esperado = """
+`arbitrado:`, e ele exige `por=`. O 3 não foi medido: foi escolhido. Nenhuma sonda pode recomputá-lo, \
+porque não há nada no disco de onde ele saia — ele sai de uma decisão. Selá-lo como `aferido:` seria \
+a ferramenta inventando que houve medição. O caso pede também `derruba=`: o que faria alguém escolher \
+outro número.\
+"""
+derivado_de = "README.md § A terceira marca: `arbitrado:`"
+
+[[prova.golden]]
+pergunta = "O CENSO.md é gerado do ecossistema.json e afirma «15 projetos». Selar com `aferido: censo.projetos=15`?"
+esperado = """
+Não. Os dois lados sairiam do mesmo JSON: o número publicado e o número medido teriam a mesma fonte, \
+e o par passaria verde TRAVANDO o defeito em vez de achá-lo. Para artefato derivado a pergunta certa \
+não é «o número está certo?» e sim «isto ainda corresponde à fonte?» — um selo só, de \
+`natureza=relacao`, que manda parar e investigar quando divergir.\
+"""
+derivado_de = "README.md § A lista publicável — a regra do artefato derivado"
+
+[[prova.golden]]
+pergunta = "O README diz «somos o verificador mais rápido do mercado». O que ele responde?"
+esperado = """
+Que o número deve sair do texto, ou virar uma afirmação com denominador. Não é medida — nenhuma \
+sonda offline alcança o mercado — e não é escolha com dono, porque não é um parâmetro que alguém \
+fixou. É claim sem denominador, e a saída é reescrevê-lo estreito («mais rápido que X e Y, medido \
+assim, nesta data») ou apagá-lo.\
+"""
+derivado_de = "LACUNAS.md § 1 — a sonda prova coerência interna, nunca a verdade do mundo"

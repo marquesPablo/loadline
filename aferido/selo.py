@@ -13,6 +13,21 @@ Um selo é um comentário legível por máquina, colado à afirmação que ele c
     Seis projetos independentes usam o nome AgentGuard.
     <!-- aferido: colisao.agentguard=6 natureza=contagem em=2026-08-16 vence=90d -->
 
+Três marcas, e a diferença entre elas é QUEM produziu o número:
+
+    aferido:    alguém MEDIU, e dá para medir de novo. Tem sonda.
+    congelado:  isto é história, e não se recomputa. Exige `motivo=`.
+    arbitrado:  alguém ESCOLHEU. Ninguém mediu, e nunca vai medir.
+
+`arbitrado:` é a marca que faltava, e a ausência dela era a lacuna mais funda
+deste projeto: as outras duas **pressupõem que o número um dia foi medido**.
+Limiar, teto, prazo, `vence=90d` — todos são escolhas vestidas de medidas, e um
+número escolhido sem dono é um palpite com cara de fato:
+
+    O limite de retentativas é 3.
+    <!-- arbitrado: retry.max=3 por="time de plataforma" em=2026-08-20 vence=180d
+         derruba="qualquer incidente em que 3 não bastou" -->
+
 Chaves reservadas (não são métrica):
 
     natureza  contagem | relacao   — decide o QUE significa divergir
@@ -20,6 +35,8 @@ Chaves reservadas (não são métrica):
     vence     Nd | Nm | nunca      — validade; sem isto o selo nunca expira
     fonte     caminho ou URL       — de onde a métrica é recomputada
     motivo    texto                — obrigatório em `congelado:`
+    por       quem escolheu        — obrigatório em `arbitrado:`
+    derruba   o que mudaria a escolha — opcional, e é a parte mais valiosa
     eco       nao                  — dispensa o bloco do confronto prosa × selo
 
 Todo o resto é `metrica=valor`, e é isso que o verificador recomputa.
@@ -36,14 +53,26 @@ import re
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 
-RESERVADAS = frozenset({"natureza", "em", "vence", "fonte", "motivo", "eco"})
+RESERVADAS = frozenset({"natureza", "em", "vence", "fonte", "motivo", "por", "derruba", "eco"})
 NATUREZAS = frozenset({"contagem", "relacao"})
+TIPOS = ("aferido", "congelado", "arbitrado")
+
+#: A alternação das marcas, DERIVADA da tupla acima e nunca escrita à mão duas
+#: vezes. Ela é usada aqui e no confronto de prosa (`eco.py`), e a segunda cópia
+#: já dessincronizou uma vez: quando `arbitrado` nasceu, o reconhecedor de bloco
+#: continuou enxergando só duas marcas e passou a fundir parágrafos que o selo
+#: novo separava — verde-falso do lado errado. Uma quarta marca não pode ter
+#: como repetir isso.
+MARCAS_RE = "|".join(TIPOS)
 
 # `<!-- aferido: ... -->` em Markdown/HTML, `# aferido: ...` em código.
 _PADRAO = re.compile(
-    r"(?:<!--|#|//)\s*(?P<tipo>aferido|congelado)\s*:\s*(?P<corpo>.*?)\s*(?:-->|$)",
+    rf"(?:<!--|#|//)\s*(?P<tipo>{MARCAS_RE})\s*:\s*(?P<corpo>.*?)\s*(?:-->|$)",
     re.IGNORECASE,
 )
+
+#: "esta linha carrega um selo?" — sem capturar o corpo. Mesma fonte de verdade.
+SELO_NA_LINHA = re.compile(rf"(?:<!--|#|//)\s*(?:{MARCAS_RE})\s*:", re.IGNORECASE)
 
 # `chave=valor` ou `chave="valor com espaço"`.
 _PAR = re.compile(r'(?P<k>[\w.\-]+)\s*=\s*(?:"(?P<qv>[^"]*)"|(?P<v>\S+))')
@@ -59,13 +88,15 @@ class SeloMalformado(ValueError):
 class Selo:
     """Um selo lido do disco, com a linha de onde ele saiu."""
 
-    tipo: str  # "aferido" | "congelado"
+    tipo: str  # "aferido" | "congelado" | "arbitrado"
     metricas: dict[str, str]
     natureza: str | None = None
     em: date | None = None
     vence: str | None = None
     fonte: str | None = None
     motivo: str | None = None
+    por: str | None = None
+    derruba: str | None = None
     eco: str | None = None
     arquivo: str = ""
     linha: int = 0
@@ -74,6 +105,16 @@ class Selo:
     @property
     def congelado(self) -> bool:
         return self.tipo == "congelado"
+
+    @property
+    def arbitrado(self) -> bool:
+        """O número foi ESCOLHIDO. Não há sonda, e nunca vai haver.
+
+        Ele não se recomputa — mas ele VENCE, e é isso que separa a marca de uma
+        desculpa: escolha sem prazo é escolha esquecida, e bastaria chamar de
+        arbitrado todo número incômodo para nunca mais olhar para ele.
+        """
+        return self.tipo == "arbitrado"
 
     def vencido_em(self, hoje: date) -> bool:
         """Vencimento é do selo, não do valor.
@@ -144,6 +185,11 @@ def ler_linha(texto: str, arquivo: str = "", linha: int = 0) -> Selo | None:
             f"{onde}: `congelado:` exige `motivo=\"...\"` — congelar sem dizer por quê "
             "é o mesmo que apagar a medida"
         )
+    if tipo == "arbitrado" and not campos.get("por"):
+        raise SeloMalformado(
+            f'{onde}: `arbitrado:` exige `por="..."` — número escolhido sem dono é '
+            "palpite vestido de medida, que é exatamente o que esta marca existe para desmascarar"
+        )
 
     return Selo(
         tipo=tipo,
@@ -153,6 +199,8 @@ def ler_linha(texto: str, arquivo: str = "", linha: int = 0) -> Selo | None:
         vence=campos.get("vence"),
         fonte=campos.get("fonte"),
         motivo=campos.get("motivo"),
+        por=campos.get("por"),
+        derruba=campos.get("derruba"),
         eco=campos.get("eco"),
         arquivo=arquivo,
         linha=linha,
@@ -184,16 +232,20 @@ def escrever(selo: Selo, **mudancas: object) -> str:
         "vence": selo.vence,
         "fonte": selo.fonte,
         "motivo": selo.motivo,
+        "por": selo.por,
+        "derruba": selo.derruba,
     }
     for chave, valor in mudancas.items():
         alvo = reservadas if chave in RESERVADAS else metricas
         alvo[chave] = None if valor is None else str(valor)
 
     partes = [f"{k}={v}" for k, v in metricas.items() if v is not None]
-    for chave in ("natureza", "em", "vence", "fonte"):
+    for chave in ("natureza", "por", "em", "vence", "fonte"):
         if reservadas.get(chave) is not None:
-            partes.append(f"{chave}={reservadas[chave]}")
-    if reservadas.get("motivo") is not None:
-        partes.append(f'motivo="{reservadas["motivo"]}"')
+            valor = str(reservadas[chave])
+            partes.append(f'{chave}="{valor}"' if " " in valor else f"{chave}={valor}")
+    for chave in ("motivo", "derruba"):
+        if reservadas.get(chave) is not None:
+            partes.append(f'{chave}="{reservadas[chave]}"')
 
     return f"<!-- {selo.tipo}: {' '.join(partes)} -->"

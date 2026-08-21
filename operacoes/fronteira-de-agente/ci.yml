@@ -1,0 +1,60 @@
+# Copie para `.github/workflows/fronteira.yml`.
+#
+# Este job REPROVA de verdade, e o motivo é o objeto. Os jobs de `README` e de
+# arquivo de instrução medem documentação envelhecida e avisam; este e o de
+# dependência medem poder concedido sem que ninguém tenha olhado, e travam.
+# Um número velho no README custa uma correção; um agente com escrita
+# irrestrita custa o que ele escrever.
+#
+# Se você não estiver pronto para reprovar, ponha `continue-on-error: true` e
+# SELE a decisão com dono e prazo — não a deixe implícita. O selo pronto para
+# copiar está em `selos.md`, na seção «A decisão que este selo NÃO toma».
+
+name: fronteira-de-agente
+
+on:
+  pull_request:
+    paths:
+      - ".claude/agents/**"
+      - ".claude/settings.json"
+      - ".claude/settings.local.json"
+      - "sondas.py"
+  push:
+    branches: [main, master]
+  schedule:
+    # Um agente pode ganhar poder sem que o arquivo dele mude: basta alguém
+    # remover o hook que o cercava. A execução semanal é o que pega isso.
+    - cron: "0 6 * * 1"
+
+jobs:
+  aferir:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: instalar o aferido
+        run: |
+          git clone --depth 1 https://github.com/SEU-USUARIO/aferido.git /tmp/aferido
+          echo "PYTHONPATH=/tmp/aferido" >> "$GITHUB_ENV"
+
+      - name: conferir a fronteira declarada de cada agente
+        run: |
+          set +e
+          python -m aferido . | tee relatorio.txt
+          codigo=${PIPESTATUS[0]}
+          set -e
+          case "$codigo" in
+            0) echo "toda fronteira declarada bate com os hooks registrados" ;;
+            1) echo "::error::poder concedido sem cerca, ou selo de fronteira divergindo"; exit 1 ;;
+            2) echo "::error::nenhum selo de fronteira neste repositório. Rode \`python -m aferido . --selar\` e leia operacoes/fronteira-de-agente/selos.md"; exit 1 ;;
+            *) echo "::error::o aferido não pôde rodar"; exit 1 ;;
+          esac
+
+# ⚠️ Este job mede fronteira DECLARADA, nunca segurança. Um hook registrado pode
+#    estar quebrado ou liberar tudo, e daria exatamente o mesmo verde. A pergunta
+#    "ele nega de verdade?" se responde rodando o hook contra um evento — é o que
+#    o autoteste da forja faz com os hooks que ela emite, e é outro job.

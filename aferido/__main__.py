@@ -6,11 +6,22 @@ reprova. Um relatório que só aparece quando passa não é evidência.
     python -m aferido .              # varre o projeto
     python -m aferido README.md      # varre um arquivo
     python -m aferido . --sondas     # mostra de onde cada sonda tira o valor
+    python -m aferido . --selar      # ESCREVE: anota o que ninguém confere
     python -m aferido . --hoje 2027-01-01   # simula o futuro; é assim que se
                                             # prova que o vencimento reprova
 
-Código de saída: 0 se tudo verde, 1 se qualquer coisa não-verde. Vencido
-reprova de propósito.
+Toda rodada devolve TRÊS listas, e a terceira é a que faz a primeira execução
+valer alguma coisa num repositório que nunca anotou nada:
+
+    ✅ conferido e bate          o que uma sonda recomputou
+    ❌ conferido e NÃO bate      derivou, venceu, não tem sonda, prosa muda
+    ⚠️  ninguém confere isto     afirmação que nenhum selo cobre — SUSPEITA
+
+Código de saída: 0 tudo verde · 1 reprova · 2 sem denominador (nada reprova, e
+há afirmação que ninguém consegue conferir). O 2 separa *"suas anotações estão
+erradas"* de *"você ainda não anotou nada"* — e antes do ADR-107 as duas
+devolviam 0, que era não-medido virando zero dentro da ferramenta que existe
+para proibir isso.
 """
 
 from __future__ import annotations
@@ -19,10 +30,11 @@ import sys
 from datetime import date
 
 from .registro import explicar
+from .selar import selar
 from .varredura import carregar_sondas, varrer
-from .veredito import CONGELADO, DERIVOU, PROSA_MUDA, SEM_PROVA, VALE, VENCIDO
+from .veredito import ARBITRADO, CONGELADO, DERIVOU, PROSA_MUDA, SEM_PROVA, VALE, VENCIDO
 
-ORDEM = (DERIVOU, PROSA_MUDA, VENCIDO, SEM_PROVA, CONGELADO, VALE)
+ORDEM = (DERIVOU, PROSA_MUDA, VENCIDO, SEM_PROVA, CONGELADO, ARBITRADO, VALE)
 
 
 def _console_em_utf8() -> None:
@@ -52,6 +64,10 @@ def main(argv: list[str] | None = None) -> int:
     if mostrar_sondas:
         argv.remove("--sondas")
 
+    escrever_selos = "--selar" in argv
+    if escrever_selos:
+        argv.remove("--selar")
+
     alvo = argv[0] if argv else "."
 
     usado = carregar_sondas(__import__("pathlib").Path(alvo))
@@ -71,6 +87,14 @@ def main(argv: list[str] | None = None) -> int:
     for problema in relatorio.malformados:
         print(f"MALFORMADO {problema}")
 
+    if relatorio.sem_prova_nenhuma:
+        print()
+        print("⚠️  NINGUÉM CONSEGUE CONFERIR ISTO — são suspeitas, não defeitos.")
+        print("    Um número que ninguém confere não é um número errado; é um número")
+        print("    sobre o qual nada aqui tem o que dizer. `--selar` anota todos eles.")
+        for afirmacao in relatorio.sem_prova_nenhuma:
+            print(f"      {afirmacao}")
+
     print("-" * 72)
     print(relatorio.resumo())
 
@@ -81,9 +105,29 @@ def main(argv: list[str] | None = None) -> int:
         for achado in relatorio.defeitos:
             print(f"      {achado.selo.arquivo}:{achado.selo.linha}  {achado.metrica}")
 
+    if escrever_selos:
+        escritos, problemas = selar(relatorio.sem_prova_nenhuma, hoje=hoje)
+        print()
+        if escritos:
+            arquivos = len({e.arquivo for e in escritos})
+            print(
+                f"escrevi {len(escritos)} selo(s) em {arquivos} arquivo(s), todos como "
+                "`arbitrado:` — ninguém mediu nada ainda."
+            )
+            for e in escritos:
+                print(f"  {e.arquivo}:{e.linha}  {e.texto}")
+            print()
+            print("  Agora troque cada `por=?` por quem escolheu o número, e renomeie a")
+            print("  métrica se o nome que eu chutei não for o certo — ele saiu da palavra")
+            print("  ao lado do número, não de entender o que ele significa.")
+        else:
+            print("nada a selar: ou não há afirmação sem prova, ou o lugar já tem selo.")
+        for problema in problemas:
+            print(f"  ⛔ {problema}")
+
     print()
-    print("REPROVA" if relatorio.reprova else "PASSA")
-    return 1 if relatorio.reprova else 0
+    print(relatorio.veredito_da_corrida)
+    return relatorio.codigo_de_saida
 
 
 if __name__ == "__main__":
