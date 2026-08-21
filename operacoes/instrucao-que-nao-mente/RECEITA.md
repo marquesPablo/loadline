@@ -43,8 +43,11 @@ os harnesses de hoje leem. Se o seu tem outro nome, acrescente-o em `NOMES_DE_IN
 ```console
 $ cp operacoes/instrucao-que-nao-mente/sondas.py  /caminho/do/seu/repo/sondas.py
 $ cd /caminho/do/seu/repo
-$ python -m aferido .
+$ PYTHONPATH=/caminho/para/aferido python -m aferido .
 ```
+
+> Instalou com `pip install -e /caminho/para/aferido`? Então é só `aferido .`. As duas
+> formas estão em [`operacoes/README.md`](../README.md), e nenhuma baixa nada.
 
 A primeira execução não pede nada. Ela devolve o que ninguém consegue conferir no seu repositório.
 Depois, cole no fim do seu `AGENTS.md`:
@@ -62,7 +65,7 @@ Troque `AAAA-MM-DD` por hoje. Pronto — a operação está no ar.
 ## O que você vê quando alguma coisa quebra
 
 ```console
-$ python -m aferido .
+$ PYTHONPATH=/caminho/para/aferido python -m aferido .
 aferido · . · em 2026-08-21
 ========================================================================
 DERIVOU   AGENTS.md:19  instrucao.comandos_quebrados: escrito=0 medido=2  → PARE. Relação divergindo é defeito — investigue antes de resselar

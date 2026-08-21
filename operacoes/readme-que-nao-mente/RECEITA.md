@@ -39,8 +39,8 @@ no topo do `sondas.py`. É a única linha que alguém precisa tocar, e só nesse
 $ cp operacoes/readme-que-nao-mente/sondas.py  /caminho/do/seu/repo/sondas.py
 $ cd /caminho/do/seu/repo
 
-$ python -m aferido .            # o que ninguém consegue conferir aqui
-$ python -m aferido . --selar    # escreve o selo de cada um, para você colar
+$ PYTHONPATH=/caminho/para/aferido python -m aferido .            # o que ninguém consegue conferir aqui
+$ PYTHONPATH=/caminho/para/aferido python -m aferido . --selar    # escreve o selo de cada um, para você colar
 ```
 
 O `--selar` escreve tudo como `arbitrado:` — *este número foi escolhido, não medido* — porque
@@ -51,7 +51,7 @@ a cada execução.
 Não sabe quais têm sonda? A ferramenta diz:
 
 ```console
-$ python -m aferido . --sondas
+$ PYTHONPATH=/caminho/para/aferido python -m aferido . --sondas
 sondas carregadas de: sondas.py
   repo.arquivos                ← arquivos fora das pastas de dependência e de build
   repo.commits                 ← `git rev-list --count HEAD`
@@ -62,7 +62,7 @@ sondas carregadas de: sondas.py
 ## O que você vê
 
 ```console
-$ python -m aferido .
+$ PYTHONPATH=/caminho/para/aferido python -m aferido .
 DERIVOU   README.md:8   repo.testes: escrito=200 medido=84   → resele: contagem anda quando alguém escreve
 VENCIDO   README.md:11  repo.dependencias: escrito=7 medido=7
           → reconfira e resele — ninguém olha isto há 214 dias (prazo: 90d)

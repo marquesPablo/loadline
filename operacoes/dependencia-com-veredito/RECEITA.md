@@ -77,8 +77,11 @@ um pacote que já saiu**. As duas últimas são as que a tabela sozinha nunca ia
 ```console
 $ cp operacoes/dependencia-com-veredito/sondas.py  /caminho/do/seu/repo/sondas.py
 $ cd /caminho/do/seu/repo
-$ python -m aferido .
+$ PYTHONPATH=/caminho/para/aferido python -m aferido .
 ```
+
+> Instalou com `pip install -e /caminho/para/aferido`? Então é só `aferido .`. As duas
+> formas estão em [`operacoes/README.md`](../README.md), e nenhuma baixa nada.
 
 E cole na sua tabela de licenças:
 

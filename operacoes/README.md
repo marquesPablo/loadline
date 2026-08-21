@@ -3,7 +3,7 @@
 > Uma **operação** não é um exemplo. É um trabalho inteiro, pré-montado: as sondas que recomputam,
 > os selos que vencem, o agente com gate que mantém tudo, e o job de CI que reprova quando envelhece.
 >
-> Você ajusta o que a `RECEITA.md` mandar ajustar — nunca mais que três campos — e roda.
+> Você ajusta o que a `RECEITA.md` mandar ajustar — nas quatro de hoje, no máximo um campo — e roda.
 
 O núcleo do `aferido` responde *"isto que está escrito continua sendo verdade hoje?"*. Sozinho, ele
 é um motor sem carga: chega num repositório novo, não conhece nenhuma métrica dele, e a primeira
@@ -49,8 +49,21 @@ $ git clone <este repo> && cd aferido
 $ cp operacoes/instrucao-que-nao-mente/sondas.py /caminho/do/seu/repo/sondas.py
 $ cd /caminho/do/seu/repo
 
-$ python -m aferido .
+$ PYTHONPATH=/caminho/para/aferido python -m aferido .
 ```
+
+### Como o `aferido` fica alcançável de dentro do SEU repositório
+
+Duas formas, e as duas funcionam. **Nenhuma baixa nada da internet.**
+
+| | Como | Quando |
+|---|---|---|
+| **sem instalar** | `PYTHONPATH=/caminho/para/aferido python -m aferido .` | experimentar, CI efêmero, máquina que você não administra |
+| **instalando** | `pip install -e /caminho/para/aferido`, e depois só `aferido .` | uso diário; o `pyproject.toml` declara o comando e **zero dependências** |
+
+Os exemplos das receitas usam a primeira forma, porque ela é a que funciona em qualquer lugar sem
+pedir permissão a ninguém. Se você instalou, troque `PYTHONPATH=... python -m aferido` por `aferido`
+em todos eles.
 
 A primeira execução **não pede nada de você**. Ela devolve três listas, e a terceira é a que
 importa: toda afirmação numérica dos seus arquivos que nenhum selo cobre, com arquivo, linha e o
