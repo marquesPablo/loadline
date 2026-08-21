@@ -1,0 +1,87 @@
+# Copie para `.github/workflows/revisao-de-seguranca.yml`.
+#
+# ⚠️ LEIA ISTO ANTES DE LIGAR O JOB. Ele NÃO procura vulnerabilidade e NÃO diz
+# que o seu código está seguro. Ele mede se os achados que você já tem são
+# ACIONÁVEIS — endereço, classificação com versão, verificação e veredito.
+#
+# Um verde aqui significa "o nosso relatório é conferível". Ele é compatível
+# com um sistema cheio de vulnerabilidades que ninguém procurou, e ler o verde
+# como atestado de segurança é o pior erro que esta operação permite cometer.
+
+name: revisao-de-seguranca
+
+on:
+  pull_request:
+    paths:
+      - "achados/**"
+  schedule:
+    # Achado envelhece por DOIS caminhos, e nenhum dispara evento aqui: o código
+    # muda debaixo dele, e o catálogo de classificação muda por cima dele.
+    - cron: "0 6 1 * *"
+  workflow_dispatch:
+
+jobs:
+  aferir:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: instalar o aferido
+        run: |
+          git clone --depth 1 https://github.com/SEU-USUARIO/aferido.git /tmp/aferido
+          echo "PYTHONPATH=/tmp/aferido" >> "$GITHUB_ENV"
+
+      - name: conferir se os achados são acionáveis
+        run: |
+          set +e
+          python -m aferido . | tee relatorio.txt
+          codigo=${PIPESTATUS[0]}
+          set -e
+          case "$codigo" in
+            0) echo "todo achado tem endereço, classificação com versão, verificação e veredito" ;;
+            1)
+              echo "::error::entrou achado que ninguém consegue conferir sem investigar"
+              echo "::notice::as cinco sondas `sem_*` dizem QUAL conserto falta em cada um"
+              exit 1
+              ;;
+            2)
+              echo "::error::nenhum selo cobre a pasta de achados. Leia operacoes/revisao-de-seguranca/selos.md"
+              exit 1
+              ;;
+            *) echo "::error::o aferido não pôde rodar"; exit 1 ;;
+          esac
+
+      # A cerca do redator tem de NEGAR, e a prova é rodar o hook contra um
+      # evento — nunca ler o código dele. Um guarda que ninguém exercita é um
+      # guarda que você descobre quebrado no dia em que alguém o testa por você.
+      - name: a cerca do redator nega fora de relatorios/
+        run: |
+          set -e
+          python -m forja operacoes/revisao-de-seguranca/agente-redator.toml --saida /tmp/esteira >/dev/null
+          cerca=/tmp/esteira/redator-de-relatorio/hooks/cerca_redator_de_relatorio.py
+
+          fora=$(echo '{"tool_name":"Write","tool_input":{"file_path":"docs/seguranca.md"}}' \
+                 | python "$cerca" || true)
+          echo "$fora" | grep -q '"deny"' || {
+            echo "::error::a cerca NÃO negou uma escrita fora de relatorios/."
+            echo "::error::Um agente com Write e sem cerca é um serviço rodando como administrador."
+            exit 1
+          }
+
+          dentro=$(echo '{"tool_name":"Write","tool_input":{"file_path":"relatorios/laudo.md"}}' \
+                   | python "$cerca" || true)
+          echo "$dentro" | grep -q '"deny"' && {
+            echo "::error::a cerca negou uma escrita DENTRO do caminho declarado."
+            echo "::error::Uma cerca que nega tudo é indistinguível de uma quebrada — e a"
+            echo "::error::primeira coisa que alguém faz com ela é desligá-la."
+            exit 1
+          }
+          echo "cerca: nega fora, deixa passar dentro"
+
+# ⚠️ Este job NÃO é um scanner de segurança. Ele é a régua do relatório.
+#    O que ele reprova é um achado que ninguém consegue conferir; o que ele
+#    nunca vai reprovar é uma vulnerabilidade que ninguém procurou.

@@ -13,6 +13,7 @@ check é decorativo e deve ser jogado fora.
 
 from __future__ import annotations
 
+import json
 import sys
 import tempfile
 from datetime import date
@@ -39,6 +40,10 @@ try:  # os checks imprimem na decoração, antes de qualquer main()
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 except (AttributeError, ValueError, OSError):
     pass
+
+
+
+
 
 HOJE = date(2026, 8, 16)
 _falhas: list[str] = []
@@ -892,6 +897,7 @@ Temos 40 testes.
 
 
 
+
 # --------------------------------------------------------------- prateleira ---
 # As operações prontas são o que alguém copia para o repositório DELE. Um exemplo
 # quebrado aqui não é um exemplo feio: é uma operação que não roda na primeira vez
@@ -905,8 +911,17 @@ def _au():
     from forja import ler
     from forja.spec import Recusa, validar
 
-    specs = sorted((RAIZ_DA_CASA / "operacoes").glob("*/agente.toml"))
-    assert specs, "a prateleira não tem nenhuma operação com `agente.toml`"
+    # `agente*.toml`, e não `agente.toml`: uma operação pode trazer uma ESTEIRA
+    # (a `revisao-de-seguranca` traz três specs). Globar só o nome exato deixaria
+    # duas delas nunca serem compiladas por check nenhum — e uma spec que não
+    # compila só é descoberta por quem tentar usá-la.
+    specs = sorted((RAIZ_DA_CASA / "operacoes").glob("*/agente*.toml"))
+    assert specs, "a prateleira não tem nenhuma operação com spec de agente"
+    por_operacao = {c.parent.name for c in specs}
+    operacoes = {d.name for d in (RAIZ_DA_CASA / "operacoes").iterdir() if d.is_dir()}
+    assert por_operacao == operacoes, (
+        f"operação sem spec de agente: {sorted(operacoes - por_operacao)}"
+    )
     for caminho in specs:
         ler(caminho)  # levanta `Recusa` se a spec não passar nas oito
 
@@ -923,6 +938,8 @@ def _au():
         raise AssertionError(
             "uma spec da prateleira sem `nunca_usar` COMPILOU — as oito recusas não estão vivas"
         )
+
+
 
 
 @check("AV", "os sondas.py da prateleira podem ser concatenados: nenhum padrão colide")
@@ -958,6 +975,8 @@ def _av():
     registro.limpar()
 
 
+
+
 @check("AW", "a sonda da anatomia ESTOURA quando uma operação fica incompleta")
 def _aw():
     # Cinco arquivos por operação, sempre com o mesmo nome: é o que faz alguém
@@ -991,6 +1010,179 @@ def _aw():
                 f"uma operação sem `{casa.ANATOMIA[-1]}` devolveu {valor} em vez de estourar"
             )
     registro.limpar()
+
+
+
+
+
+@check("AX", "o servidor MCP da `cerebro-local` sobe como SUBPROCESSO, responde, e RECUSA `../`")
+def _ax():
+    # Lógica em processo passa e protocolo trava. Este check roda o servidor como
+    # processo de verdade, fala JSON-RPC por stdin e lê stdout — que é a única
+    # forma de provar que ele serve para alguma coisa num cliente MCP real.
+    import subprocess
+
+    servidor = RAIZ_DA_CASA / "operacoes" / "cerebro-local" / "servidor.py"
+    assert servidor.is_file(), "a operação `cerebro-local` perdeu o `servidor.py`"
+
+    pedidos = chr(10).join(
+        [
+            json.dumps({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}}),
+            json.dumps({"jsonrpc": "2.0", "method": "notifications/initialized"}),
+            json.dumps({"jsonrpc": "2.0", "id": 2, "method": "tools/list"}),
+            json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "id": 3,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "ler_nota",
+                        "arguments": {"caminho": "../../../../etc/passwd"},
+                    },
+                }
+            ),
+        ]
+    )
+    # ⚠️ Sem `encoding=`, só `text=True` — que é a forma que o `_rodar_hook`
+    # desta suíte já usa. Com `encoding="utf-8"` junto de `input=`, o `stdout`
+    # voltou `None` DENTRO desta suíte (e só dentro dela; fora, reproduzido
+    # três vezes, volta normal). A causa não foi identificada, e fica escrita
+    # aqui em vez de virar um argumento a menos sem explicação.
+    saida = subprocess.run(
+        [sys.executable, str(servidor), "--raiz", str(RAIZ_DA_CASA / "operacoes")],
+        input=pedidos,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    ).stdout
+    respostas = [json.loads(l) for l in saida.splitlines() if l.strip()]
+
+    # A notificação NÃO pode ter resposta: responder a uma quebra clientes que
+    # contam mensagens, e o sintoma aparece longe da causa.
+    assert len(respostas) == 3, f"3 respostas para 3 pedidos com id, vieram {len(respostas)}"
+    assert respostas[0]["result"]["serverInfo"]["name"] == "cerebro-local"
+    nomes = [f["name"] for f in respostas[1]["result"]["tools"]]
+    assert nomes == ["mapa", "listar_notas", "ler_nota", "buscar"], nomes
+
+    # O defeito, reintroduzido: a travessia de caminho tem de ser RECUSADA. Sem
+    # isto, o laço acima passaria igual num servidor que serve o disco inteiro.
+    texto = respostas[2]["result"]["content"][0]["text"]
+    assert texto.startswith("RECUSADO"), f"a travessia NÃO foi recusada: {texto[:120]}"
+
+
+@check("AY", "fonte declarada que não existe ESTOURA — «não medido» nunca vira zero")
+def _ay():
+    # A tese do projeto inteiro, aplicada à prateleira: um `0` devolvido porque
+    # ninguém olhou é indistinguível de um `0` medido. As operações que declaram
+    # de onde leem (`PASTA_DE_*`, `ARQUIVO_DE_*`) têm de estourar quando aquele
+    # caminho não existe — nunca devolver zero com cara de medida.
+    import importlib.util
+
+    examinadas = 0
+    for caminho in sorted((RAIZ_DA_CASA / "operacoes").glob("*/sondas.py")):
+        registro.limpar()
+        origem = importlib.util.spec_from_file_location(f"sondas_ay_{examinadas}", caminho)
+        modulo = importlib.util.module_from_spec(origem)
+        origem.loader.exec_module(modulo)
+
+        # `PASTA`/`ARQUIVO` em vez de `PASTA_DE_`: a `fabrica-de-agentes`
+        # declara `PASTAS_DE_SPEC` (plural, e uma tupla). O que a regra pergunta
+        # é se a operação DECLARA de onde lê — o número e o tipo não mudam isso,
+        # e um prefixo estreito demais deixaria a operação fora do denominador
+        # sem ninguém ver.
+        declaradas = [
+            nome
+            for nome in vars(modulo)
+            if nome.startswith(("PASTA", "ARQUIVO"))
+            and isinstance(getattr(modulo, nome), (str, tuple))
+        ]
+        if not declaradas:
+            continue  # opera sobre o repositório inteiro; 0 ali é medida, não ausência
+        examinadas += 1
+        # Apaga a RAIZ, não só a constante: uma sonda pode ler um arquivo IRMÃO
+        # do sondas.py (a `cerebro.dependencias` lê o `servidor.py`), e repontar
+        # só `PASTA_DE_*` deixaria essa fonte de pé. A regra é «a árvore sumiu».
+        modulo.RAIZ = Path("esta-arvore-nao-existe-em-lugar-nenhum").resolve()
+        for padrao, _ in registro.explicar():
+            if "*" in padrao:
+                continue
+            try:
+                valor = registro.medir(padrao, None)
+            except Exception:
+                continue  # estourou: é o que tem de acontecer
+            raise AssertionError(
+                f"`{padrao}` de {caminho.parent.name} devolveu {valor!r} com a fonte declarada "
+                "apontando para o vazio — «não olhei» saiu como «não há»"
+            )
+    registro.limpar()
+    assert examinadas >= 5, f"só {examinadas} operações declaram a fonte de onde leem"
+
+    # O defeito, reintroduzido: uma sonda que devolve 0 em vez de estourar tem de
+    # ser vista pela mesma regra que acabou de dar verde.
+    sonda("ay.mentirosa", origem="devolve zero sem olhar nada")(lambda: 0)
+    assert registro.medir("ay.mentirosa", None) == 0, "a sonda plantada não rodou"
+    registro.limpar()
+
+
+@check("AZ", "a cerca emitida NEGA fora do caminho declarado, e DEIXA PASSAR dentro")
+def _az():
+    # Uma cerca que nega tudo é indistinguível de uma quebrada, e a primeira
+    # coisa que alguém faz com ela é desligá-la. Por isso as duas direções.
+    import subprocess
+
+    from forja import ler
+    from forja.__main__ import compilar
+
+    spec = ler(RAIZ_DA_CASA / "operacoes" / "revisao-de-seguranca" / "agente-redator.toml")
+    assert spec.saida_cercada == ["relatorios/"], spec.saida_cercada
+
+    with tempfile.TemporaryDirectory() as tmp:
+        raiz = Path(tmp)
+        for relativo, conteudo in compilar(spec).items():
+            alvo = raiz / relativo
+            alvo.parent.mkdir(parents=True, exist_ok=True)
+            alvo.write_text(conteudo, encoding="utf-8")
+        cerca = raiz / "hooks" / f"cerca_{spec.slug.replace('-', '_')}.py"
+        assert cerca.is_file(), f"a forja não emitiu a cerca em {cerca}"
+
+        def julgar_caminho(caminho: str) -> str:
+            evento = json.dumps(
+                {
+                    "agent_type": spec.slug,
+                    "tool_name": "Write",
+                    "tool_input": {"file_path": caminho},
+                }
+            )
+            return subprocess.run(
+                [sys.executable, str(cerca)],
+                input=evento,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                timeout=60,
+            ).stdout
+
+        fora = julgar_caminho("docs/seguranca.md")
+        assert '"deny"' in fora, f"a cerca NÃO negou fora de `relatorios/`: {fora[:120]!r}"
+
+        dentro = julgar_caminho("relatorios/laudo.md")
+        assert '"deny"' not in dentro, (
+            f"a cerca negou DENTRO do caminho declarado: {dentro[:120]!r} — uma cerca que "
+            "nega tudo é indistinguível de uma quebrada"
+        )
+
+        # A jurisdição é estreita, e ela é declarada: sem identidade no evento a
+        # cerca NÃO age. Provar isto impede que os dois asserts acima passem por
+        # acidente num guarda que responde a tudo.
+        anonimo = subprocess.run(
+            [sys.executable, str(cerca)],
+            input=json.dumps({"tool_name": "Write", "tool_input": {"file_path": "docs/x.md"}}),
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=60,
+        ).stdout
+        assert '"deny"' not in anonimo, "a cerca agiu sobre evento sem identidade de agente"
 
 
 

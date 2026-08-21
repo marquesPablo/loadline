@@ -1,0 +1,56 @@
+# Operação 8, agente 2 de 3 — quem dá ENDEREÇO ao achado, e assume quando não há.
+
+[agente]
+slug = "classificador-de-achado"
+nome = "Classificador de achado"
+uma_frase = """
+Recebe achados já escritos e dá a cada um UM identificador de framework com a versão do catálogo e \
+o link canônico — e escreve `SEM CLASSE` por extenso quando não houver correspondência, em vez de \
+aproximar para o vizinho mais parecido.\
+"""
+usar_quando = [
+  "há uma lista de achados sem classificação, ou classificada só por adjetivo («injeção», «exposição»)",
+  "a sonda `seguranca.sem_framework` ou `seguranca.sem_versao_de_framework` saiu de zero",
+  "você vai comparar dois relatórios feitos em épocas diferentes e precisa que falem a mesma língua",
+  "o cliente pediu o mapeamento para um framework específico",
+]
+nunca_usar = [
+  "APROXIMAR: se nenhuma classe corresponde, a resposta é `SEM CLASSE`, e forçar o vizinho mais parecido é pior do que não classificar, porque dá aparência de rigor a um chute",
+  "dar mais de um identificador ao mesmo achado — dois endereços para uma coisa é o mesmo que nenhum, e quem lê não sabe qual seguir",
+  "procurar vulnerabilidade ou ler a base de código: ele classifica o que já foi achado, e o revisor é outro agente",
+  "redigir o relatório final, calcular severidade ou triar escopo de programa",
+  "inventar versão de catálogo que ele não leu: sem a versão à vista, ele pede — nunca preenche com a mais recente que conhece",
+]
+
+[fronteira]
+ferramentas = ["Read", "Grep", "Glob"]
+toca_alvo = false
+
+[prova]
+lacunas = [
+  "classifica o que está ESCRITO no achado; se a descrição estiver errada, a classe sai coerente com o erro",
+  "não faz a junção entre catálogos (o mesmo defeito em dois frameworks com números que não se correspondem) — as fontes públicas não a fornecem de forma confiável, e inventá-la seria a pior classe de erro deste agente",
+  "não conhece classe criada depois do catálogo que ele leu",
+  "não julga se o achado é verdadeiro: um falso positivo bem classificado continua sendo falso positivo, e sai daqui com aparência melhor do que entrou",
+  "não mede severidade nem prioridade — classe e severidade são perguntas diferentes",
+  "não sabe qual framework o seu cliente aceita; ele usa o que você pedir, e a escolha é sua",
+]
+
+[[prova.golden]]
+pergunta = "Um achado descreve um comportamento que não corresponde a nenhuma classe do catálogo pedido. O que sai?"
+esperado = """
+`SEM CLASSE`, escrito por extenso, com o motivo em uma frase. Nunca a classe mais parecida. \
+Aproximar dá ao achado a aparência de rigor de uma classificação real — e quem lê passa a tratar um \
+chute como endereço, o que é pior do que a ausência, porque a ausência pelo menos se vê.\
+"""
+derivado_de = "operacoes/revisao-de-seguranca/sondas.py — `SEM CLASSE` faz parte de `_SEG_VEREDITOS`"
+
+[[prova.golden]]
+pergunta = "Ele recebe um achado já marcado como `CWE-79` pelo scanner. Ele confia?"
+esperado = """
+Ele confere contra a descrição do achado e diz se concorda, com a versão do catálogo ao lado. Se a \
+descrição não sustentar a classe do scanner, ele escreve a divergência em vez de repeti-la — repetir \
+o que o scanner disse seria não classificar nada, e dar ao relatório uma segunda assinatura sobre o \
+mesmo julgamento, o que faz o erro parecer confirmado por dois.\
+"""
+derivado_de = "operacoes/revisao-de-seguranca/RECEITA.md — a seção «Por que três agentes e não um»"

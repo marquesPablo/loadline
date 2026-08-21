@@ -56,11 +56,30 @@ _FRONT_ANTI = re.compile(
 
 
 def _front_arquivos() -> list[Path]:
+    """Todo artefato de agente sob as pastas declaradas.
+
+    ⚠️ **Nenhuma das pastas existir ESTOURA, e não devolve lista vazia.** É a
+    regra que esta operação existe para aplicar, aplicada a ela mesma: um
+    `agentes.rede_sem_cerca = 0` porque ninguém achou a pasta é indistinguível
+    de um `0` medido — e o primeiro sai VERDE no CI de quem confia nele.
+
+    *"Não olhei"* e *"olhei e não há"* dizem coisas opostas. Uma pasta que
+    existe e está vazia é a segunda, e devolve `0` normalmente.
+    """
     achados: list[Path] = []
+    achou_pasta = False
     for relativo in PASTAS_DE_AGENTE:
         pasta = RAIZ / relativo
         if pasta.is_dir():
+            achou_pasta = True
             achados.extend(sorted(p for p in pasta.rglob("*.md") if p.is_file()))
+    if not achou_pasta:
+        raise LookupError(
+            "nenhuma das pastas de agente existe: "
+            f"{', '.join(PASTAS_DE_AGENTE)}. Se os seus agentes moram noutro lugar, ajuste "
+            "PASTAS_DE_AGENTE no topo de sondas.py — devolver zero aqui seria dizer que "
+            "você não tem agente sem cerca, quando o que houve foi eu não ter achado nenhum"
+        )
     return achados
 
 
@@ -165,6 +184,18 @@ def com_execucao() -> int:
 
 @sonda("agentes.hooks", origem="entradas PreToolUse com comando em .claude/settings*.json")
 def hooks() -> int:
+    """Quantas barreiras `PreToolUse` estão registradas de verdade.
+
+    ⚠️ **Zero aqui é uma medida legítima — mas só depois de eu ter achado os
+    seus agentes.** Um repositório com agentes e sem nenhum hook registrado tem
+    mesmo zero cercas, e esse é o achado. Um repositório onde eu não achei nem a
+    pasta de agentes também devolveria zero, e aí o número diria «você não tem
+    cerca» quando o que houve foi eu não ter olhado.
+
+    Por isso a chamada abaixo: ela ESTOURA quando a árvore não está onde as
+    constantes do topo dizem, e o veredito vira `SEM_PROVA` em vez de verde.
+    """
+    _front_arquivos()
     total_de_hooks = 0
     for nome in ("settings.json", "settings.local.json"):
         arquivo = RAIZ / ".claude" / nome

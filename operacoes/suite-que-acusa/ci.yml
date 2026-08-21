@@ -1,0 +1,93 @@
+# Copie para `.github/workflows/suite-que-acusa.yml`.
+#
+# ⚠️ ESTE JOB TEM DUAS METADES DE PROPÓSITO, E MISTURÁ-LAS ARRUINA AS DUAS.
+#
+#   1. O que REPROVA: `suite.sem_assercao`. É veredito — uma função de teste sem
+#      asserção não pode falhar, e isso é propriedade do código, não opinião.
+#
+#   2. O que AVISA e nunca reprova: `suite.sem_controle_negativo`. É heurística
+#      declarada, e erra nos dois sentidos. Uma régua heurística que reprova
+#      treina o time a escrever teste para agradar a régua — e aí ela para de
+#      medir o código e passa a medir a si mesma.
+#
+# Se você ligar a segunda como reprovação, terá construído exatamente o defeito
+# que esta operação existe para achar: uma suíte verde que não prova nada.
+
+name: suite-que-acusa
+
+on:
+  pull_request:
+    paths:
+      - "tests/**"
+      - "LACUNAS.md"
+  schedule:
+    # A lista de lacunas envelhece de um jeito particular: as lacunas FECHAM sem
+    # ninguém apagar a linha. O check que faltava foi escrito e a lista continua
+    # declarando o buraco. Nenhum commit dispara isso — é o `vence=` que pega.
+    - cron: "0 6 1 * *"
+
+jobs:
+  aferir:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: instalar o aferido
+        run: |
+          git clone --depth 1 https://github.com/SEU-USUARIO/aferido.git /tmp/aferido
+          echo "PYTHONPATH=/tmp/aferido" >> "$GITHUB_ENV"
+
+      - name: o que reprova — teste que não pode falhar, e a terceira lista
+        run: |
+          set +e
+          python -m aferido . | tee relatorio.txt
+          codigo=${PIPESTATUS[0]}
+          set -e
+          case "$codigo" in
+            0) echo "nenhuma função de teste sem asserção, e a terceira lista está no prazo" ;;
+            1)
+              echo "::error::há função de teste que não pode falhar, ou a terceira lista venceu"
+              echo "::notice::uma função de teste sem assert roda, devolve verde e não verifica nada"
+              exit 1
+              ;;
+            2)
+              echo "::error::nenhum selo cobre a suíte. Leia operacoes/suite-que-acusa/selos.md"
+              exit 1
+              ;;
+            *) echo "::error::o aferido não pôde rodar"; exit 1 ;;
+          esac
+
+      # A metade que AVISA. Ela nunca sai diferente de zero — é `warning`, por
+      # decisão, e a decisão está explicada no cabeçalho deste arquivo.
+      - name: o que avisa — testes sem controle negativo aparente
+        if: always()
+        run: |
+          set -e
+          python - <<'PY'
+          import importlib.util, os, sys
+          sys.path.insert(0, os.environ.get("PYTHONPATH", ""))
+          from aferido import registro
+          spec = importlib.util.spec_from_file_location("sondas", "sondas.py")
+          modulo = importlib.util.module_from_spec(spec); spec.loader.exec_module(modulo)
+          try:
+              sem = registro.medir("suite.sem_controle_negativo", None)
+              total = registro.medir("suite.checks", None)
+              pulados = registro.medir("suite.pulados", None)
+          except LookupError as exc:
+              print(f"::warning::não consegui ler a suíte: {exc}")
+              raise SystemExit(0)
+          if sem:
+              print(f"::warning::{sem} de {total} testes sem controle negativo APARENTE.")
+              print("::warning::Heurística: erra nos dois sentidos. É lista de leitura, não veredito.")
+          if pulados:
+              print(f"::warning::{pulados} teste(s) pulado(s) — contam na lista e não medem nada.")
+          PY
+
+# ⚠️ Um verde aqui NÃO diz que a sua suíte pegaria um bug real. Diz que nenhum
+#    teste é uma função que não pode falhar, e que os limites da suíte estão
+#    escritos e dentro do prazo. É bem menos do que parece — e é bem mais do que
+#    uma suíte verde comum diz.

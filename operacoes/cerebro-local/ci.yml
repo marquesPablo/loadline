@@ -1,0 +1,85 @@
+# Copie para `.github/workflows/cerebro-local.yml`.
+#
+# Este job tem duas metades, e a segunda é a que interessa. A primeira confere
+# os selos do vault. A segunda RODA O SERVIDOR e prova que ele ainda faz o que
+# a documentação diz — inclusive que ele RECUSA um caminho fora da raiz.
+#
+# Um servidor de arquivos cuja recusa nunca é exercitada é um servidor cuja
+# recusa você descobre quebrada no dia em que alguém a testa por você.
+
+name: cerebro-local
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    # Um link quebrado nasce de um rename e não avisa; uma órfã nasce da nota
+    # nova que ninguém citou ainda. Nenhum dos dois dispara evento de commit
+    # sozinho — é o `vence=` que pega, e ele só morde se alguém rodar.
+    - cron: "0 6 * * 1"
+
+jobs:
+  aferir:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: instalar o aferido
+        run: |
+          git clone --depth 1 https://github.com/SEU-USUARIO/aferido.git /tmp/aferido
+          echo "PYTHONPATH=/tmp/aferido" >> "$GITHUB_ENV"
+
+      - name: conferir os selos do vault
+        run: |
+          set +e
+          python -m aferido . | tee relatorio.txt
+          codigo=${PIPESTATUS[0]}
+          set -e
+          case "$codigo" in
+            0) echo "corpus íntegro: nenhuma aresta para o vazio, e o servidor é o que está escrito" ;;
+            1)
+              echo "::error::alguma coisa conferida não bate — leia a natureza de cada linha antes de resselar"
+              echo "::notice::contagem divergindo = você escreveu. relacao divergindo = PARE e investigue."
+              exit 1
+              ;;
+            2)
+              echo "::error::nenhum selo cobre o vault. Leia cerebro/selos.md"
+              exit 1
+              ;;
+            *) echo "::error::o aferido não pôde rodar"; exit 1 ;;
+          esac
+
+      # A metade que importa: o servidor tem de RODAR, e tem de RECUSAR.
+      - name: o servidor sobe, responde e recusa
+        run: |
+          set -e
+          saida=$(python cerebro/servidor.py --raiz . --teste)
+          echo "$saida"
+
+          echo "$saida" | grep -q "RECUSADO, como tem de ser" || {
+            echo "::error::o servidor NÃO recusou um caminho fora da raiz."
+            echo "::error::Isto não é um detalhe: é um leitor de notas que lê o disco inteiro."
+            exit 1
+          }
+
+          # O handshake do protocolo, com o servidor como subprocesso de verdade.
+          # Lógica em processo passa e protocolo trava — já custou caro a mais
+          # de um projeto, e o sintoma aparece longe da causa.
+          resposta=$(printf '%s\n' \
+            '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' \
+            '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
+            | python cerebro/servidor.py --raiz . )
+          echo "$resposta" | grep -q '"tools"' || {
+            echo "::error::o servidor não respondeu tools/list pelo protocolo"
+            exit 1
+          }
+          echo "servidor: sobe, responde o handshake, lista as ferramentas e recusa fora da raiz"
+
+# ⚠️ Este job NÃO diz que as suas notas estão certas. Ele diz que o corpus está
+#    bem ligado, que o servidor é o que a documentação promete, e que a recusa
+#    de caminho continua fechada. Conteúdo é julgamento de quem escreveu.

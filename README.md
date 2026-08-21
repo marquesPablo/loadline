@@ -228,15 +228,27 @@ e a primeira coisa que pede é trabalho: *escreva sua sonda*. **[`operacoes/`](o
 carga** — trabalhos inteiros, pré-montados, que rodam no seu repositório sem uma linha de
 configuração.
 
+**🔧 Capacidade — o que você passa a conseguir fazer:**
+
+| Operação | O que você ganha ao clonar | Ajuste |
+|---|---|---:|
+| [`fabrica-de-agentes`](operacoes/fabrica-de-agentes/) | seus agentes passam a ter **fonte**: uma spec que compila em 7 artefatos, incluindo o hook que nega | **0–2 campos** |
+| [`cerebro-local`](operacoes/cerebro-local/) | um **servidor MCP somente-leitura sobre as suas notas**, num arquivo, sem chave de API | **1 campo** |
+| [`sala-de-decisao`](operacoes/sala-de-decisao/) | um registro que responde **o que está parado esperando você, e há quantos dias** | **1 campo** |
+| [`revisao-de-seguranca`](operacoes/revisao-de-seguranca/) | uma **esteira de três agentes** — acha, classifica, redige — e só um pode escrever | **1 campo** |
+| [`suite-que-acusa`](operacoes/suite-que-acusa/) | a régua que responde **quais testes seus passariam se o mecanismo fosse removido** | **2 campos** |
+
+**🩺 Higiene — o que para de mentir no seu repositório:**
+
 | Operação | A dor que ela resolve | Ajuste |
 |---|---|---:|
-| [`instrucao-que-nao-mente`](operacoes/instrucao-que-nao-mente/) | seu `AGENTS.md` manda rodar um comando que não existe mais, e manda editar uma pasta que foi deletada | **0 campos** |
+| [`instrucao-que-nao-mente`](operacoes/instrucao-que-nao-mente/) | seu `AGENTS.md` manda rodar um comando que não existe mais, e editar uma pasta deletada | **0 campos** |
 | [`readme-que-nao-mente`](operacoes/readme-que-nao-mente/) | o README afirma números que ninguém recomputa desde que foram escritos | **0 campos** |
-| [`fronteira-de-agente`](operacoes/fronteira-de-agente/) | você tem subagentes escritos à mão, e nenhum declara para onde pode falar nem onde pode escrever | **1 campo** |
+| [`fronteira-de-agente`](operacoes/fronteira-de-agente/) | você tem subagentes escritos à mão, e nenhum declara para onde fala nem onde escreve | **1 campo** |
 | [`dependencia-com-veredito`](operacoes/dependencia-com-veredito/) | entrou dependência nova e ninguém olhou a licença dela | **1 campo** |
 
-São 4 operações prontas, e a prateleira cresce por decisão, não por acúmulo.
-<!-- aferido: operacoes.total=4 natureza=contagem em=2026-08-21 vence=nunca fonte=operacoes/ -->
+São 9 operações prontas, e a prateleira cresce por decisão, não por acúmulo.
+<!-- aferido: operacoes.total=9 natureza=contagem em=2026-08-21 vence=nunca fonte=operacoes/ -->
 
 ```console
 $ cp operacoes/fronteira-de-agente/sondas.py  /caminho/do/seu/repo/sondas.py
@@ -245,13 +257,19 @@ $ cd /caminho/do/seu/repo && python -m aferido .
 
 Cada operação traz sempre os mesmos cinco arquivos — a receita com o que ajustar, as sondas prontas,
 a spec do agente que a forja compila com gate, os selos para colar, e o job de CI. Se você aprendeu
-uma, aprendeu todas.
+uma, aprendeu todas. Uma operação pode trazer **mais** que os cinco (a `cerebro-local` traz o
+servidor; a `revisao-de-seguranca` traz uma spec por agente da esteira); o que ela não pode é
+trazer **menos**.
 
 <!-- aferido: operacoes.arquivos_por_operacao=5 natureza=relacao em=2026-08-21 vence=nunca fonte=operacoes/ -->
 
-**E as sondas são o que faltava.** Elas leem código, manifesto, `git` e arquivo de configuração —
-nunca o `.md` onde o número está escrito. É a regra anti-espelho aplicada por padrão, em vez de
-deixada como exercício para quem adota.
+**E as sondas são o que faltava.** Elas leem código, manifesto, `git`, o sistema de arquivos e a
+árvore sintática dos seus testes — nunca o `.md` onde o número está escrito. É a regra anti-espelho
+aplicada por padrão, em vez de deixada como exercício para quem adota.
+
+⚠️ **Duas das nove trazem heurística declarada** (`suite-que-acusa`, e a detecção de anti-descrição
+da `fabrica-de-agentes`). Elas erram nos dois sentidos, dizem isso em toda saída, e o número que
+produzem é **lista de leitura, nunca veredito** — nenhuma das duas deve reprovar o CI sozinha.
 
 ---
 
@@ -448,11 +466,11 @@ aqui e recomputado de lá: dois artefatos, que é o que faz o par valer.
 
 ```console
 $ python autoteste.py
-48 checks declarados · 48 executados · 0 fora do denominador
+51 checks declarados · 51 executados · 0 fora do denominador
 PASSOU
 ```
 
-<!-- aferido: nucleo.checks=48 nucleo.fora=0 natureza=contagem em=2026-08-21 vence=nunca fonte=autoteste.py -->
+<!-- aferido: nucleo.checks=51 nucleo.fora=0 natureza=contagem em=2026-08-21 vence=nunca fonte=autoteste.py -->
 
 **Cada check reintroduz o defeito que ele existe para pegar.** Um check que só confirma o caminho
 feliz passa igual se o mecanismo for removido — ele não prova nada, e o custo dele é dar a alguém a

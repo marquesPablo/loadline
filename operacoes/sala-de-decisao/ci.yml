@@ -1,0 +1,86 @@
+# Copie para `.github/workflows/sala-de-decisao.yml`.
+#
+# Este job tem um gatilho que os outros da prateleira não têm: `schedule`
+# DIÁRIO. E a razão é a natureza do que ele mede.
+#
+# Um item parado esperando decisão não dispara evento nenhum. Não há commit, não
+# há PR, não há diff — o arquivo está lá, idêntico, e vai ficando velho. Todos os
+# outros jobs desta prateleira medem coisas que mudam quando alguém escreve;
+# este mede uma coisa que piora quando NINGUÉM escreve.
+#
+# Um cron semanal já seria melhor que nada. Diário é o que faz a fila ser vista
+# antes de alguém precisar dela.
+
+name: sala-de-decisao
+
+on:
+  pull_request:
+    paths:
+      - "decisoes/**"
+  schedule:
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+
+jobs:
+  aferir:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: instalar o aferido
+        run: |
+          git clone --depth 1 https://github.com/SEU-USUARIO/aferido.git /tmp/aferido
+          echo "PYTHONPATH=/tmp/aferido" >> "$GITHUB_ENV"
+
+      - name: conferir a integridade do acervo
+        run: |
+          set +e
+          python -m aferido . | tee relatorio.txt
+          codigo=${PIPESTATUS[0]}
+          set -e
+          case "$codigo" in
+            0) echo "acervo íntegro: todo status declarado, toda revogação com contra-ponteiro" ;;
+            1)
+              echo "::error::o acervo de decisões divergiu do que está escrito sobre ele"
+              echo "::notice::relacao divergindo = PARE e investigue. contagem = leia o número, depois resele."
+              exit 1
+              ;;
+            2)
+              echo "::error::nenhum selo cobre o índice de decisões. Leia operacoes/sala-de-decisao/selos.md"
+              exit 1
+              ;;
+            *) echo "::error::o aferido não pôde rodar"; exit 1 ;;
+          esac
+
+      # A fila é informação, não defeito — e por isso ela AVISA sem reprovar.
+      # Um job que falha porque alguém ainda não decidiu treina o time a fechar
+      # gate no grito para o CI ficar verde, que é o oposto do que a fila serve.
+      - name: dizer o que está esperando alguém
+        if: always()
+        run: |
+          set -e
+          python - <<'PY'
+          import importlib.util, os, sys
+          sys.path.insert(0, os.environ.get("PYTHONPATH", ""))
+          from aferido import registro
+          spec = importlib.util.spec_from_file_location("sondas", "sondas.py")
+          modulo = importlib.util.module_from_spec(spec); spec.loader.exec_module(modulo)
+          try:
+              abertos = registro.medir("decisao.gates_abertos", None)
+              dias = registro.medir("decisao.gate_mais_velho_dias", None)
+          except LookupError as exc:
+              print(f"::warning::não consegui ler a fila: {exc}")
+              raise SystemExit(0)
+          if abertos:
+              print(f"::warning::{abertos} item(ns) esperando decisão. O mais antigo há {dias} dia(s).")
+          else:
+              print("nada esperando decisão.")
+          PY
+
+# ⚠️ Este job NÃO diz que as decisões estão sendo cumpridas, nem que foram boas.
+#    Ele diz que o acervo está íntegro — status declarado, alternativa escrita,
+#    revogação com aviso dos dois lados — e diz em voz alta o que está parado.

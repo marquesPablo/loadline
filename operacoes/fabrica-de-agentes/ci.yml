@@ -1,0 +1,86 @@
+# Copie para `.github/workflows/fabrica-de-agentes.yml`.
+#
+# O gatilho deste job é o que o torna útil: ele roda quando um AGENTE ou uma
+# SPEC muda — que é o momento em que a divergência entre os dois nasce, e não
+# uma revisão trimestral que já vai encontrar tudo aprovado.
+#
+# ⚠️ LEIA ANTES DE CONFIAR NO VERDE DAQUI. A sonda
+# `fabrica.artefato_desatualizado` lê `mtime`, e o git não preserva `mtime`:
+# num checkout novo todo arquivo nasce com o mesmo instante, e ela devolve zero
+# POR CONSTRUÇÃO. O zero dela neste job não prova nada. Ele é medida na árvore
+# de trabalho de quem edita, e é lá que tem de ser lido — por isso o passo de
+# recompilação abaixo existe: ele não confia no mtime, ele recompila e compara
+# o conteúdo.
+
+name: fabrica-de-agentes
+
+on:
+  pull_request:
+    paths:
+      - ".claude/agents/**"
+      - ".config/agents/**"
+      - "agentes/**"
+      - "specs/**"
+  schedule:
+    # Um agente sem fonte não envelhece por commit — ele já nasceu assim, e
+    # continua parecendo igual aos outros. É o `vence=` que pega isso, e ele
+    # só morde se alguém rodar.
+    - cron: "0 6 * * 1"
+
+jobs:
+  aferir:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: instalar o aferido
+        run: |
+          git clone --depth 1 https://github.com/SEU-USUARIO/aferido.git /tmp/aferido
+          echo "PYTHONPATH=/tmp/aferido" >> "$GITHUB_ENV"
+
+      - name: conferir se todo agente tem fonte
+        run: |
+          set +e
+          python -m aferido . | tee relatorio.txt
+          codigo=${PIPESTATUS[0]}
+          set -e
+          case "$codigo" in
+            0) echo "todo agente tem spec, toda spec está compilada, nenhuma seria recusada" ;;
+            1)
+              echo "::error::há agente sem fonte, spec sem artefato, ou spec que a forja recusa"
+              echo "::notice::natureza=relacao — estes números não deviam andar. Leia operacoes/fabrica-de-agentes/RECEITA.md"
+              exit 1
+              ;;
+            2)
+              echo "::error::nenhum selo cobre a pasta de agentes. Leia operacoes/fabrica-de-agentes/selos.md"
+              exit 1
+              ;;
+            *) echo "::error::o aferido não pôde rodar"; exit 1 ;;
+          esac
+
+      # O passo que o mtime não consegue dar, e ele é da própria forja.
+      # `--conferir` recompila a spec em memória e compara o CONTEÚDO com o que
+      # está versionado, saindo 1 se divergir. É a única forma de responder
+      # "o que roda é o que está escrito?" depois de um clone, onde toda data
+      # de modificação foi zerada.
+      - name: recompilar e comparar conteúdo
+        run: |
+          set -e
+          encontrou=0
+          for spec in agentes/*.toml specs/*.toml; do
+            [ -e "$spec" ] || continue
+            encontrou=1
+            echo "· $spec"
+            python -m forja "$spec" --saida . --conferir
+          done
+          if [ "$encontrou" = 0 ]; then
+            echo "::warning::nenhuma spec em agentes/ nem specs/ — todos os seus agentes são escritos à mão"
+          fi
+
+# ⚠️ Este job NÃO diz que os seus agentes são bons. Ele diz que cada um tem uma
+#    fonte, que a fonte compila, e que o arquivo versionado é o que a fonte
+#    produz hoje. Um verde aqui é procedência — nunca qualidade.
