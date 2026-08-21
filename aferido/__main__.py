@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import sys
 from datetime import date
+from pathlib import Path
 
 from .registro import explicar
 from .selar import selar
@@ -70,7 +71,28 @@ def main(argv: list[str] | None = None) -> int:
 
     alvo = argv[0] if argv else "."
 
-    usado = carregar_sondas(__import__("pathlib").Path(alvo))
+    # ⚠️ Alvo que não existe é RECUSA, nunca `PASSA`.
+    #
+    # Sem isto, `aferido ./sr` (por `./src`) varria zero arquivo, não achava
+    # nenhuma afirmação, e saía **verde com código 0** — um erro de digitação no
+    # CI deixava o gate aprovando para sempre. É exatamente *não medido* virando
+    # *zero*, no ponto de entrada da ferramenta cuja tese inteira é que isso não
+    # pode acontecer. Bandeira desconhecida cai aqui pelo mesmo caminho: ela é
+    # lida como caminho, e nenhum caminho chamado `--sondaz` existe.
+    caminho_do_alvo = Path(alvo)
+    if not caminho_do_alvo.exists():
+        print(f"aferido · {alvo} · em {hoje.isoformat()}")
+        print("=" * 72)
+        if alvo.startswith("-"):
+            print(f"`{alvo}` não é uma bandeira conhecida, e não existe como caminho.")
+            print("Bandeiras: --selar · --sondas · --hoje AAAA-MM-DD")
+        else:
+            print(f"`{alvo}` não existe.")
+        print()
+        print("RECUSADO — não varri nada, e não vou devolver verde por isso.   (exit 2)")
+        return 2
+
+    usado = carregar_sondas(caminho_do_alvo)
     if mostrar_sondas:
         print(f"sondas carregadas de: {usado or '(nenhum sondas.py encontrado)'}")
         for padrao, origem in explicar():

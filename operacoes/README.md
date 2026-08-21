@@ -13,9 +13,9 @@ Esta pasta é a carga.
 
 ---
 
-## As nove, por família
+## As dez, por família
 
-<!-- aferido: operacoes.total=9 natureza=contagem em=2026-08-21 vence=nunca fonte=operacoes/ -->
+<!-- aferido: operacoes.total=10 natureza=contagem em=2026-08-21 vence=nunca fonte=operacoes/ -->
 
 ### 🔧 Capacidade — o que você **passa a conseguir fazer**
 
@@ -28,6 +28,7 @@ Estas instalam um trabalho que você não fazia. Comece por aqui.
 | 7 | [`sala-de-decisao`](sala-de-decisao/) | um registro de decisões que responde **o que está parado esperando você, e há quantos dias** | **1 campo** |
 | 8 | [`revisao-de-seguranca`](revisao-de-seguranca/) | uma **esteira de três agentes** — acha, classifica, redige — em que só um pode escrever, e num caminho só | **1 campo** |
 | 9 | [`suite-que-acusa`](suite-que-acusa/) | a régua que responde **quais dos seus testes passariam se o mecanismo fosse removido** | **2 campos** |
+| 10 | [`handoff-que-mede-o-disco`](handoff-que-mede-o-disco/) | o arquivo de retomada passa a ser **escrito do disco** — commits desde, caminho morto, comando sem alvo, deriva de git | **1 campo** |
 
 ### 🩺 Higiene — o que **para de mentir** no seu repositório
 
@@ -102,7 +103,7 @@ em vez de escolhido. A `RECEITA.md` de cada operação diz exatamente quais.
 
 As sondas são escritas para poderem ser concatenadas. Nenhum nome de função auxiliar colide entre
 elas — cada operação usa um prefixo próprio (`_instr_`, `_repo_`, `_front_`, `_dep_`, `_fab_`,
-`_cer_`, `_dec_`, `_seg_`, `_su_`) — e importar duas vezes o mesmo módulo da stdlib é legal em
+`_cer_`, `_dec_`, `_seg_`, `_su_`, `_hand_`) — e importar duas vezes o mesmo módulo da stdlib é legal em
 Python:
 
 ```console
@@ -110,7 +111,7 @@ $ cat operacoes/instrucao-que-nao-mente/sondas.py \
       operacoes/fabrica-de-agentes/sondas.py > /caminho/do/seu/repo/sondas.py
 ```
 
-Nenhum **padrão de métrica** colide entre as nove, e isso é gateado por um check com controle
+Nenhum **padrão de métrica** colide entre as dez, e isso é gateado por um check com controle
 negativo — uma colisão sombrearia a sonda mais velha sem erro nenhum.
 
 ---

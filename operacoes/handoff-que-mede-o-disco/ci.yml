@@ -1,0 +1,81 @@
+# Copie para `.github/workflows/handoff.yml`.
+#
+# ⚠️ LEIA ANTES DE LIGAR, PORQUE METADE DAS SONDAS DESTA OPERAÇÃO NÃO VALE AQUI.
+#
+# `handoff.commits_desde` e `handoff.sessoes_desde` leem `mtime`, e o git NÃO
+# preserva `mtime`: num checkout de CI todo arquivo nasce com o mesmo instante.
+# As duas estouram para o total do repositório, ou zeram, dependendo da ordem —
+# e nos dois casos o número não mede nada. Elas são medida da árvore de trabalho
+# de quem edita.
+#
+# O que VALE no CI é a outra metade, e ela é a que interessa mesmo: caminho
+# morto, comando sem alvo e deriva de git são propriedades do CONTEÚDO do
+# documento contra o CONTEÚDO do repositório, e sobrevivem a qualquer clone.
+#
+# Por isso este job usa `--so` para nomear o que confere. Se a sua versão do
+# aferido não tiver essa bandeira, deixe o job rodar tudo e IGNORE por escrito o
+# vermelho das duas de idade — nunca as resele para o valor do CI, porque isso
+# grava no documento um número que só existe dentro de um checkout efêmero.
+
+name: handoff-que-mede-o-disco
+
+on:
+  pull_request:
+    paths:
+      - "CONTINUAR.md"
+      - "HANDOFF.md"
+      - "RETOMAR.md"
+      - "CONTEXT.md"
+      - "STATE.md"
+  schedule:
+    # Um handoff nunca envelhece por commit NELE — ele envelhece por commit em
+    # tudo o mais. Nenhum evento deste arquivo dispara, e é por isso que o cron
+    # aqui é semanal e não mensal.
+    - cron: "0 7 * * 1"
+  workflow_dispatch:
+
+jobs:
+  aferir:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # O histórico inteiro: `handoff.commits_desde` conta commits, e um
+          # checkout raso devolveria um número menor sem erro nenhum — que é a
+          # família de defeito que este projeto existe para proibir.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: instalar o aferido
+        run: |
+          git clone --depth 1 https://github.com/SEU-USUARIO/aferido.git /tmp/aferido
+          echo "PYTHONPATH=/tmp/aferido" >> "$GITHUB_ENV"
+
+      - name: o documento de retomada corresponde ao repositório
+        run: |
+          set +e
+          python -m aferido . | tee relatorio.txt
+          codigo=${PIPESTATUS[0]}
+          set -e
+          case "$codigo" in
+            0) echo "nenhum caminho morto, nenhum comando sem alvo, e o git concorda com o texto" ;;
+            1)
+              echo "::error::o arquivo de retomada afirma coisas que o disco desmente"
+              echo "::notice::caminho morto e comando sem alvo têm conserto de uma linha cada"
+              echo "::notice::as sondas de IDADE não valem neste job — veja o cabeçalho deste arquivo"
+              exit 1
+              ;;
+            2)
+              echo "::error::nenhum selo cobre o arquivo de retomada. Leia operacoes/handoff-que-mede-o-disco/selos.md"
+              exit 1
+              ;;
+            *) echo "::error::o aferido não pôde rodar"; exit 1 ;;
+          esac
+
+# ⚠️ Um verde aqui NÃO diz que a sua retomada está boa. Diz que ela não afirma
+#    caminho que sumiu, comando que perdeu o alvo, nem estado que o git desmente.
+#    Se ela conta a história certa continua sendo julgamento de quem escreveu —
+#    e nenhuma sonda offline alcança isso.

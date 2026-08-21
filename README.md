@@ -86,7 +86,15 @@ devolver verde.
 0   tudo verde
 1   REPROVA — alguma coisa conferida não bate
 2   SEM DENOMINADOR — nada reprova, e há afirmação que ninguém confere
+    …ou nenhum arquivo foi lido, e aí o caminho é que está errado
 ```
+
+**Alvo que não existe é RECUSADO com código 2, e nunca `PASSA`.** Isto parece detalhe e não é:
+antes, `aferido ./sr` (por `./src`) varria zero arquivo, não encontrava afirmação nenhuma, e saía
+**verde com código 0** — um erro de digitação no CI deixava o gate aprovando para sempre. Pasta real
+e vazia cai na mesma regra. É *não medido* virando *zero* no ponto de entrada da ferramenta cuja
+tese inteira é que isso não pode acontecer, e ficou assim até alguém apontá-la para um caminho
+errado de propósito.
 
 O `2` separa *"suas anotações estão erradas"* de *"você ainda não anotou nada"*. Antes ele não
 existia, e as duas devolviam `0`: um repositório que nunca anotou nada saía **`PASSA`, verde no
@@ -237,6 +245,7 @@ configuração.
 | [`sala-de-decisao`](operacoes/sala-de-decisao/) | um registro que responde **o que está parado esperando você, e há quantos dias** | **1 campo** |
 | [`revisao-de-seguranca`](operacoes/revisao-de-seguranca/) | uma **esteira de três agentes** — acha, classifica, redige — e só um pode escrever | **1 campo** |
 | [`suite-que-acusa`](operacoes/suite-que-acusa/) | a régua que responde **quais testes seus passariam se o mecanismo fosse removido** | **2 campos** |
+| [`handoff-que-mede-o-disco`](operacoes/handoff-que-mede-o-disco/) | o arquivo de retomada passa a ser **escrito do disco**, não da memória do chat | **1 campo** |
 
 **🩺 Higiene — o que para de mentir no seu repositório:**
 
@@ -247,8 +256,8 @@ configuração.
 | [`fronteira-de-agente`](operacoes/fronteira-de-agente/) | você tem subagentes escritos à mão, e nenhum declara para onde fala nem onde escreve | **1 campo** |
 | [`dependencia-com-veredito`](operacoes/dependencia-com-veredito/) | entrou dependência nova e ninguém olhou a licença dela | **1 campo** |
 
-São 9 operações prontas, e a prateleira cresce por decisão, não por acúmulo.
-<!-- aferido: operacoes.total=9 natureza=contagem em=2026-08-21 vence=nunca fonte=operacoes/ -->
+São 10 operações prontas, e a prateleira cresce por decisão, não por acúmulo.
+<!-- aferido: operacoes.total=10 natureza=contagem em=2026-08-21 vence=nunca fonte=operacoes/ -->
 
 ```console
 $ cp operacoes/fronteira-de-agente/sondas.py  /caminho/do/seu/repo/sondas.py
@@ -267,7 +276,7 @@ trazer **menos**.
 árvore sintática dos seus testes — nunca o `.md` onde o número está escrito. É a regra anti-espelho
 aplicada por padrão, em vez de deixada como exercício para quem adota.
 
-⚠️ **Duas das nove trazem heurística declarada** (`suite-que-acusa`, e a detecção de anti-descrição
+⚠️ **Duas das dez trazem heurística declarada** (`suite-que-acusa`, e a detecção de anti-descrição
 da `fabrica-de-agentes`). Elas erram nos dois sentidos, dizem isso em toda saída, e o número que
 produzem é **lista de leitura, nunca veredito** — nenhuma das duas deve reprovar o CI sozinha.
 
@@ -466,11 +475,11 @@ aqui e recomputado de lá: dois artefatos, que é o que faz o par valer.
 
 ```console
 $ python autoteste.py
-51 checks declarados · 51 executados · 0 fora do denominador
+52 checks declarados · 52 executados · 0 fora do denominador
 PASSOU
 ```
 
-<!-- aferido: nucleo.checks=51 nucleo.fora=0 natureza=contagem em=2026-08-21 vence=nunca fonte=autoteste.py -->
+<!-- aferido: nucleo.checks=52 nucleo.fora=0 natureza=contagem em=2026-08-21 vence=nunca fonte=autoteste.py -->
 
 **Cada check reintroduz o defeito que ele existe para pegar.** Um check que só confirma o caminho
 feliz passa igual se o mecanismo for removido — ele não prova nada, e o custo dele é dar a alguém a

@@ -1186,6 +1186,35 @@ def _az():
 
 
 
+@check("BA", "alvo que NÃO existe é recusado com código 2 — nunca `PASSA` com código 0")
+def _ba():
+    # O defeito que este check trava era real e estava no ponto de entrada: um
+    # caminho inexistente varria zero arquivo, não achava afirmação nenhuma, e
+    # saía VERDE com código 0. `aferido ./sr` por `./src` deixava o gate do CI
+    # aprovando para sempre — *não medido* virando *zero*, dentro da ferramenta
+    # cuja tese inteira é que isso não pode acontecer.
+    from aferido.__main__ import main as cli
+
+    for alvo in ("esta-pasta-nao-existe-em-lugar-nenhum", "--bandeira-que-nao-existe"):
+        assert cli([alvo]) == 2, f"`{alvo}` não foi recusado com código 2"
+
+    # O controle negativo, e ele é o que impede a correção de virar «recuse
+    # tudo»: um alvo REAL tem de continuar sendo varrido. Uma recusa que recusa
+    # o caminho feliz é indistinguível de uma quebrada, e a primeira coisa que
+    # alguém faz com ela é desligá-la.
+    with tempfile.TemporaryDirectory() as tmp:
+        raiz = Path(tmp)
+        (raiz / "README.md").write_text(
+            "Este projeto tem 3 modulos." + chr(10), encoding="utf-8"
+        )
+        codigo = cli([str(raiz)])
+        assert codigo == 2, f"pasta REAL sem selo devia sair 2 (sem denominador), veio {codigo}"
+
+        (raiz / "vazia").mkdir()
+        assert cli([str(raiz / "vazia")]) == 2, "pasta real e vazia também é sem denominador"
+
+
+
 def main() -> int:
     print("autoteste do aferido — cada check reintroduz o defeito que ele pega\n")
     ordem = sorted(

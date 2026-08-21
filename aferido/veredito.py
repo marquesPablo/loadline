@@ -277,12 +277,20 @@ class Relatorio:
         """
         if self.reprova:
             return 1
+        # Zero arquivo lido é `não olhei`, e `não olhei` nunca é verde. Sem esta
+        # linha, `aferido ./docs` numa pasta real e vazia — ou apontada para o
+        # lugar errado — devolvia `PASSA` com código 0: exatamente *não medido*
+        # virando *zero*, dentro da ferramenta que existe para proibir isso.
+        if not self.arquivos_lidos:
+            return 2
         return 2 if self.sem_prova_nenhuma else 0
 
     @property
     def veredito_da_corrida(self) -> str:
         if self.reprova:
             return "REPROVA"
+        if not self.arquivos_lidos:
+            return "SEM DENOMINADOR — nenhum arquivo foi lido; confira o caminho"
         return "SEM DENOMINADOR" if self.sem_prova_nenhuma else "PASSA"
 
     def resumo(self) -> str:
