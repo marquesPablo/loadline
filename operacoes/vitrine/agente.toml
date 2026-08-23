@@ -52,7 +52,7 @@ Sim, regra S1 — `writing-rules/SKILL.md` das skills oficiais da Anthropic tem 
 agente cita as duas linhas: o `name:` declarado e o nome real da pasta-mãe, e explica por que a \
 divergência importa — o `name` é o ENDEREÇO que o carregamento usa, não um título livre.\
 """
-derivado_de = "vitrine/regras.py:S1 — medido contra C:/Users/pablo/.claude/skills/graphify em 2026-08-23"
+derivado_de = "vitrine/regras.py:S1 — medido contra writing-rules/SKILL.md das skills oficiais da Anthropic (name: writing-hookify-rules numa pasta writing-rules) em 2026-08-23"
 
 [[prova.golden]]
 pergunta = """
