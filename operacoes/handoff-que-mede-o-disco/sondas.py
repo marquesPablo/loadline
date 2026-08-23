@@ -234,8 +234,8 @@ def hand_caminhos_mortos() -> int:
     está velho».
 
     ⚠️ **Resolve tudo a partir da RAIZ do repositório, e isso é decisão, não
-    limitação.** Um caminho citado como `00-mapa/vazios.md`, que só existe sob
-    `cerebro/`, conta como morto aqui — porque conta como morto para quem
+    limitação.** Um caminho citado como `notas/x.md`, que só existe sob
+    `outra-pasta/`, conta como morto aqui — porque conta como morto para quem
     copiar a linha e colar no terminal. O conserto é escrever o caminho inteiro,
     e é o mesmo conserto que serve ao leitor. Medido num arquivo real: 11 dos 44
     caminhos citados eram desta classe.

@@ -86,8 +86,8 @@ REPROVA   CONTINUAR.md:228  handoff.deriva_de_git: escrito=0 medido=1
 ## Os caminhos "mortos" que não foram deletados
 
 **Tudo é resolvido a partir da raiz do repositório, e isso é decisão.** Um caminho citado como
-`00-mapa/vazios.md`, que só existe sob `cerebro/00-mapa/vazios.md`, conta como morto aqui — porque
-conta como morto para quem copiar a linha e colar no terminal.
+`notas/x.md`, que só existe sob `outra-pasta/notas/x.md`, conta como morto aqui — porque conta
+como morto para quem copiar a linha e colar no terminal.
 
 Dos 11 achados na medição acima, **nenhum era arquivo deletado**: todos eram caminhos escritos a
 partir de uma raiz implícita que o documento não declarava. O conserto é escrever o caminho inteiro,
