@@ -197,6 +197,10 @@ Conferido em 2026-08-20, lendo a página pública de cada um. Nenhum foi clonado
 - [`blind/`](blind/) — a fronteira que uma varredura ingênua atravessa em silêncio: junction,
   symlink de diretório, e a regra de `.gitignore` que esconde mesmo de quem atravessa a fronteira
   estrutural. `python -m blind .`
+- [`placar/`](placar/) — as sete portas de "Would you ship this AI agent?" (OBJECTIVE · IDENTITY ·
+  AUTHORITY · FAILURE · APPROVAL · TRACEABILITY · CONTAINMENT), cada uma conferida com evidência de
+  disco, nunca opinião. Reprovar IDENTITY, AUTHORITY ou CONTAINMENT é NO-GO. `python -m placar .`
+  <!-- aferido: placar.portas=7 natureza=contagem em=2026-08-23 vence=nunca fonte=placar/portas.py -->
 
 ---
 
@@ -204,11 +208,11 @@ Conferido em 2026-08-20, lendo a página pública de cada um. Nenhum foi clonado
 
 ```console
 $ python autoteste.py
-62 checks declarados · 62 executados · 0 fora do denominador
+64 checks declarados · 64 executados · 0 fora do denominador
 PASSOU
 ```
 
-<!-- aferido: nucleo.checks=62 nucleo.fora=0 natureza=contagem em=2026-08-22 vence=nunca fonte=autoteste.py -->
+<!-- aferido: nucleo.checks=64 nucleo.fora=0 natureza=contagem em=2026-08-23 vence=nunca fonte=autoteste.py -->
 
 **Cada check reintroduz o defeito que ele existe para pegar.** Um check que só confirma o caminho
 feliz passa igual se o mecanismo for removido — ele não prova nada, e o custo dele é dar a alguém a
