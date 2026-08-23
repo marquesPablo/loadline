@@ -45,13 +45,14 @@ aferido = "aferido.__main__:main"
 Repository = "https://github.com/USUARIO/aferido"
 
 [tool.hatch.build.targets.wheel]
-packages = ["aferido"]
+packages = ["aferido", "blind"]
 
 [tool.hatch.build.targets.sdist]
 include = [
     "/aferido",
     "/forja",
     "/censo",
+    "/blind",
     "/sondas.py",
     "/autoteste.py",
     "/README.md",

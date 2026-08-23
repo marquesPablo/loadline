@@ -1214,6 +1214,54 @@ def _ba():
         assert cli([str(raiz / "vazia")]) == 2, "pasta real e vazia também é sem denominador"
 
 
+# --------------------------------- blind: a fronteira que a varredura não vê ---
+#
+# Dois checks, e cada um prova uma coisa diferente. `blind/controles.py` já roda
+# cinco controles negativos com fixture REAL (`mklink /J`, `git init`); BL prova
+# que essa suíte está VIVA — que ela reprovaria se o próprio detector emudecesse
+# — em vez de só confirmar que ela existe. BM prova a camada que os controles do
+# pacote não tocam: o contrato de saída da CLI (`python -m blind`), nos mesmos
+# moldes de BA/BE/BF para `aferido`/`forja`.
+
+from blind import controles as _blindctl  # noqa: E402
+
+
+@check("BL", "os controles negativos do `blind` passam, e REPROVAM se o detector emudecer")
+def _bl():
+    assert _blindctl.main() == 0, "os 5 controles do blind têm de passar limpos, com fixture real"
+
+    # O defeito, reintroduzido: um detector que nunca acusa nada (equivalente a
+    # `rg` parando na fronteira sem ninguém notar) tinha de derrubar os próprios
+    # controles do blind — sem isto, B1/B3 estariam confirmando o caminho feliz
+    # e um detector morto passaria pela suíte que existe para pegar exatamente
+    # essa morte.
+    original = _blindctl.detectar
+    _blindctl.detectar = lambda raiz: []
+    try:
+        assert _blindctl.main() == 1, (
+            "detector sempre mudo tinha de derrubar os controles negativos, e não derrubou"
+        )
+    finally:
+        _blindctl.detectar = original
+
+
+@check("BM", "`python -m blind` tem o mesmo contrato de saída dos outros pontos de entrada")
+def _bm():
+    from blind.__main__ import main as _blind_cli
+
+    assert _blind_cli([]) == 2, "sem argumento tinha de recusar com código 2, e não variar"
+    with tempfile.TemporaryDirectory() as tmp:
+        assert _blind_cli([str(Path(tmp) / "nao-existe")]) == 2, (
+            "caminho inexistente tinha de recusar com código 2"
+        )
+        # O controle negativo que impede a correção de virar «recuse tudo»: uma
+        # pasta REAL e limpa (sem junction, symlink ou gitignore) tem de sair 0.
+        limpa = Path(tmp) / "limpa"
+        limpa.mkdir()
+        assert _blind_cli([str(limpa)]) == 0, (
+            "pasta real sem fronteira nenhuma tinha de sair 0, e não recusar o caminho feliz"
+        )
+
 
 def main() -> int:
     print("autoteste do aferido — cada check reintroduz o defeito que ele pega\n")
