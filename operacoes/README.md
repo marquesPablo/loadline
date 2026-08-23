@@ -13,9 +13,9 @@ Esta pasta é a carga.
 
 ---
 
-## As dez, por família
+## As onze, por família
 
-<!-- aferido: operacoes.total=10 natureza=contagem em=2026-08-21 vence=nunca fonte=operacoes/ -->
+<!-- aferido: operacoes.total=11 natureza=contagem em=2026-08-23 vence=nunca fonte=operacoes/ -->
 
 ### 🔧 Capacidade — o que você **passa a conseguir fazer**
 
@@ -40,6 +40,7 @@ Estas medem coisas que já existem e envelheceram caladas.
 | 2 | [`readme-que-nao-mente`](readme-que-nao-mente/) | o README afirma números que ninguém recomputa desde que foram escritos | **0 campos** |
 | 3 | [`fronteira-de-agente`](fronteira-de-agente/) | você tem subagentes escritos à mão e nenhum declara onde escreve nem para onde fala | **1 campo** |
 | 4 | [`dependencia-com-veredito`](dependencia-com-veredito/) | entrou dependência nova e ninguém olhou a licença dela | **1 campo** |
+| 11 | [`vitrine`](vitrine/) | um agente decide carregar sua skill lendo só `name` e `description` — **26 de 31 skills oficiais da Anthropic** não declaram quando não usar, e uma delas tem `name` divergente da própria pasta | **1 campo** |
 
 **A prateleira cresce por decisão, não por acúmulo.**
 

@@ -1,0 +1,50 @@
+# Copie para `.github/workflows/vitrine.yml`.
+#
+# Dois passos, nesta ordem, e a ordem é o ponto: primeiro os CONTROLES NEGATIVOS
+# da própria `vitrine` (cada regra vista acusando e calando), só DEPOIS o
+# veredito sobre as suas skills. Um linter que não foi visto acusando o próprio
+# defeito não é confiável — foi rodando `vitrine.controles` que os dois bugs
+# reais desta ferramenta foram achados antes de qualquer skill ser julgada.
+
+name: vitrine
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  schedule:
+    - cron: "0 6 * * 1"
+
+jobs:
+  aferir:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: instalar o aferido e a vitrine
+        run: |
+          git clone --depth 1 https://github.com/SEU-USUARIO/aferido.git /tmp/aferido
+          echo "PYTHONPATH=/tmp/aferido" >> "$GITHUB_ENV"
+
+      - name: confiar no linter primeiro — controles negativos
+        run: python -m vitrine.controles
+
+      - name: só então, julgar as skills deste repositório
+        id: aferir
+        continue-on-error: true
+        run: python -m vitrine .claude/skills
+
+      - name: decidir
+        run: |
+          case "${{ steps.aferir.outcome }}" in
+            success) echo "toda skill passa na vitrine" ;;
+            *) echo "::error::alguma skill fica invisível para o roteador — veja o relatório acima"; exit 1 ;;
+          esac
+
+# ⚠️ Não inverta os dois passos. Rodar `python -m vitrine` sem antes rodar
+#    `python -m vitrine.controles` julga suas skills contra uma régua que
+#    ninguém provou estar reta.
