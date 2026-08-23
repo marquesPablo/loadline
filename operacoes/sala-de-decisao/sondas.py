@@ -38,7 +38,13 @@ PASTA_DE_DECISOES = "decisoes"
 _DEC_ACEITA = re.compile(r"^\s*status\s*:\s*[\"']?(aceito|aceita|accepted)", re.I | re.M)
 _DEC_REVOGADA = re.compile(r"^\s*status\s*:\s*[\"']?(revogad|superseded|substitu)", re.I | re.M)
 _DEC_REVOGA = re.compile(r"^\s*(?:revoga|supersedes|emenda)\s*:\s*(.+)$", re.I | re.M)
+#: Duas convenções de identificador coexistem no mundo, e ler só uma devolve
+#: ZERO calado no repositório que usa a outra. `ADR-031-assunto.md` é a forma
+#: com prefixo; `0031-usar-postgres.md` é a do `adr-tools` original, e nela o id
+#: não tem letra nenhuma. Qual delas vale sai do disco, em `_dec_convencao()`.
 _DEC_REFERENCIA = re.compile(r"\b([A-Z]{2,5}-\d{1,4})\b")
+_DEC_REFERENCIA_NUA = re.compile(r"\b(\d{3,4})\b")
+_DEC_NOME_NU = re.compile(r"^(\d{3,4})(?=-)")
 _DEC_DATA_NO_NOME = re.compile(r"(\d{4})-(\d{2})-(\d{2})")
 #: Um gate é `AAAA-MM-DD-gate-assunto.md`: a data E o token, os dois no NOME.
 #: Exigir os dois não é rigor de estilo — procurar só a palavra `gate` casa com
@@ -96,14 +102,60 @@ def _dec_texto(arquivo: Path) -> str:
     return arquivo.read_text(encoding="utf-8", errors="replace")
 
 
+def _dec_convencao() -> str:
+    """Qual das duas convenções de identificador este registro usa, lida do disco.
+
+    Nunca cravada: um registro que nomeia `0001-record-....md` é tão canônico
+    quanto um que nomeia `ADR-001-....md` — ele é o do `adr-tools` original.
+    Assumir a primeira e devolver zero na segunda é *não medido* virando *zero*,
+    que é exatamente o defeito que esta operação existe para acusar.
+    """
+    arquivos = _dec_decisoes()
+    com_prefixo = sum(1 for a in arquivos if _DEC_REFERENCIA.search(a.name.upper()))
+    nus = sum(1 for a in arquivos if _DEC_NOME_NU.match(a.name))
+    if com_prefixo and com_prefixo >= nus:
+        return "prefixo"
+    return "nua" if nus else "nenhuma"
+
+
 def _dec_identificadores() -> dict[str, Path]:
-    """`ADR-042` -> arquivo, lido do NOME do arquivo. Um id por arquivo."""
+    """`ADR-042` (ou `0042`) -> arquivo, lido do NOME do arquivo. Um id por arquivo."""
+    arquivos = _dec_decisoes()
+    convencao = _dec_convencao()
+
+    # ⚠️ RECUSA, e nunca zero. Sem nenhum identificador legível, esta sonda não
+    # sabe dizer que está tudo bem — ela sabe que não conseguiu olhar. As duas
+    # coisas são opostas, e devolver `0` para as duas é a mentira que a operação
+    # inteira existe para acusar.
+    if arquivos and convencao == "nenhuma":
+        raise LookupError(
+            f"achei {len(arquivos)} arquivo(s) de decisão e nenhum identificador no nome de "
+            "nenhum deles. Esta sonda lê o id do NOME do arquivo, em uma de duas convenções: "
+            "`ADR-031-assunto.md` ou `0031-assunto.md`. Renomeie, ou tire esta sonda — o que "
+            "ela não vai fazer é devolver zero e deixar você achar que está tudo certo."
+        )
+
     achados: dict[str, Path] = {}
-    for arquivo in _dec_decisoes():
-        referencia = _DEC_REFERENCIA.search(arquivo.name.upper())
+    for arquivo in arquivos:
+        if convencao == "prefixo":
+            referencia = _DEC_REFERENCIA.search(arquivo.name.upper())
+        else:
+            referencia = _DEC_NOME_NU.match(arquivo.name)
         if referencia:
             achados.setdefault(referencia.group(1), arquivo)
     return achados
+
+
+def _dec_citados(linha: str) -> list[str]:
+    """Os ids citados numa linha de `revoga:`/`emenda:`, na convenção do registro.
+
+    Na convenção nua a busca é restrita a essas linhas de propósito: procurar
+    três ou quatro dígitos soltos no corpo inteiro casaria com ano, porta e
+    número de versão, e a sonda passaria a acusar o que ninguém escreveu.
+    """
+    if _dec_convencao() == "prefixo":
+        return _DEC_REFERENCIA.findall(linha.upper())
+    return _DEC_REFERENCIA_NUA.findall(linha)
 
 
 def _dec_aberto(gate: Path) -> bool:
@@ -178,16 +230,17 @@ def dec_revogacao_de_um_lado_so() -> int:
     eles**, e é por isso que nenhuma revisão de código o pega.
     """
     porid = _dec_identificadores()
+    por_arquivo = {caminho: ident for ident, caminho in porid.items()}
     orfas: set[str] = set()
     for arquivo in _dec_decisoes():
-        atual = _DEC_REFERENCIA.search(arquivo.name.upper())
+        atual = por_arquivo.get(arquivo)
         texto = _dec_texto(arquivo)
         for linha in _DEC_REVOGA.findall(texto):
-            for alvo in _DEC_REFERENCIA.findall(linha.upper()):
-                if alvo not in porid or (atual and alvo == atual.group(1)):
+            for alvo in _dec_citados(linha):
+                if alvo not in porid or (atual and alvo == atual):
                     continue
                 # O contra-ponteiro: a revogada tem de NOMEAR quem a revogou.
-                if not (atual and atual.group(1) in _dec_texto(porid[alvo]).upper()):
+                if not (atual and atual in _dec_texto(porid[alvo]).upper()):
                     orfas.add(alvo)
     return len(orfas)
 

@@ -14,10 +14,13 @@ check é decorativo e deve ser jogado fora.
 from __future__ import annotations
 
 import json
+import os
 import sys
 import tempfile
 from datetime import date
 from pathlib import Path
+
+from forja.__main__ import main as forja_main
 
 from aferido import (
     ARBITRADO,
@@ -746,7 +749,7 @@ def _an():
     )
 
 
-# ------------------------------------------- ADR-107: a terceira marca e a lista 3
+# ------------------------------- a terceira marca de selo, e a terceira lista
 
 
 @check("AO", "`arbitrado:` sem `por=` é MALFORMADO — escolha sem dono é palpite")
@@ -791,7 +794,7 @@ def _aq():
 
 @check("AR", "repositório SEM SELO NENHUM sai com código 2, e não com 0")
 def _ar():
-    # Este é o defeito que o ADR-107 existe para consertar, reintroduzido: até
+    # Este é o defeito reintroduzido de propósito: até o conserto,
     # ele, esta mesma árvore devolvia `PASSA` e código 0, com as afirmações
     # dentro. Era `não medido` virando `zero` na ferramenta que proíbe isso.
     with tempfile.TemporaryDirectory() as tmp:
@@ -918,7 +921,15 @@ def _au():
     specs = sorted((RAIZ_DA_CASA / "operacoes").glob("*/agente*.toml"))
     assert specs, "a prateleira não tem nenhuma operação com spec de agente"
     por_operacao = {c.parent.name for c in specs}
-    operacoes = {d.name for d in (RAIZ_DA_CASA / "operacoes").iterdir() if d.is_dir()}
+    # `__pycache__` e `.qualquercoisa` não são operações. Sem este filtro, rodar
+    # a prateleira uma vez cria a pasta de cache e o check passa a acusar uma
+    # «operação sem spec» que ninguém escreveu — o denominador teria crescido
+    # sozinho, o que é exatamente a família de defeito que esta suíte persegue.
+    operacoes = {
+        d.name
+        for d in (RAIZ_DA_CASA / "operacoes").iterdir()
+        if d.is_dir() and not d.name.startswith((".", "_"))
+    }
     assert por_operacao == operacoes, (
         f"operação sem spec de agente: {sorted(operacoes - por_operacao)}"
     )
@@ -1212,6 +1223,266 @@ def _ba():
 
         (raiz / "vazia").mkdir()
         assert cli([str(raiz / "vazia")]) == 2, "pasta real e vazia também é sem denominador"
+
+
+
+# --------------------------- a vistoria: ler os agentes que a pessoa JÁ TEM ---
+#
+# Sete controles, e cada um reintroduz o defeito que ele existe para pegar. Um
+# check que só confirma o caminho feliz passa igual se o mecanismo for removido.
+
+from forja import vistoria as _v  # noqa: E402
+
+
+def _roster(tmp: str, arquivos: dict[str, str], irmaos: dict[str, str] | None = None) -> Path:
+    raiz = Path(tmp)
+    pasta = raiz / ".claude" / "agents"
+    pasta.mkdir(parents=True, exist_ok=True)
+    for nome, texto in arquivos.items():
+        (pasta / nome).write_text(texto, encoding="utf-8")
+    for relativo, texto in (irmaos or {}).items():
+        alvo = raiz / relativo
+        alvo.parent.mkdir(parents=True, exist_ok=True)
+        alvo.write_text(texto, encoding="utf-8")
+    return pasta
+
+
+def _regras(pasta: Path) -> set[str]:
+    return {a.regra for a in _v.vistoriar(_v.ler_roster(pasta))}
+
+
+AGENTE_COMPLETO = """---
+name: completo
+description: "Faz uma coisa so. Usar quando voce precisar dela. NUNCA usar para outra coisa."
+tools: Read, Grep
+---
+Lacunas: nao mede o que esta fora do disco. Golden: resposta esperada escrita a mao.
+"""
+
+
+@check("BB", "agente que NÃO diz o que nunca faz é acusado; o que diz, não é")
+def _bb():
+    with tempfile.TemporaryDirectory() as tmp:
+        pasta = _roster(tmp, {"completo.md": AGENTE_COMPLETO})
+        assert "V1" not in _regras(pasta), (
+            "um agente que declara o que NUNCA faz não pode ser acusado de não declarar — "
+            "se ele for, a régua acusa todo mundo e deixa de separar nada"
+        )
+    with tempfile.TemporaryDirectory() as tmp:
+        mudo = AGENTE_COMPLETO.replace(" NUNCA usar para outra coisa.", "")
+        pasta = _roster(tmp, {"completo.md": mudo})
+        assert "V1" in _regras(pasta), (
+            "tirei a anti-descrição e a vistoria continuou verde: sem anti-descrição o "
+            "orquestrador despacha por tema, e é o defeito que V1 existe para pegar"
+        )
+
+
+@check("BC", "dois que se confundem são acusados — e param quando um NOMEIA o outro")
+def _bc():
+    gemeo = """---
+name: {slug}
+description: "Revisa codigo procurando problema de qualidade seguranca arquitetura relatorio recomendacao. Usar quando abrir PR. NUNCA usar para {anti}."
+tools: Read
+---
+Lacunas: nenhuma medida fora do disco. Golden: resposta esperada a mao.
+"""
+    with tempfile.TemporaryDirectory() as tmp:
+        pasta = _roster(
+            tmp,
+            {
+                "revisor.md": gemeo.format(slug="revisor", anti="outra coisa"),
+                "auditor.md": gemeo.format(slug="auditor", anti="outra coisa"),
+            },
+        )
+        assert "V6" in _regras(pasta), (
+            "duas descrições quase iguais, e nenhuma nomeia a outra — se isto passa, "
+            "o único defeito que só existe a partir do segundo agente passa junto"
+        )
+    with tempfile.TemporaryDirectory() as tmp:
+        pasta = _roster(
+            tmp,
+            {
+                "revisor.md": gemeo.format(slug="revisor", anti="auditar licenca — isso e do auditor"),
+                "auditor.md": gemeo.format(slug="auditor", anti="outra coisa"),
+            },
+        )
+        assert "V6" not in _regras(pasta), (
+            "um passou a nomear o irmão e a acusação continuou de pé: então o conserto "
+            "que a saída manda fazer não conserta, e a régua treina quem a lê a ignorá-la"
+        )
+
+
+@check("BD", "`tools:` AUSENTE é lido como TODAS as ferramentas, nunca como nenhuma")
+def _bd():
+    with tempfile.TemporaryDirectory() as tmp:
+        sem_tools = AGENTE_COMPLETO.replace("tools: Read, Grep" + chr(10), "")
+        pasta = _roster(tmp, {"completo.md": sem_tools})
+        lido = _v.ler_roster(pasta)[0]
+        assert lido.tools_ausente, "`tools:` não estava lá e a vistoria não percebeu"
+        assert lido.usa_escrita and lido.usa_rede, (
+            "campo ausente lido como «nenhuma ferramenta» é como toda cerca vira porta "
+            "dos fundos: nos harnesses de hoje ausente quer dizer TODAS"
+        )
+        assert "V7" in _regras(pasta)
+
+
+@check("BE", "pasta que NÃO EXISTE é recusa com código 2, e nunca verde")
+def _be():
+    with tempfile.TemporaryDirectory() as tmp:
+        codigo = forja_main([str(Path(tmp) / "nao-existe")])
+        assert codigo == 2, (
+            f"apontar para caminho errado devolveu {codigo}: um erro de digitação no CI "
+            "deixaria o gate aprovando para sempre, que é não-medido virando zero"
+        )
+
+
+@check("BF", "pasta VAZIA é recusa com código 2 — zero agente lido não é zero defeito")
+def _bf():
+    with tempfile.TemporaryDirectory() as tmp:
+        (Path(tmp) / ".claude" / "agents").mkdir(parents=True)
+        codigo = forja_main([tmp])
+        assert codigo == 2, (
+            f"pasta vazia devolveu {codigo}: «não olhei nada» e «está tudo certo» são "
+            "coisas opostas, e devolvê-las com o mesmo código é inventar um fato"
+        )
+
+
+@check("BG", "markdown solto na pasta NÃO vira agente, e não infla o denominador")
+def _bg():
+    with tempfile.TemporaryDirectory() as tmp:
+        pasta = _roster(
+            tmp,
+            {"completo.md": AGENTE_COMPLETO, "README.md": "# so uma nota, sem frontmatter"},
+        )
+        roster = _v.ler_roster(pasta)
+        assert len(roster) == 1, (
+            f"li {len(roster)} agentes onde há 1: um arquivo que não é agente entrando na "
+            "conta faz o denominador crescer e toda porcentagem daqui mentir"
+        )
+
+
+@check("BH", "cerca em arquivo IRMÃO conta — a vistoria não acusa a saída do compilador")
+def _bh():
+    escreve = """---
+name: escritor
+description: "Escreve relatorio. Usar quando pedirem. NUNCA usar para outra coisa."
+tools: Read, Write
+---
+Lacunas: nao mede fora do disco. Golden: resposta esperada a mao.
+"""
+    with tempfile.TemporaryDirectory() as tmp:
+        pasta = _roster(tmp, {"escritor.md": escreve})
+        assert "V3" in _regras(pasta), "pede Write, ninguém declarou onde, e passou"
+    with tempfile.TemporaryDirectory() as tmp:
+        pasta = _roster(
+            tmp,
+            {"escritor.md": escreve},
+            irmaos={"hooks/cerca_escritor.py": '# slug = "escritor" · saida_cercada = ["relatorios/"]'},
+        )
+        assert "V3" not in _regras(pasta), (
+            "o hook que NEGA estava no arquivo irmão e a vistoria acusou mesmo assim — "
+            "ela estaria medindo a prosa do prompt, que nenhum runtime lê, e acusaria "
+            "exatamente o que a própria forja emite"
+        )
+
+
+@check("BI", "`--adotar` escreve ao lado dos agentes do LEITOR, não no clone da ferramenta")
+def _bi():
+    # O defeito reintroduzido: a saída era relativa ao diretório corrente. Quem
+    # clonasse a ferramenta e a apontasse para o próprio projeto veria as specs
+    # nascerem DENTRO do clone, numa pasta que o `.gitignore` de lá ignora — e
+    # sumirem sem erro nenhum. O relatório dizia «escrevi 4 spec(s)», e era
+    # verdade; só não era no lugar onde a pessoa ia procurar.
+    with tempfile.TemporaryDirectory() as alheio, tempfile.TemporaryDirectory() as clone:
+        pasta = _roster(alheio, {"completo.md": AGENTE_COMPLETO})
+        anterior = Path.cwd()
+        try:
+            os.chdir(clone)
+            forja_main([str(Path(alheio)), "--adotar"])
+        finally:
+            os.chdir(anterior)
+        assert (Path(alheio) / "build" / "specs" / "completo.toml").exists(), (
+            "a spec não nasceu ao lado dos agentes do leitor — quem adota não tem "
+            "por que adivinhar que o arquivo dele foi parar no clone da ferramenta"
+        )
+        assert not (Path(clone) / "build").exists(), (
+            "a ferramenta escreveu dentro do próprio clone: é lá que o arquivo some, "
+            "porque é lá que o `.gitignore` dela ignora `build/`"
+        )
+        assert pasta.is_dir(), "a vistoria não pode mexer na pasta que ela lê"
+
+
+def _juntar():
+    """Carrega `operacoes/juntar.py` POR CAMINHO, sem tornar a prateleira um pacote.
+
+    `operacoes/` é uma estante de pastas independentes — cada uma existe para ser
+    copiada sozinha para o repositório de outra pessoa. Pôr um `__init__.py` ali
+    para o teste importar mais fácil mudaria o que a estante é, e ainda faria o
+    `__pycache__` nascer contando como operação no check vizinho.
+    """
+    import importlib.util
+
+    caminho = RAIZ_DA_CASA / "operacoes" / "juntar.py"
+    spec = importlib.util.spec_from_file_location("_juntar_da_prateleira", caminho)
+    assert spec and spec.loader, f"não consegui carregar {caminho}"
+    modulo = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(modulo)
+    return modulo
+
+
+@check("BJ", "juntar duas operações com `cat` QUEBRA, e o `juntar.py` conserta os 45 pares")
+def _bj():
+    import itertools
+
+    _j = _juntar()
+
+    ops = sorted(p.parent.name for p in (RAIZ_DA_CASA / "operacoes").glob("*/sondas.py"))
+    textos = {o: (RAIZ_DA_CASA / "operacoes" / o / "sondas.py").read_text(encoding="utf-8") for o in ops}
+    pares = list(itertools.combinations(ops, 2))
+    assert pares, "não há operações com sondas — o denominador deste check sumiu"
+
+    # ⚠️ O defeito reintroduzido, e o instrumento importa: `ast.parse` NÃO
+    # reprova `from __future__` fora do topo — quem reprova é o compilador. Um
+    # check escrito com o parser passaria verde sobre o defeito inteiro.
+    quebrados = 0
+    for a, b in pares:
+        try:
+            compile(textos[a] + textos[b], "<cat>", "exec")
+        except SyntaxError:
+            quebrados += 1
+    assert quebrados == len(pares), (
+        f"{quebrados} de {len(pares)} pares quebram com `cat`; se este número cair, a "
+        "documentação que manda usar `juntar.py` passou a assustar sem motivo"
+    )
+
+    for a, b in pares:
+        texto = _j.juntar([a, b], raiz=RAIZ_DA_CASA / "operacoes")
+        try:
+            compile(texto, "<juntado>", "exec")
+        except SyntaxError as exc:
+            raise AssertionError(f"`juntar.py` produziu arquivo inválido para {a}+{b}: {exc}")
+
+
+@check("BK", "`juntar.py` RECUSA colisão de padrão de métrica, e não escreve nada")
+def _bk():
+    _j = _juntar()
+
+    with tempfile.TemporaryDirectory() as tmp:
+        raiz = Path(tmp)
+        corpo = 'from __future__ import annotations\n\nfrom aferido import sonda\n\n\n@sonda(\n    "x.y",\n    origem="teste",\n)\ndef _f() -> int:\n    return 1\n'
+        for nome in ("uma", "outra"):
+            (raiz / nome).mkdir()
+            (raiz / nome / "sondas.py").write_text(corpo, encoding="utf-8")
+        try:
+            _j.juntar(["uma", "outra"], raiz=raiz)
+        except _j.Colisao as exc:
+            assert "x.y" in str(exc), "a recusa tem de nomear o padrão que colidiu"
+        else:
+            raise AssertionError(
+                "duas operações registrando `x.y` foram juntadas em silêncio — em Python a "
+                "segunda sombreia a primeira sem erro, e a métrica sombreada some do "
+                "relatório sem nunca ter reprovado"
+            )
 
 
 # --------------------------------- blind: a fronteira que a varredura não vê ---

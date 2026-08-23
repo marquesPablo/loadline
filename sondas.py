@@ -247,3 +247,18 @@ def sondas_de_uma_operacao(metrica: str, _selo) -> int:
         if operacao.name.startswith(alvo):
             return (operacao / "sondas.py").read_text(encoding="utf-8").count("@sonda(")
     raise LookupError(f"`{alvo}` não é o começo do nome de nenhuma operação em operacoes/")
+
+
+@sonda("vistoria.achados", origem="regras `V<n>` distintas passadas a marcar() em forja/vistoria.py")
+def achados_da_vistoria() -> int:
+    """Quantos defeitos a vistoria sabe achar.
+
+    Lido do CÓDIGO que os emite, nunca do README que os narra — os dois lados
+    saindo do mesmo texto passariam verde travando o defeito em vez de achá-lo.
+    É de RELAÇÃO: o vocabulário é fechado de propósito e só anda quando alguém
+    DECIDE que ele ande, o que manda parar e investigar antes de resselar.
+    """
+    import re
+
+    texto = (RAIZ / "forja" / "vistoria.py").read_text(encoding="utf-8")
+    return len(set(re.findall(r'^\s+"(V\d+)",$', texto, re.MULTILINE)))

@@ -5,18 +5,20 @@ build-backend = "hatchling.build"
 [project]
 name = "aferido"
 version = "0.1.0"
-description = "Toda afirmação escrita vence — e este pacote faz ela dizer quando, e como se recomputa."
+description = "Lê a pasta de agentes que você já tem e acha o que só aparece a partir do terceiro: quem se confunde com quem, quem alcança o disco todo, o que ninguém cobre."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
 keywords = [
-    "documentation-drift",
-    "assertion-decay",
-    "verification",
     "agents",
     "agent-spec",
-    "governance",
-    "provenance",
+    "subagents",
+    "claude-code",
+    "agents-md",
+    "agent-governance",
+    "linter",
+    "documentation-drift",
+    "verification",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -39,20 +41,24 @@ classifiers = [
 dependencies = []
 
 [project.scripts]
+forja = "forja.__main__:main"
 aferido = "aferido.__main__:main"
 
 [project.urls]
 Repository = "https://github.com/USUARIO/aferido"
 
 [tool.hatch.build.targets.wheel]
-packages = ["aferido", "blind"]
+packages = ["aferido", "forja", "censo", "vitrine", "blind"]
 
 [tool.hatch.build.targets.sdist]
 include = [
     "/aferido",
     "/forja",
     "/censo",
+    "/vitrine",
     "/blind",
+    "/operacoes",
+    "/exemplos",
     "/sondas.py",
     "/autoteste.py",
     "/README.md",

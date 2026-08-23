@@ -19,7 +19,7 @@ valer alguma coisa num repositório que nunca anotou nada:
 
 Código de saída: 0 tudo verde · 1 reprova · 2 sem denominador (nada reprova, e
 há afirmação que ninguém consegue conferir). O 2 separa *"suas anotações estão
-erradas"* de *"você ainda não anotou nada"* — e antes do ADR-107 as duas
+erradas"* de *"você ainda não anotou nada"* — e antes dele as duas
 devolviam 0, que era não-medido virando zero dentro da ferramenta que existe
 para proibir isso.
 """

@@ -45,7 +45,7 @@ NOMES_DE_HANDOFF = ("CONTINUAR.md", "HANDOFF.md", "RETOMAR.md", "CONTEXT.md", "S
 #: contagem de comandos com arquivos que ninguém executa.
 _HAND_SCRIPT = (".py", ".sh", ".ps1", ".js", ".ts", ".rb", ".go", ".bat", ".cmd")
 
-#: `python servidor/selftest.py`, `bash scripts/deploy.sh`, `./run.sh`
+#: `python scripts/verificar.py`, `bash scripts/deploy.sh`, `./run.sh`
 _HAND_COMANDO = re.compile(
     r"`([^`\n]{3,160})`|^\s{0,3}\$\s+([^\n]{3,160})$", re.M
 )
@@ -62,7 +62,7 @@ _HAND_MAKE = re.compile(r"^make\s+([\w:.-]+)", re.I)
 #: ⚠️ Medido contra um arquivo de retomada real de 667 linhas: a versão frouxa
 #: (só «tem barra») acusou 20 caminhos mortos, e a MAIORIA era falso positivo —
 #: `Q10/Q11/Q12` (nomes de check enumerados), `origin/feat/algo` e
-#: `feat/algo` (referências de git), `Mr.Sinos/marketing-ops` (nome de pasta de
+#: `feat/algo` (referências de git), `grupo/subpasta` (nome de pasta de
 #: vault, relativo a outra raiz). Uma sonda que grita vinte vezes é uma sonda
 #: que a pessoa desliga na segunda semana — e aí ela deixa de pegar as três
 #: reais junto com as dezessete falsas.

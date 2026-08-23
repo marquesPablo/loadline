@@ -173,7 +173,7 @@ def varrer(raiz: str | Path, hoje: date | None = None) -> Relatorio:
             # A lista 3 — o que NENHUM selo cobre. Ela roda em todo arquivo de
             # prosa, tenha ele selo ou não; num repositório recém-clonado ela é
             # a única coisa que a ferramenta tem a dizer, e é o motivo de a
-            # primeira rodada ter deixado de devolver verde (ADR-107).
+            # primeira rodada ter deixado de devolver verde.
             relatorio.sem_prova_nenhuma.extend(
                 afirmacoes_sem_selo(linhas, do_arquivo, str(caminho), especimes)
             )

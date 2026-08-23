@@ -64,6 +64,50 @@ seguinte ser preposição, ou o número não ter substantivo nenhum ao lado. Nes
 **Isto é sugestão para renomear, nunca afirmação de que a ferramenta entendeu o que o número
 significa** — e a diferença entre as duas está escrita na saída de toda rodada que escreve.
 
+## 9 · A vistoria acusa a AUSÊNCIA da declaração, nunca a qualidade dela
+
+Ela responde *"existe aqui alguma coisa legível por máquina dizendo o que este agente nunca faz?"*.
+Ela não responde se a anti-descrição estava certa, se a fronteira declarada era a fronteira boa, ou
+se o caso do golden set pergunta o que importa. **Um agente excelente com a fronteira escrita em
+prosa aparece na lista, e deve aparecer** — mas a recíproca não vale: declarar não é acertar.
+
+## 10 · Frontmatter multi-linha não é lido
+
+O leitor pega `chave: valor` de uma linha, que é o que os harnesses de hoje escrevem. Uma
+`description` quebrada em várias linhas, ou um bloco YAML aninhado, é lido pela metade — e a
+metade que faltou vira ausência, que é justamente o erro que este arquivo existe para nomear.
+
+**O custo:** um agente bem declarado em YAML multi-linha pode ser acusado à toa.
+
+## 11 · O limiar do `V6` é ESCOLHIDO, e não medido
+
+Trinta por cento de palavras em comum. Ninguém mediu que 30% é onde dois agentes passam a disputar
+o mesmo despacho — o número foi escolhido olhando rosters reais, e está no código com o motivo ao
+lado em vez de enterrado numa condição. Ele erra nos dois sentidos, e a saída dele é **lista de
+leitura, nunca veredito**: `V6` sozinho não deve reprovar o CI de ninguém.
+
+## 12 · Nada aqui roda o agente
+
+A vistoria lê arquivo parado. Ela não despacha, não observa o orquestrador escolhendo, e não sabe
+se o seu agente responde bem. Ela sabe se existe, no repositório, **alguma coisa capaz de dizer que
+ele respondeu mal** — que é uma pergunta menor, e é a única que dá para responder offline e sem
+modelo.
+
+## 13 · O `V6` compara PALAVRAS, e não sentido
+
+Ele acha `revisor` × `auditor` quando as duas descrições dizem *"procurando problema de qualidade,
+segurança e arquitetura"* — palavras iguais, 67% em comum. Ele **não acha**
+`pesquisador` × `investigador` quando uma diz *"pesquisa na web e resume o que achou sobre um
+tema"* e a outra *"investiga na web e resume o que encontrou sobre um assunto"*. São a mesma vaga,
+escritas com sinônimos: 17% de palavras em comum, abaixo do limiar, e passam verdes.
+
+Achar sinônimo exigiria um modelo, e um verificador que depende de um modelo não é um verificador —
+é uma segunda opinião, e ela não roda offline nem no CI de quem mais precisa dela.
+
+**O custo, dito por extenso:** o `V6` acha colisão de VOCABULÁRIO. Ele é um piso, nunca um teto —
+silêncio dele não é prova de que o seu roster não se confunde. A pergunta que ele não faz, e que
+continua sendo sua: *se eu escondesse os nomes, eu saberia qual dos dois despachar?*
+
 ## Fechadas
 
 Uma lacuna sai desta lista quando o mecanismo que a fechava passa a existir e a ter controle
@@ -72,5 +116,5 @@ este arquivo existe para impedir.
 
 - **`Não há marca para o número que foi ESCOLHIDO, e não medido`** — fechada em 2026-08-20 pela
   marca `arbitrado:`, que exige o dono (`por=`) e vence como qualquer outro selo. Era descrita aqui
-  como *"a lacuna mais funda da lista, e a próxima coisa a nascer"*. Controles negativos: as letras
-  `AO`, `AP` e `AQ` do autoteste.
+  como *"a lacuna mais funda da lista, e a próxima coisa a nascer"*. Controles negativos: três
+  checks do autoteste, cada um reintroduzindo o defeito.

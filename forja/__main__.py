@@ -4,6 +4,8 @@ natureza: correcao — a saída é sempre impressa por inteiro, inclusive quando
 forja RECUSA. Uma recusa que não diz o conserto é um erro; uma recusa que diz o
 conserto é a metade útil de um compilador.
 
+    python -m forja                          # vistoria: lê os agentes que você JÁ tem
+    python -m forja --adotar                 # ESCREVE: uma spec por agente lido
     python -m forja exemplos/revisor-de-licenca.toml
     python -m forja exemplos/*.toml --saida build/
     python -m forja spec.toml --conferir     # não escreve; sai 1 se estiver stale
@@ -15,7 +17,7 @@ import sys
 from datetime import date
 from pathlib import Path
 
-from . import alvos, conselho
+from . import alvos, conselho, vistoria
 from .spec import Recusa, Spec, ler
 
 CENSO_PADRAO = Path(__file__).resolve().parent.parent / "censo" / "ecossistema.json"
@@ -58,12 +60,76 @@ def _stale(raiz: Path, artefatos: dict[str, str]) -> list[str]:
     return fora
 
 
+def _vistoria(raiz: Path, *, adotar: bool, saida: Path, saida_explicita: bool) -> int:
+    """`python -m forja` sem argumento: lê os agentes que já existem."""
+    hoje = date.today().isoformat()
+    pasta = vistoria.achar_pasta(raiz)
+
+    # ⚠️ Pasta que não existe é RECUSA, e nunca verde. Um erro de digitação no
+    # caminho não pode deixar um gate aprovando para sempre — é *não medido*
+    # virando *zero*, no ponto de entrada.
+    if pasta is None:
+        print(f"vistoria · {raiz} · em {hoje}")
+        print("=" * vistoria.LARGURA)
+        print("Não achei pasta de agentes aqui. Procurei, nesta ordem:")
+        for relativo in vistoria.PASTAS:
+            print(f"     {raiz / relativo}")
+        print()
+        print("RECUSADO — não li nada, e não vou devolver verde por isso.      (exit 2)")
+        return 2
+
+    roster = vistoria.ler_roster(pasta)
+    if not roster:
+        print(f"vistoria · {pasta} · em {hoje}")
+        print("=" * vistoria.LARGURA)
+        print("A pasta existe e não há nenhum agente dentro dela.")
+        print()
+        print("RECUSADO — zero agente lido não é zero defeito.                 (exit 2)")
+        return 2
+
+    achados = vistoria.vistoriar(roster)
+    for linha in vistoria.relatorio(roster, achados, pasta, hoje):
+        print(linha)
+
+    if adotar:
+        # ⚠️ A spec do leitor nasce ao lado dos AGENTES DELE, e não dentro do
+        # clone desta ferramenta. Escrever relativo ao diretório corrente parece
+        # inofensivo até alguém rodar `forja /caminho/do/projeto --adotar` de
+        # dentro do clone: as specs caem aqui, numa pasta que o `.gitignore`
+        # daqui ignora, e somem sem erro nenhum. `--saida` continua mandando
+        # quando alguém a escreve por extenso.
+        destino = (saida if saida_explicita else vistoria.raiz_do_projeto(pasta) / "build") / "specs"
+        destino.mkdir(parents=True, exist_ok=True)
+        print()
+        print(f"escrevi {len(roster)} spec(s) em {destino}/ — uma por agente lido:")
+        for lido in roster:
+            arquivo = destino / f"{lido.slug}.toml"
+            arquivo.write_text(vistoria.adotar(lido, hoje, arquivo), encoding="utf-8")
+            print(f"  ✓ {arquivo}")
+        print()
+        print("  Cada `?` é um buraco que já existia no agente e que ninguém tinha onde")
+        print("  ver. Preencha, e rode `python -m forja " + str(destino) + "/*.toml`.")
+
+    print()
+    if not achados:
+        print("PASSA — todo agente lido declara as seis coisas.                (exit 0)")
+        return 0
+    print("REPROVA                                                        (exit 1)")
+    if not adotar:
+        print()
+        print("  `python -m forja --adotar` escreve a spec de cada um a partir do que já")
+        print("  está lá, com um `?` em cada buraco. Aí a forja compila os artefatos que")
+        print("  faltam — inclusive o hook que NEGA, que é o único que o runtime lê.")
+    return 1
+
+
 def main(argv: list[str] | None = None) -> int:
     _console_em_utf8()
     argv = list(sys.argv[1:] if argv is None else argv)
 
     saida = Path("build")
-    if "--saida" in argv:
+    saida_explicita = "--saida" in argv
+    if saida_explicita:
         i = argv.index("--saida")
         saida = Path(argv[i + 1])
         del argv[i : i + 2]
@@ -72,10 +138,39 @@ def main(argv: list[str] | None = None) -> int:
     if conferir:
         argv.remove("--conferir")
 
+    adotar_agentes = "--adotar" in argv
+    if adotar_agentes:
+        argv.remove("--adotar")
+
     especes = [Path(a) for a in argv if not a.startswith("-")]
-    if not especes:
-        print(__doc__)
+
+    # Sem argumento nenhum, a forja NÃO imprime a ajuda: ela olha o que você já
+    # tem. Ninguém com doze agentes escritos à mão vai escrever doze specs na fé
+    # para descobrir se valia a pena — a anotação é a saída da primeira rodada,
+    # nunca o pedágio dela.
+    # Diretório é sempre vistoria; `.toml` é sempre compilação. O argumento diz
+    # qual das duas direções você quer, e nunca é preciso decorar uma bandeira.
+    # ⚠️ Alvo que não existe é RECUSA, nunca outra coisa — e este bug nasceu de
+    # novo aqui depois de já ter sido consertado no varredor: sem esta linha,
+    # `forja ./agentez` caía na compilação, morria lendo a spec e devolvia 1.
+    # O `1` diz «a sua spec está errada»; o `2` diz «eu não li nada». Um erro de
+    # digitação no CI encostado no código errado é não-medido virando zero.
+    if especes and not especes[0].exists():
+        print(f"forja · {especes[0]} · em {date.today().isoformat()}")
+        print("=" * vistoria.LARGURA)
+        print(f"`{especes[0]}` não existe — nem como pasta de agentes, nem como spec.")
+        print()
+        print("RECUSADO — não li nada, e não vou devolver verde por isso.      (exit 2)")
         return 2
+
+    aponta_pasta = bool(especes) and especes[0].is_dir()
+    if adotar_agentes or not especes or aponta_pasta:
+        return _vistoria(
+            especes[0] if aponta_pasta else Path("."),
+            adotar=adotar_agentes,
+            saida=saida,
+            saida_explicita=saida_explicita,
+        )
 
     censo = conselho.carregar(CENSO_PADRAO)
     problemas = 0

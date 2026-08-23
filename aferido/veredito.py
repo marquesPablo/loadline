@@ -259,8 +259,8 @@ class Relatorio:
     def sem_denominador(self) -> bool:
         """Nada reprova, e mesmo assim há afirmação que ninguém consegue conferir.
 
-        Este é o estado que devolvia `PASSA` e código de saída 0 até o ADR-107 —
-        e era o `ADR-013` violado dentro da ferramenta que existe para cobrá-lo:
+        Este é o estado que devolvia `PASSA` e código de saída 0 —
+        e era *não medido* virando *zero* dentro da ferramenta que existe
         **não medido virando zero**. Um repositório que nunca anotou nada não
         está aprovado; ele está por medir.
         """

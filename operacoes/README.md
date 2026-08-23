@@ -102,15 +102,25 @@ em vez de escolhido. A `RECEITA.md` de cada operação diz exatamente quais.
 
 ### Usando duas operações no mesmo repositório
 
-As sondas são escritas para poderem ser concatenadas. Nenhum nome de função auxiliar colide entre
-elas — cada operação usa um prefixo próprio (`_instr_`, `_repo_`, `_front_`, `_dep_`, `_fab_`,
-`_cer_`, `_dec_`, `_seg_`, `_su_`, `_hand_`) — e importar duas vezes o mesmo módulo da stdlib é legal em
-Python:
+As sondas são escritas para poderem conviver. Nenhum nome de função auxiliar colide entre elas —
+cada operação usa um prefixo próprio (`_instr_`, `_repo_`, `_front_`, `_dep_`, `_fab_`, `_cer_`,
+`_dec_`, `_seg_`, `_su_`, `_hand_`) — e nenhum padrão de métrica colide entre as dez.
+
+**Mas não junte com `cat`.** Todo `sondas.py` abre com `from __future__ import annotations`, e o
+Python exige que essa linha seja a primeira instrução do arquivo. Concatenado, o segundo arquivo
+põe a dele no meio, e o resultado morre com `SyntaxError` na importação — depois de já ter
+sobrescrito o `sondas.py` de quem tentou. Medido: **os 45 pares possíveis quebram, os 45.**
 
 ```console
-$ cat operacoes/instrucao-que-nao-mente/sondas.py \
-      operacoes/fabrica-de-agentes/sondas.py > /caminho/do/seu/repo/sondas.py
+$ python operacoes/juntar.py instrucao-que-nao-mente readme-que-nao-mente \
+      --saida /caminho/do/seu/repo/sondas.py
+✓ /caminho/do/seu/repo/sondas.py  ·  2 operações, 20 sondas, 0 colisões
 ```
+
+Ele sobe os imports para o topo, deduplica, e **recusa** se duas operações registrarem o mesmo
+padrão de métrica — em Python a segunda sombrearia a primeira sem erro nenhum, e a métrica
+sombreada sumiria do relatório sem nunca ter reprovado. Quando ele recusa, não escreve nada: um
+`sondas.py` pela metade importa, roda, e devolve verde sobre o que ficou de fora.
 
 Nenhum **padrão de métrica** colide entre as dez, e isso é gateado por um check com controle
 negativo — uma colisão sombrearia a sonda mais velha sem erro nenhum.
