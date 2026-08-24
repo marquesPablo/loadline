@@ -23,7 +23,7 @@ exatamente o lado que decai. O disco é o lado que não.
 
 Oito sondas sobre o seu arquivo de retomada, todas lendo o **git** e o **sistema de arquivos** —
 nunca o documento que faz a afirmação:
-<!-- aferido: operacao.handoff.sondas=8 natureza=contagem em=2026-08-21 vence=nunca fonte=operacoes/handoff-que-mede-o-disco/sondas.py -->
+<!-- measured: operacao.handoff.sondas=8 natureza=contagem em=2026-08-21 vence=nunca fonte=operacoes/handoff-que-mede-o-disco/sondas.py -->
 
 | Métrica | O que recomputa | Natureza |
 |---|---|---|
@@ -69,7 +69,7 @@ impecável"* são leituras opostas.
 ```console
 $ cp operacoes/handoff-que-mede-o-disco/sondas.py  /caminho/do/seu/repo/sondas.py
 $ cd /caminho/do/seu/repo
-$ PYTHONPATH=/caminho/para/aferido python -m aferido .
+$ PYTHONPATH=/caminho/para/loadline python -m loadline .
 ```
 
 Rodado contra um arquivo de retomada real de 667 linhas, num repositório vivo:
@@ -81,7 +81,7 @@ REPROVA   CONTINUAR.md:228  handoff.deriva_de_git: escrito=0 medido=1
           → o documento diz que está commitado; o git discorda.
 ```
 
-<!-- congelado: exemplo.caminhos=44 exemplo.mortos=11 exemplo.comandos=3 exemplo.sem_alvo=0 exemplo.deriva=1 motivo="medição de 2026-08-21 num arquivo de retomada de OUTRO repositório; é o exemplo impresso acima, não o estado deste projeto, e recomputá-lo aqui mediria a coisa errada" -->
+<!-- frozen: exemplo.caminhos=44 exemplo.mortos=11 exemplo.comandos=3 exemplo.sem_alvo=0 exemplo.deriva=1 motivo="medição de 2026-08-21 num arquivo de retomada de OUTRO repositório; é o exemplo impresso acima, não o estado deste projeto, e recomputá-lo aqui mediria a coisa errada" -->
 
 ## Os caminhos "mortos" que não foram deletados
 

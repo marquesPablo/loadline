@@ -3,7 +3,7 @@
 > **Este arquivo é gerado.** Não o edite à mão — edite `censo/ecossistema.json` e rode
 > `python censo/gerar.py`. O verificador reprova se os dois saírem de sincronia.
 
-<!-- aferido: censo.gerado_em_dia=1 natureza=relacao em=2026-08-16 vence=nunca fonte=censo/gerar.py -->
+<!-- measured: censo.gerado_em_dia=1 natureza=relacao em=2026-08-16 vence=nunca fonte=censo/gerar.py -->
 
 Uma lista `awesome-*` não reprova quando envelhece. Este censo reprova.
 
@@ -299,6 +299,6 @@ em silêncio produz resposta plausível e vazia.
    estava creditado a quem postou no LinkedIn, não a quem escreveu o código.
 2. Preencha `censo/ecossistema.json`. **`nao_verificado` é um valor legítimo** e nunca
    vira zero.
-3. Rode `python censo/gerar.py` e `python -m aferido .`. Se algum dos dois reprovar, a
+3. Rode `python censo/gerar.py` e `python -m loadline .`. Se algum dos dois reprovar, a
    entrada ainda não está pronta.
 

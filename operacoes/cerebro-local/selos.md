@@ -7,10 +7,10 @@ Cole **no README do seu vault** — o arquivo que descreve o que o corpus é e o
 ```markdown
 Este servidor expõe quatro ferramentas somente-leitura sobre as minhas notas, sem nenhuma
 dependência de terceiros, e o grafo não tem aresta para o vazio.
-<!-- aferido: cerebro.ferramentas=4 natureza=relacao em=AAAA-MM-DD vence=nunca fonte=servidor.py -->
-<!-- aferido: cerebro.dependencias=0 natureza=relacao em=AAAA-MM-DD vence=nunca fonte=servidor.py -->
-<!-- aferido: cerebro.links_quebrados=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=corpus -->
-<!-- aferido: cerebro.orfas=0 natureza=relacao em=AAAA-MM-DD vence=90d fonte=corpus -->
+<!-- measured: cerebro.ferramentas=4 natureza=relacao em=AAAA-MM-DD vence=nunca fonte=servidor.py -->
+<!-- measured: cerebro.dependencias=0 natureza=relacao em=AAAA-MM-DD vence=nunca fonte=servidor.py -->
+<!-- measured: cerebro.links_quebrados=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=corpus -->
+<!-- measured: cerebro.orfas=0 natureza=relacao em=AAAA-MM-DD vence=90d fonte=corpus -->
 ```
 
 **`cerebro.dependencias=0` é o selo mais valioso desta operação**, e o menos óbvio. *"Zero
@@ -25,8 +25,8 @@ mesma métrica reprovar por duas razões diferentes, e o vermelho deixaria de di
 ## As duas contagens do corpus
 
 ```markdown
-<!-- aferido: cerebro.notas=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=corpus -->
-<!-- aferido: cerebro.pastas=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=corpus -->
+<!-- measured: cerebro.notas=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=corpus -->
+<!-- measured: cerebro.pastas=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=corpus -->
 ```
 
 Estas andam toda vez que você escreve. Divergiram, resele e siga — é o caso em que o vermelho
@@ -49,7 +49,7 @@ colchetes duplos**.
 
 ```markdown
 O grafo de notas é reconferido a cada 30 dias.
-<!-- arbitrado: cerebro.prazo=30 por="quem adotou a operação" em=AAAA-MM-DD vence=180d
+<!-- arbitrated: cerebro.prazo=30 por="quem adotou a operação" em=AAAA-MM-DD vence=180d
      derruba="um vault que só recebe notas novas, ou um em que várias pessoas renomeiam arquivo" -->
 ```
 

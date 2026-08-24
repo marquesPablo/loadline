@@ -1,6 +1,6 @@
 """`--selar` — a anotação vira SAÍDA da primeira rodada, não pedágio dela.
 
-aferido-ignorar-arquivo: este arquivo ENSINA a sintaxe que emite, e os selos
+loadline-ignore-file: este arquivo ENSINA a sintaxe que emite, e os selos
 escritos aqui são espécimes, não afirmações. Sem esta linha o módulo lê o
 próprio gerador como se ele declarasse fatos.
 
@@ -22,8 +22,8 @@ sai da primeira sessão com o arquivo anotado. O que era pedágio virou produto.
 
 1. **Só escreve com a bandeira.** Sem `--selar` o projeto inteiro é
    somente-leitura, e é assim que ele é apresentado.
-2. **Emite `arbitrado:` e nunca `aferido:`.** Ninguém mediu nada. Emitir
-   `aferido:` seria a ferramenta inventando que houve medição — a mentira exata
+2. **Emite `arbitrated:` e nunca `measured:`.** Ninguém mediu nada. Emitir
+   `measured:` seria a ferramenta inventando que houve medição — a mentira exata
    que ela existe para perseguir.
 3. **`por=?` sai por escrito.** A ferramenta não sabe quem escolheu o número, e
    fingir que sabe é a mesma família de defeito. O `?` parseia (o arquivo
@@ -80,7 +80,7 @@ def _nomes_unicos(afirmacoes: list[Afirmacao]) -> dict[int, list[tuple[str, str]
 def selar_arquivo(
     caminho: Path, afirmacoes: list[Afirmacao], hoje: date, vence: str = VENCE_PADRAO
 ) -> list[Escrito]:
-    """Insere um selo `arbitrado:` depois de cada linha que afirma sem prova.
+    """Insere um selo `arbitrated:` depois de cada linha que afirma sem prova.
 
     Insere de baixo para cima: escrever de cima para baixo desloca todos os
     números de linha seguintes, e o segundo selo cairia no lugar errado — em
@@ -99,7 +99,7 @@ def selar_arquivo(
         recuo = original[: len(original) - len(original.lstrip())]
         metricas = " ".join(f"{nome}={valor}" for nome, valor in pares)
         selo = (
-            f"{recuo}<!-- arbitrado: {metricas} por=? "
+            f"{recuo}<!-- arbitrated: {metricas} por=? "
             f"em={hoje.isoformat()} vence={vence} -->"
         )
         linhas.insert(indice + 1, selo)

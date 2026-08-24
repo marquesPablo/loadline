@@ -1,4 +1,4 @@
-# aferido
+# loadline
 
 **Você tem mais de um agente de IA no seu repositório. Ninguém olha o conjunto.**
 
@@ -11,7 +11,7 @@ Um comando, sem configurar nada, sem escrever nada. Clone, e rode contra o roste
 vem junto — ou troque o caminho pelo do seu projeto:
 
 ```console
-$ git clone https://github.com/USUARIO/aferido && cd aferido
+$ git clone https://github.com/USUARIO/loadline && cd loadline
 $ python -m forja exemplos/roster-de-exemplo
 vistoria · exemplos\roster-de-exemplo\.claude\agents · em 2026-08-22
 ==========================================================================
@@ -47,7 +47,7 @@ $ python -m forja /caminho/do/seu/projeto
 **Zero dependência.** Só a biblioteca padrão do Python 3.10+. Sem LLM, sem chave de API, sem
 serviço. Um verificador que depende de um modelo não é um verificador — é uma segunda opinião.
 
-<!-- aferido: nucleo.dependencias=0 natureza=relacao em=2026-08-22 vence=nunca fonte=pyproject.toml -->
+<!-- measured: nucleo.dependencias=0 natureza=relacao em=2026-08-22 vence=nunca fonte=pyproject.toml -->
 
 ---
 
@@ -66,7 +66,7 @@ um arquivo você lê.
 Os cinco primeiros são sobre **um** agente. Os dois últimos só existem porque há **mais de um**, e
 são a razão de isto existir.
 
-<!-- aferido: vistoria.achados=7 natureza=relacao em=2026-08-22 vence=nunca fonte=forja/vistoria.py -->
+<!-- measured: vistoria.achados=7 natureza=relacao em=2026-08-22 vence=nunca fonte=forja/vistoria.py -->
 
 | | O que ele acha | Por que dói |
 |---|---|---|
@@ -131,14 +131,14 @@ recusa que não diz a saída treina quem a lê a contorná-la.
 | `R3` | não diz o que nunca faz | `R7` | toca alvo externo sem autorização |
 | `R4` | não diz o que não cobre | `R8` | slug que vira nome de arquivo inválido |
 
-<!-- aferido: forja.recusas=8 natureza=contagem em=2026-08-22 vence=nunca fonte=forja/spec.py -->
+<!-- measured: forja.recusas=8 natureza=contagem em=2026-08-22 vence=nunca fonte=forja/spec.py -->
 
 ---
 
 ## Instalação
 
 ```console
-$ git clone https://github.com/USUARIO/aferido && cd aferido
+$ git clone https://github.com/USUARIO/loadline && cd loadline
 $ python -m forja /caminho/do/seu/projeto
 ```
 
@@ -163,7 +163,7 @@ Não há segundo passo.
 
 As treze lacunas declaradas estão em [`LACUNAS.md`](LACUNAS.md).
 
-<!-- aferido: nucleo.lacunas=13 natureza=contagem em=2026-08-22 vence=nunca fonte=LACUNAS.md -->
+<!-- measured: nucleo.lacunas=13 natureza=contagem em=2026-08-22 vence=nunca fonte=LACUNAS.md -->
 
 Toda ferramenta publica o que passou e o que falhou; quase nenhuma publica **o que nunca olhou**, e
 é essa terceira lista que decide se um verde significa alguma coisa.
@@ -188,11 +188,11 @@ Conferido em 2026-08-20, lendo a página pública de cada um. Nenhum foi clonado
 
 ## Também mora neste repositório
 
-- [`aferido/`](aferido/) — a mesma régua aplicada ao **texto**: uma afirmação escrita ganha prazo de
+- [`loadline/`](loadline/) — a mesma régua aplicada ao **texto**: uma afirmação escrita ganha prazo de
   validade e uma sonda que a recomputa, e a sonda **não pode ler a fonte que produziu o número**.
-  `python -m aferido .`
+  `python -m loadline .`
 - [`operacoes/`](operacoes/) — onze trabalhos prontos que rodam no seu repositório sem configuração.
-  <!-- aferido: operacoes.total=11 natureza=contagem em=2026-08-23 vence=nunca fonte=operacoes/ -->
+  <!-- measured: operacoes.total=11 natureza=contagem em=2026-08-23 vence=nunca fonte=operacoes/ -->
 - [`censo/`](censo/) — um registro do ecossistema de agentes de IA onde cada entrada **vence**.
 - [`blind/`](blind/) — a fronteira que uma varredura ingênua atravessa em silêncio: junction,
   symlink de diretório, e a regra de `.gitignore` que esconde mesmo de quem atravessa a fronteira
@@ -200,7 +200,7 @@ Conferido em 2026-08-20, lendo a página pública de cada um. Nenhum foi clonado
 - [`placar/`](placar/) — as sete portas de "Would you ship this AI agent?" (OBJECTIVE · IDENTITY ·
   AUTHORITY · FAILURE · APPROVAL · TRACEABILITY · CONTAINMENT), cada uma conferida com evidência de
   disco, nunca opinião. Reprovar IDENTITY, AUTHORITY ou CONTAINMENT é NO-GO. `python -m placar .`
-  <!-- aferido: placar.portas=7 natureza=contagem em=2026-08-23 vence=nunca fonte=placar/portas.py -->
+  <!-- measured: placar.portas=7 natureza=contagem em=2026-08-23 vence=nunca fonte=placar/portas.py -->
 
 ---
 
@@ -208,11 +208,11 @@ Conferido em 2026-08-20, lendo a página pública de cada um. Nenhum foi clonado
 
 ```console
 $ python autoteste.py
-64 checks declarados · 64 executados · 0 fora do denominador
+65 checks declarados · 65 executados · 0 fora do denominador
 PASSOU
 ```
 
-<!-- aferido: nucleo.checks=64 nucleo.fora=0 natureza=contagem em=2026-08-23 vence=nunca fonte=autoteste.py -->
+<!-- measured: nucleo.checks=65 nucleo.fora=0 natureza=contagem em=2026-08-24 vence=nunca fonte=autoteste.py -->
 
 **Cada check reintroduz o defeito que ele existe para pegar.** Um check que só confirma o caminho
 feliz passa igual se o mecanismo for removido — ele não prova nada, e o custo dele é dar a alguém a

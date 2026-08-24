@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "aferido"
+name = "loadline"
 version = "0.1.0"
 description = "Lê a pasta de agentes que você já tem e acha o que só aparece a partir do terceiro: quem se confunde com quem, quem alcança o disco todo, o que ninguém cobre."
 readme = "README.md"
@@ -42,17 +42,17 @@ dependencies = []
 
 [project.scripts]
 forja = "forja.__main__:main"
-aferido = "aferido.__main__:main"
+loadline = "loadline.__main__:main"
 
 [project.urls]
-Repository = "https://github.com/USUARIO/aferido"
+Repository = "https://github.com/USUARIO/loadline"
 
 [tool.hatch.build.targets.wheel]
-packages = ["aferido", "forja", "censo", "vitrine", "blind", "placar"]
+packages = ["loadline", "forja", "censo", "vitrine", "blind", "placar"]
 
 [tool.hatch.build.targets.sdist]
 include = [
-    "/aferido",
+    "/loadline",
     "/forja",
     "/censo",
     "/vitrine",

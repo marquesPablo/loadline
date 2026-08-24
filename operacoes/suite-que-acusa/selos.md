@@ -6,8 +6,8 @@ Cole **no README do seu repositório**, na seção que fala dos testes — é l�
 
 ```markdown
 A suíte tem N checks, e nenhum deles é uma função que não pode falhar.
-<!-- aferido: suite.checks=N natureza=contagem em=AAAA-MM-DD vence=nunca fonte=tests/ -->
-<!-- aferido: suite.sem_assercao=0 natureza=relacao em=AAAA-MM-DD vence=nunca fonte=tests/ -->
+<!-- measured: suite.checks=N natureza=contagem em=AAAA-MM-DD vence=nunca fonte=tests/ -->
+<!-- measured: suite.sem_assercao=0 natureza=relacao em=AAAA-MM-DD vence=nunca fonte=tests/ -->
 ```
 
 **`suite.sem_assercao=0` é o único selo desta operação que é veredito**, e por isso é o único que
@@ -22,7 +22,7 @@ deixaria de dizer qual.
 
 ```markdown
 Esta suíte declara N coisas que ela NÃO mede.
-<!-- aferido: suite.lacunas_declaradas=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=LACUNAS.md -->
+<!-- measured: suite.lacunas_declaradas=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=LACUNAS.md -->
 ```
 
 **`vence=90d` aqui, e o prazo é o mecanismo.** Uma lista de lacunas envelhece de um jeito
@@ -35,12 +35,12 @@ quanto um que não foi declarado — e o prazo é o que obriga alguém a reler.
 ```markdown
 A régua aponta N testes sem controle negativo aparente. É uma lista de leitura, não um veredito:
 a detecção erra nos dois sentidos e está declarada como heurística.
-<!-- arbitrado: suite.sem_controle_negativo=N por="quem cuida da suíte" em=AAAA-MM-DD vence=60d
+<!-- arbitrated: suite.sem_controle_negativo=N por="quem cuida da suíte" em=AAAA-MM-DD vence=60d
      derruba="qualquer teste desta lista que, ao ser aberto, revele controle negativo que a régua não reconheceu" -->
 ```
 
-**`arbitrado:`, e não `aferido:`.** A marca importa: `aferido:` diz *isto foi medido*, e esta
-métrica é uma aproximação declarada. `arbitrado:` diz *alguém escolheu tratar isto assim, e aqui
+**`arbitrated:`, e não `measured:`.** A marca importa: `measured:` diz *isto foi medido*, e esta
+métrica é uma aproximação declarada. `arbitrated:` diz *alguém escolheu tratar isto assim, e aqui
 está quem*.
 
 E `derruba=` é a parte mais valiosa — ela escreve, antes de acontecer, o que faria o número deixar
@@ -50,8 +50,8 @@ o time a escrever teste para agradar a régua, e aí ela para de medir o código
 ## Os dois de higiene
 
 ```markdown
-<!-- aferido: suite.arquivos=N natureza=contagem em=AAAA-MM-DD vence=nunca fonte=tests/ -->
-<!-- aferido: suite.pulados=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=tests/ -->
+<!-- measured: suite.arquivos=N natureza=contagem em=AAAA-MM-DD vence=nunca fonte=tests/ -->
+<!-- measured: suite.pulados=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=tests/ -->
 ```
 
 **`suite.pulados` com prazo curto.** Um teste pulado é um teste que não existe, com aparência de
@@ -63,7 +63,7 @@ ninguém decidir isso.
 
 ```markdown
 A régua da suíte é reconferida a cada 60 dias.
-<!-- arbitrado: suite.prazo=60 por="quem cuida da suíte" em=AAAA-MM-DD vence=180d
+<!-- arbitrated: suite.prazo=60 por="quem cuida da suíte" em=AAAA-MM-DD vence=180d
      derruba="um projeto que reescreve a suíte a cada release, ou um cuja suíte não muda há um ano" -->
 ```
 

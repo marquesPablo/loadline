@@ -63,7 +63,7 @@ mesmo tendo mecanismo de reversibilidade de fato (um `git revert` documentado, u
 faz `CONTAINMENT` reprovar a maioria absoluta dos repositórios reais hoje — **e essa é a leitura
 correta da proposta**: é a porta mais rara de passar, porque é a menos praticada do ecossistema.
 
-Medido nesta rodada: o próprio repositório `aferido` **não tem harness de agente na raiz**
+Medido nesta rodada: o próprio repositório `loadline` **não tem harness de agente na raiz**
 (`python -m placar .` devolve exit 2 — nenhum `CLAUDE.md`/`AGENTS.md`/`.claude/`, porque este
 repositório É a ferramenta, não um agente configurado). Contra `exemplos/roster-de-exemplo/` — o
 mesmo fixture que o `README.md` da `forja` usa — o placar reprova 6 das 7 portas, e `CONTAINMENT` é
@@ -100,6 +100,6 @@ escolhido para não travar, não medido contra um repositório real desse tamanh
   1 que o `blind` desta casa mediu). `_arquivos_de_texto` agora PODA junction e symlink de diretório
   antes de descer, e o relatório nomeia quantas fronteiras foram puladas, apontando para
   `python -m blind` como o comando que mostra o que está atrás. Sem isto, rodar `placar` na raiz de
-  um repositório com uma junction para conteúdo externo (este próprio ecossistema de `aferido` vive
+  um repositório com uma junction para conteúdo externo (este próprio ecossistema de `loadline` vive
   ao lado de um cérebro montado por junction) leria — e poderia reportar segredo de — uma árvore que
   o alvo declarado não sabia que alcançava.

@@ -1,4 +1,4 @@
-"""aferido — toda afirmação escrita vence, e este pacote faz ela dizer quando.
+"""loadline — toda afirmação escrita vence, e este pacote faz ela dizer quando.
 
     Aquilo que não está escrito não existe.
     E aquilo que está escrito e não é reconferido, mente.
@@ -10,15 +10,15 @@ uma afirmação ou é recomputável por uma função, ou não é afirmável.
 from .registro import SemSonda, achar, explicar, medir, sonda
 from .selo import TIPOS, Selo, SeloMalformado, escrever, ler_linha, ler_texto
 from .varredura import varrer
-from .eco import PROSA_MUDA, Afirmacao, afirmacoes_sem_selo
+from .eco import PROSE_DRIFT, Afirmacao, afirmacoes_sem_selo
 from .selar import selar
 from .veredito import (
-    ARBITRADO,
-    CONGELADO,
-    DERIVOU,
-    SEM_PROVA,
-    VALE,
-    VENCIDO,
+    ARBITRATED,
+    FROZEN,
+    DRIFTED,
+    UNPROVEN,
+    MATCHES,
+    EXPIRED,
     Achado,
     Relatorio,
     julgar,
@@ -45,12 +45,12 @@ __all__ = [
     "Afirmacao",
     "afirmacoes_sem_selo",
     "TIPOS",
-    "VALE",
-    "DERIVOU",
-    "VENCIDO",
-    "SEM_PROVA",
-    "CONGELADO",
-    "ARBITRADO",
-    "PROSA_MUDA",
+    "MATCHES",
+    "DRIFTED",
+    "EXPIRED",
+    "UNPROVEN",
+    "FROZEN",
+    "ARBITRATED",
+    "PROSE_DRIFT",
     "__version__",
 ]

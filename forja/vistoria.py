@@ -84,6 +84,12 @@ class Lido:
     #: A raiz do projeto que contém este agente — de onde os arquivos irmãos
     #: (hook, golden, lacunas) são procurados. `None` quando não dá para dizer.
     raiz: Path | None = None
+    #: O frontmatter INTEIRO, `chave: valor` cru — não só `name`/`description`/
+    #: `tools`. Existe porque `saida_cercada`/`dominios_permitidos` (as duas
+    #: marcas de fronteira que V3 procura) costumam morar AQUI, não na prosa do
+    #: corpo — e um campo estruturado é sinal mais forte que a mesma frase
+    #: escrita como texto (mesmo raciocínio de `_irmao_declara`).
+    campos: dict[str, str] = field(default_factory=dict)
 
     @property
     def nome_curto(self) -> str:
@@ -166,6 +172,7 @@ def ler_agente(caminho: Path, raiz: Path | None = None) -> Lido | None:
         corpo=corpo,
         tools_ausente="tools" not in campos or not bruto,
         raiz=raiz,
+        campos=campos,
     )
 
 
@@ -256,6 +263,23 @@ def _contem(lido: Lido, marcas: tuple[str, ...]) -> bool:
     return any(_sem_acento(m) in alvo for m in marcas)
 
 
+def _campo_declarado(lido: Lido, chave: str) -> bool:
+    """`chave` existe no FRONTMATTER com valor não-vazio?
+
+    Achado nesta rodada: `_contem` nunca via `saida_cercada`/`dominios_permitidos`
+    quando o agente os declara do jeito CERTO — como campo estruturado do
+    frontmatter — porque `_frontmatter()` os retira do texto antes de `corpo`
+    existir, e `descricao` só carrega o campo `description`. Um agente com
+    `saida_cercada: "caminho/"` no YAML reprovava V3 pela MESMA razão que
+    reprovaria um agente sem cerca nenhuma — falso negativo na própria marca
+    que dá nome à constante. Campo estruturado é sinal mais forte que a mesma
+    frase em prosa (mesmo raciocínio de `_irmao_declara`), então ele decide
+    sozinho, sem precisar também aparecer no corpo.
+    """
+    valor = lido.campos.get(chave, "").strip().strip('"').strip("'").strip()
+    return bool(valor)
+
+
 def _confusao(a: Lido, b: Lido) -> float:
     """Quanto duas descrições disputam o mesmo despacho. Jaccard, sem mistério."""
     pa, pb = _significativas(a.descricao), _significativas(b.descricao)
@@ -279,6 +303,7 @@ def _fronteiras_abertas(a: Lido) -> tuple[tuple[str, str, bool], ...]:
             "escrita",
             "onde pode escrever",
             a.usa_escrita
+            and not _campo_declarado(a, "saida_cercada")
             and not _contem(a, DIZ_ONDE_ESCREVE)
             and not _irmao_declara(a.raiz, a.slug, "cerca"),
         ),
@@ -286,6 +311,7 @@ def _fronteiras_abertas(a: Lido) -> tuple[tuple[str, str, bool], ...]:
             "rede",
             "com quem pode falar",
             a.usa_rede
+            and not _campo_declarado(a, "dominios_permitidos")
             and not _contem(a, DIZ_ONDE_FALA)
             and not _irmao_declara(a.raiz, a.slug, "cerca"),
         ),

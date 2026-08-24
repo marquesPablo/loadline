@@ -6,7 +6,7 @@ escrito por extenso. Ela nunca derruba a rodada nem, pior, passa como verde.
 Uma sonda é uma função que devolve o valor de HOJE para uma métrica. Ela é o
 lado independente do par: o selo diz o que estava escrito, a sonda diz o que é.
 
-    from aferido import sonda
+    from loadline import sonda
 
     @sonda("colisao.*")
     def contar_colisao(metrica, selo):

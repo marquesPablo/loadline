@@ -26,7 +26,7 @@ nenhuma delas lê `.md` nenhum — todas leem código, manifesto ou `git`.
 | `repo.maior_arquivo` | linhas do maior arquivo — o número que ninguém quer ver |
 | `repo.contribuidores` · `repo.commits` | de `git`, não de arquivo |
 
-<!-- aferido: operacao.readme.sondas=13 natureza=contagem em=2026-08-21 vence=nunca fonte=operacoes/readme-que-nao-mente/sondas.py -->
+<!-- measured: operacao.readme.sondas=13 natureza=contagem em=2026-08-21 vence=nunca fonte=operacoes/readme-que-nao-mente/sondas.py -->
 
 ## O ajuste
 
@@ -39,19 +39,19 @@ no topo do `sondas.py`. É a única linha que alguém precisa tocar, e só nesse
 $ cp operacoes/readme-que-nao-mente/sondas.py  /caminho/do/seu/repo/sondas.py
 $ cd /caminho/do/seu/repo
 
-$ PYTHONPATH=/caminho/para/aferido python -m aferido .            # o que ninguém consegue conferir aqui
-$ PYTHONPATH=/caminho/para/aferido python -m aferido . --selar    # escreve o selo de cada um, para você colar
+$ PYTHONPATH=/caminho/para/loadline python -m loadline .            # o que ninguém consegue conferir aqui
+$ PYTHONPATH=/caminho/para/loadline python -m loadline . --selar    # escreve o selo de cada um, para você colar
 ```
 
-O `--selar` escreve tudo como `arbitrado:` — *este número foi escolhido, não medido* — porque
-ninguém mediu nada ainda. **Onde houver sonda com o mesmo nome, troque `arbitrado:` por `aferido:`.**
+O `--selar` escreve tudo como `arbitrated:` — *este número foi escolhido, não medido* — porque
+ninguém mediu nada ainda. **Onde houver sonda com o mesmo nome, troque `arbitrated:` por `measured:`.**
 Essa troca é a operação inteira: o número deixa de ser um palpite anotado e passa a ser recomputado
 a cada execução.
 
 Não sabe quais têm sonda? A ferramenta diz:
 
 ```console
-$ PYTHONPATH=/caminho/para/aferido python -m aferido . --sondas
+$ PYTHONPATH=/caminho/para/loadline python -m loadline . --sondas
 sondas carregadas de: sondas.py
   repo.arquivos                ← arquivos fora das pastas de dependência e de build
   repo.commits                 ← `git rev-list --count HEAD`
@@ -62,9 +62,9 @@ sondas carregadas de: sondas.py
 ## O que você vê
 
 ```console
-$ PYTHONPATH=/caminho/para/aferido python -m aferido .
-DERIVOU   README.md:8   repo.testes: escrito=200 medido=84   → resele: contagem anda quando alguém escreve
-VENCIDO   README.md:11  repo.dependencias: escrito=7 medido=7
+$ PYTHONPATH=/caminho/para/loadline python -m loadline .
+DRIFTED   README.md:8   repo.testes: escrito=200 medido=84   → resele: contagem anda quando alguém escreve
+EXPIRED   README.md:11  repo.dependencias: escrito=7 medido=7
           → reconfira e resele — ninguém olha isto há 214 dias (prazo: 90d)
 ```
 
@@ -79,7 +79,7 @@ inteiro, e este é o exemplo mais barato dele.
 
 `agente.toml` compila o `auditor-de-afirmacao`, que responde a pergunta que vem depois da terceira
 lista: **para cada afirmação que ninguém confere, existe sonda pronta, ou ela precisa virar
-`arbitrado:`, ou o número deveria sair do texto?** São três destinos diferentes, e escolher errado é
+`arbitrated:`, ou o número deveria sair do texto?** São três destinos diferentes, e escolher errado é
 como um repositório acumula selo decorativo.
 
 ```console

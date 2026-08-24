@@ -18,7 +18,7 @@ tempo de execução, qual skill carregar. O relato de fora é sempre "a skill n�
 ## O que esta operação instala
 
 Duas sondas que recomputam a vitrine outra vez a cada rodada — nunca a partir do que já foi escrito:
-<!-- aferido: operacao.vitrine.sondas=2 natureza=contagem em=2026-08-23 vence=nunca fonte=operacoes/vitrine/sondas.py -->
+<!-- measured: operacao.vitrine.sondas=2 natureza=contagem em=2026-08-23 vence=nunca fonte=operacoes/vitrine/sondas.py -->
 
 | Métrica | O que recomputa | Natureza |
 |---|---|---|

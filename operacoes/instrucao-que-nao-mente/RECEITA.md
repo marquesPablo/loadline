@@ -17,7 +17,7 @@ envelhece.
 ## O que esta operação instala
 
 Sete sondas que conferem as promessas do arquivo de instrução contra o disco — não contra ele mesmo:
-<!-- aferido: operacao.instrucao.sondas=7 natureza=contagem em=2026-08-21 vence=nunca fonte=operacoes/instrucao-que-nao-mente/sondas.py -->
+<!-- measured: operacao.instrucao.sondas=7 natureza=contagem em=2026-08-21 vence=nunca fonte=operacoes/instrucao-que-nao-mente/sondas.py -->
 
 | Métrica | O que recomputa | Natureza |
 |---|---|---|
@@ -43,10 +43,10 @@ os harnesses de hoje leem. Se o seu tem outro nome, acrescente-o em `NOMES_DE_IN
 ```console
 $ cp operacoes/instrucao-que-nao-mente/sondas.py  /caminho/do/seu/repo/sondas.py
 $ cd /caminho/do/seu/repo
-$ PYTHONPATH=/caminho/para/aferido python -m aferido .
+$ PYTHONPATH=/caminho/para/loadline python -m loadline .
 ```
 
-> Instalou com `pip install -e /caminho/para/aferido`? Então é só `aferido .`. As duas
+> Instalou com `pip install -e /caminho/para/loadline`? Então é só `loadline .`. As duas
 > formas estão em [`operacoes/README.md`](../README.md), e nenhuma baixa nada.
 
 A primeira execução não pede nada. Ela devolve o que ninguém consegue conferir no seu repositório.
@@ -56,8 +56,8 @@ Depois, cole no fim do seu `AGENTS.md`:
 ## O que este arquivo promete
 
 Todo comando citado aqui existe, e todo caminho citado aqui existe.
-<!-- aferido: instrucao.comandos_quebrados=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=package.json -->
-<!-- aferido: instrucao.caminhos_quebrados=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=disco -->
+<!-- measured: instrucao.comandos_quebrados=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=package.json -->
+<!-- measured: instrucao.caminhos_quebrados=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=disco -->
 ```
 
 Troque `AAAA-MM-DD` por hoje. Pronto — a operação está no ar.
@@ -65,18 +65,18 @@ Troque `AAAA-MM-DD` por hoje. Pronto — a operação está no ar.
 ## O que você vê quando alguma coisa quebra
 
 ```console
-$ PYTHONPATH=/caminho/para/aferido python -m aferido .
-aferido · . · em 2026-08-21
+$ PYTHONPATH=/caminho/para/loadline python -m loadline .
+loadline · . · em 2026-08-21
 ========================================================================
-DERIVOU   AGENTS.md:19  instrucao.comandos_quebrados: escrito=0 medido=2  → PARE. Relação divergindo é defeito — investigue antes de resselar
-DERIVOU   AGENTS.md:20  instrucao.caminhos_quebrados: escrito=0 medido=2  → PARE. Relação divergindo é defeito — investigue antes de resselar
+DRIFTED   AGENTS.md:19  instrucao.comandos_quebrados: escrito=0 medido=2  → PARE. Relação divergindo é defeito — investigue antes de resselar
+DRIFTED   AGENTS.md:20  instrucao.caminhos_quebrados: escrito=0 medido=2  → PARE. Relação divergindo é defeito — investigue antes de resselar
 
 ⚠️  NINGUÉM CONSEGUE CONFERIR ISTO — são suspeitas, não defeitos.
       SEM PROVA  AGENTS.md:3  "Este repo tem 3 servicos e 12 endpoints." → ninguém confere 3
       SEM PROVA  AGENTS.md:3  "Este repo tem 3 servicos e 12 endpoints." → ninguém confere 12
 ------------------------------------------------------------------------
 2 métricas em 3 arquivos · 2 arquivos sem selo nenhum · 2 afirmações que ninguém confere
-  DERIVOU    2
+  DRIFTED    2
   ⚠️  2 de RELAÇÃO — isso é defeito, não resselo
 
 REPROVA

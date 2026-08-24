@@ -9,8 +9,8 @@ o `vence=` significar alguma coisa.
 ## O que este arquivo promete
 
 Todo comando citado aqui existe, e todo caminho citado aqui existe.
-<!-- aferido: instrucao.comandos_quebrados=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=package.json -->
-<!-- aferido: instrucao.caminhos_quebrados=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=disco -->
+<!-- measured: instrucao.comandos_quebrados=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=package.json -->
+<!-- measured: instrucao.caminhos_quebrados=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=disco -->
 ```
 
 **Por que `relacao` e não `contagem`.** Uma grandeza de contagem anda quando alguém escreve — subiu,
@@ -19,28 +19,28 @@ ou a sonda parou de enxergar. Divergir aqui manda **parar e investigar**, e a fe
 essas palavras. Marcar isto como `contagem` seria treinar o time a resselar o defeito.
 
 **Por que `vence=30d`.** Um arquivo de instrução muda com o repositório. Trinta dias é a escolha
-padrão desta operação, não uma medida — e por isso a linha abaixo é um `arbitrado:`, com dono:
+padrão desta operação, não uma medida — e por isso a linha abaixo é um `arbitrated:`, com dono:
 
 ```markdown
 O prazo de reconferência do arquivo de instrução é 30 dias.
-<!-- arbitrado: instrucao.prazo=30 por="quem adotou a operação" em=AAAA-MM-DD vence=180d
+<!-- arbitrated: instrucao.prazo=30 por="quem adotou a operação" em=AAAA-MM-DD vence=180d
      derruba="um repositório em que a instrução fique meses estável, ou um em que quebre toda semana" -->
 ```
 
 ## O completo (as sete)
 
 ```markdown
-<!-- aferido: instrucao.arquivos=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=raiz -->
-<!-- aferido: instrucao.linhas=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=arquivos-de-instrucao -->
-<!-- aferido: instrucao.comandos=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=cercas-de-codigo -->
-<!-- aferido: instrucao.comandos_quebrados=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=package.json -->
-<!-- aferido: instrucao.caminhos=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=crases -->
-<!-- aferido: instrucao.caminhos_quebrados=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=disco -->
-<!-- aferido: instrucao.divergencia=N natureza=contagem em=AAAA-MM-DD vence=60d fonte=titulos -->
+<!-- measured: instrucao.arquivos=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=raiz -->
+<!-- measured: instrucao.linhas=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=arquivos-de-instrucao -->
+<!-- measured: instrucao.comandos=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=cercas-de-codigo -->
+<!-- measured: instrucao.comandos_quebrados=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=package.json -->
+<!-- measured: instrucao.caminhos=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=crases -->
+<!-- measured: instrucao.caminhos_quebrados=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=disco -->
+<!-- measured: instrucao.divergencia=N natureza=contagem em=AAAA-MM-DD vence=60d fonte=titulos -->
 ```
 
-Não sabe qual `N` escrever? Não escreva. Rode `python -m aferido . --selar` e a ferramenta escreve
-todos, como `arbitrado:`, com o valor de hoje. Depois troque `arbitrado:` por `aferido:` nestes sete
+Não sabe qual `N` escrever? Não escreva. Rode `python -m loadline . --selar` e a ferramenta escreve
+todos, como `arbitrated:`, com o valor de hoje. Depois troque `arbitrated:` por `measured:` nestes sete
 — eles têm sonda pronta, e a troca é o que transforma um número escolhido num número recomputado.
 
 ## O que NÃO selar aqui

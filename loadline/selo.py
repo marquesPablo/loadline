@@ -1,6 +1,6 @@
 """Leitura e escrita de selos — a gramática de uma afirmação que se reconfere.
 
-aferido-ignorar-arquivo: este arquivo ENSINA a sintaxe, e os selos escritos
+loadline-ignore-file: este arquivo ENSINA a sintaxe, e os selos escritos
 aqui são espécimes, não afirmações. Sem esta linha o módulo lê a própria
 documentação como se ela declarasse fatos — e o exemplo de selo MALFORMADO,
 que precisa poder existir escrito, derrubaria a rodada.
@@ -11,21 +11,21 @@ decide nada de segurança, e exceção aqui libera e avisa em vez de barrar.
 Um selo é um comentário legível por máquina, colado à afirmação que ele cobre:
 
     Seis projetos independentes usam o nome AgentGuard.
-    <!-- aferido: colisao.agentguard=6 natureza=contagem em=2026-08-16 vence=90d -->
+    <!-- measured: colisao.agentguard=6 natureza=contagem em=2026-08-16 vence=90d -->
 
 Três marcas, e a diferença entre elas é QUEM produziu o número:
 
-    aferido:    alguém MEDIU, e dá para medir de novo. Tem sonda.
-    congelado:  isto é história, e não se recomputa. Exige `motivo=`.
-    arbitrado:  alguém ESCOLHEU. Ninguém mediu, e nunca vai medir.
+    measured:    alguém MEDIU, e dá para medir de novo. Tem sonda.
+    frozen:      isto é história, e não se recomputa. Exige `motivo=`.
+    arbitrated:  alguém ESCOLHEU. Ninguém mediu, e nunca vai medir.
 
-`arbitrado:` é a marca que faltava, e a ausência dela era a lacuna mais funda
+`arbitrated:` é a marca que faltava, e a ausência dela era a lacuna mais funda
 deste projeto: as outras duas **pressupõem que o número um dia foi medido**.
 Limiar, teto, prazo, `vence=90d` — todos são escolhas vestidas de medidas, e um
 número escolhido sem dono é um palpite com cara de fato:
 
     O limite de retentativas é 3.
-    <!-- arbitrado: retry.max=3 por="time de plataforma" em=2026-08-20 vence=180d
+    <!-- arbitrated: retry.max=3 por="time de plataforma" em=2026-08-20 vence=180d
          derruba="qualquer incidente em que 3 não bastou" -->
 
 Chaves reservadas (não são métrica):
@@ -34,8 +34,8 @@ Chaves reservadas (não são métrica):
     em        AAAA-MM-DD           — quando foi conferido pela última vez
     vence     Nd | Nm | nunca      — validade; sem isto o selo nunca expira
     fonte     caminho ou URL       — de onde a métrica é recomputada
-    motivo    texto                — obrigatório em `congelado:`
-    por       quem escolheu        — obrigatório em `arbitrado:`
+    motivo    texto                — obrigatório em `frozen:`
+    por       quem escolheu        — obrigatório em `arbitrated:`
     derruba   o que mudaria a escolha — opcional, e é a parte mais valiosa
     eco       nao                  — dispensa o bloco do confronto prosa × selo
 
@@ -55,17 +55,17 @@ from datetime import date, timedelta
 
 RESERVADAS = frozenset({"natureza", "em", "vence", "fonte", "motivo", "por", "derruba", "eco"})
 NATUREZAS = frozenset({"contagem", "relacao"})
-TIPOS = ("aferido", "congelado", "arbitrado")
+TIPOS = ("measured", "frozen", "arbitrated")
 
 #: A alternação das marcas, DERIVADA da tupla acima e nunca escrita à mão duas
 #: vezes. Ela é usada aqui e no confronto de prosa (`eco.py`), e a segunda cópia
-#: já dessincronizou uma vez: quando `arbitrado` nasceu, o reconhecedor de bloco
+#: já dessincronizou uma vez: quando `arbitrated` nasceu, o reconhecedor de bloco
 #: continuou enxergando só duas marcas e passou a fundir parágrafos que o selo
 #: novo separava — verde-falso do lado errado. Uma quarta marca não pode ter
 #: como repetir isso.
 MARCAS_RE = "|".join(TIPOS)
 
-# `<!-- aferido: ... -->` em Markdown/HTML, `# aferido: ...` em código.
+# `<!-- measured: ... -->` em Markdown/HTML, `# measured: ...` em código.
 _PADRAO = re.compile(
     rf"(?:<!--|#|//)\s*(?P<tipo>{MARCAS_RE})\s*:\s*(?P<corpo>.*?)\s*(?:-->|$)",
     re.IGNORECASE,
@@ -88,7 +88,7 @@ class SeloMalformado(ValueError):
 class Selo:
     """Um selo lido do disco, com a linha de onde ele saiu."""
 
-    tipo: str  # "aferido" | "congelado" | "arbitrado"
+    tipo: str  # "measured" | "frozen" | "arbitrated"
     metricas: dict[str, str]
     natureza: str | None = None
     em: date | None = None
@@ -104,7 +104,7 @@ class Selo:
 
     @property
     def congelado(self) -> bool:
-        return self.tipo == "congelado"
+        return self.tipo == "frozen"
 
     @property
     def arbitrado(self) -> bool:
@@ -112,9 +112,9 @@ class Selo:
 
         Ele não se recomputa — mas ele VENCE, e é isso que separa a marca de uma
         desculpa: escolha sem prazo é escolha esquecida, e bastaria chamar de
-        arbitrado todo número incômodo para nunca mais olhar para ele.
+        arbitrated todo número incômodo para nunca mais olhar para ele.
         """
-        return self.tipo == "arbitrado"
+        return self.tipo == "arbitrated"
 
     def vencido_em(self, hoje: date) -> bool:
         """Vencimento é do selo, não do valor.
@@ -175,19 +175,19 @@ def ler_linha(texto: str, arquivo: str = "", linha: int = 0) -> Selo | None:
         raise SeloMalformado(
             f"{onde}: `natureza={natureza}` fora do vocabulário fechado {sorted(NATUREZAS)}"
         )
-    if tipo == "aferido" and metricas and natureza is None:
+    if tipo == "measured" and metricas and natureza is None:
         raise SeloMalformado(
             f"{onde}: selo com métrica precisa declarar `natureza=contagem` ou `natureza=relacao` "
             "— sem isso ninguém sabe se divergir quer dizer 'resele' ou 'investigue'"
         )
-    if tipo == "congelado" and not campos.get("motivo"):
+    if tipo == "frozen" and not campos.get("motivo"):
         raise SeloMalformado(
-            f"{onde}: `congelado:` exige `motivo=\"...\"` — congelar sem dizer por quê "
+            f"{onde}: `frozen:` exige `motivo=\"...\"` — congelar sem dizer por quê "
             "é o mesmo que apagar a medida"
         )
-    if tipo == "arbitrado" and not campos.get("por"):
+    if tipo == "arbitrated" and not campos.get("por"):
         raise SeloMalformado(
-            f'{onde}: `arbitrado:` exige `por="..."` — número escolhido sem dono é '
+            f'{onde}: `arbitrated:` exige `por="..."` — número escolhido sem dono é '
             "palpite vestido de medida, que é exatamente o que esta marca existe para desmascarar"
         )
 

@@ -11,13 +11,13 @@ slug = "auditor-de-afirmacao"
 nome = "Auditor de afirmação"
 uma_frase = """
 Pega cada número afirmado na documentação que nenhum selo cobre e decide, com o motivo escrito, \
-para onde ele vai: `aferido:` quando já existe sonda que o recomputa de fonte independente, \
-`arbitrado:` quando o número foi ESCOLHIDO e precisa de dono e de prazo, ou fora do texto quando \
+para onde ele vai: `measured:` quando já existe sonda que o recomputa de fonte independente, \
+`arbitrated:` quando o número foi ESCOLHIDO e precisa de dono e de prazo, ou fora do texto quando \
 ele não é conferível nem por medida nem por escolha.\
 """
 usar_quando = [
-  "`python -m aferido .` devolveu SEM DENOMINADOR e você não sabe por onde começar",
-  "você rodou `--selar` e agora tem uma pilha de `arbitrado:` para triar",
+  "`python -m loadline .` devolveu SEM DENOMINADOR e você não sabe por onde começar",
+  "você rodou `--selar` e agora tem uma pilha de `arbitrated:` para triar",
   "antes de publicar um README novo, para saber quais números vão envelhecer calados",
   "quando alguém propõe um selo e você quer saber se ele é medida ou espelho",
 ]
@@ -45,7 +45,7 @@ lacunas = [
 [[prova.golden]]
 pergunta = "O README diz «temos 84 testes» e existe a sonda `repo.testes`. Qual marca?"
 esperado = """
-`aferido:`, com `natureza=contagem`. A sonda recomputa de uma fonte independente — as funções de \
+`measured:`, com `natureza=contagem`. A sonda recomputa de uma fonte independente — as funções de \
 teste no código-fonte — e o número escrito está em prosa no `.md`. Dois artefatos, dois lados: \
 mexer num sem mexer no outro reprova, que é o que faz o par valer alguma coisa.\
 """
@@ -54,15 +54,15 @@ derivado_de = "operacoes/readme-que-nao-mente/sondas.py:testes — o `origem=` d
 [[prova.golden]]
 pergunta = "O README diz «o limite de retentativas é 3». Qual marca?"
 esperado = """
-`arbitrado:`, e ele exige `por=`. O 3 não foi medido: foi escolhido. Nenhuma sonda pode recomputá-lo, \
-porque não há nada no disco de onde ele saia — ele sai de uma decisão. Selá-lo como `aferido:` seria \
+`arbitrated:`, e ele exige `por=`. O 3 não foi medido: foi escolhido. Nenhuma sonda pode recomputá-lo, \
+porque não há nada no disco de onde ele saia — ele sai de uma decisão. Selá-lo como `measured:` seria \
 a ferramenta inventando que houve medição. O caso pede também `derruba=`: o que faria alguém escolher \
 outro número.\
 """
-derivado_de = "README.md § A terceira marca: `arbitrado:`"
+derivado_de = "README.md § A terceira marca: `arbitrated:`"
 
 [[prova.golden]]
-pergunta = "O CENSO.md é gerado do ecossistema.json e afirma «15 projetos». Selar com `aferido: censo.projetos=15`?"
+pergunta = "O CENSO.md é gerado do ecossistema.json e afirma «15 projetos». Selar com `measured: censo.projetos=15`?"
 esperado = """
 Não. Os dois lados sairiam do mesmo JSON: o número publicado e o número medido teriam a mesma fonte, \
 e o par passaria verde TRAVANDO o defeito em vez de achá-lo. Para artefato derivado a pergunta certa \

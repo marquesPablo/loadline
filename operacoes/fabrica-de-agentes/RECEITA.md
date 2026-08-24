@@ -26,7 +26,7 @@ entre as datas deles.
 ## O que esta operação instala
 
 Oito sondas que cruzam as suas specs com os seus artefatos:
-<!-- aferido: operacao.fabrica.sondas=8 natureza=contagem em=2026-08-21 vence=nunca fonte=operacoes/fabrica-de-agentes/sondas.py -->
+<!-- measured: operacao.fabrica.sondas=8 natureza=contagem em=2026-08-21 vence=nunca fonte=operacoes/fabrica-de-agentes/sondas.py -->
 
 | Métrica | O que recomputa | Natureza |
 |---|---|---|
@@ -64,7 +64,7 @@ dizer que todos os seus agentes são escritos à mão, e esse é o número que a
 ```console
 $ cp operacoes/fabrica-de-agentes/sondas.py  /caminho/do/seu/repo/sondas.py
 $ cd /caminho/do/seu/repo
-$ PYTHONPATH=/caminho/para/aferido python -m aferido . --selar
+$ PYTHONPATH=/caminho/para/loadline python -m loadline . --selar
 ```
 
 O que você vê, num repositório que nunca teve spec:
@@ -73,13 +73,13 @@ O que você vê, num repositório que nunca teve spec:
 ⚠️  NINGUÉM CONSEGUE CONFERIR ISTO — são suspeitas, não defeitos.
       SEM PROVA  README.md:14  "Temos 9 subagentes especializados."  → ninguém confere 9
 ------------------------------------------------------------------------
-escrevi 1 selo(s), todos como `arbitrado:` — ninguém mediu nada ainda.
+escrevi 1 selo(s), todos como `arbitrated:` — ninguém mediu nada ainda.
 ```
 
-E depois de trocar `arbitrado:` por `aferido:` nas métricas que esta operação sabe recomputar:
+E depois de trocar `arbitrated:` por `measured:` nas métricas que esta operação sabe recomputar:
 
 ```console
-$ PYTHONPATH=/caminho/para/aferido python -m aferido .
+$ PYTHONPATH=/caminho/para/loadline python -m loadline .
 REPROVA   README.md:14  fabrica.escritos_a_mao: escrito=0 medido=9
           → natureza=relacao — PARE e investigue. Nenhum dos 9 agentes tem fonte.
 ```

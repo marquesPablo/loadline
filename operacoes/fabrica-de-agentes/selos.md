@@ -9,12 +9,12 @@ ele estiver noutro lugar, quem edita a lista não vê o que ela prometia.
 ```markdown
 Todo agente deste repositório tem uma spec de onde saiu, toda spec está compilada, e o que roda é
 o que está escrito.
-<!-- aferido: fabrica.escritos_a_mao=0 natureza=relacao em=AAAA-MM-DD vence=60d fonte=.claude/agents/ -->
-<!-- aferido: fabrica.specs_nao_compiladas=0 natureza=relacao em=AAAA-MM-DD vence=60d fonte=agentes/ -->
-<!-- aferido: fabrica.artefato_desatualizado=0 natureza=relacao em=AAAA-MM-DD vence=7d fonte=mtime -->
-<!-- aferido: fabrica.specs_recusadas=0 natureza=relacao em=AAAA-MM-DD vence=60d fonte=forja -->
-<!-- aferido: fabrica.artefatos_sem_anti_descricao=0 natureza=relacao em=AAAA-MM-DD vence=60d fonte=.claude/agents/ -->
-<!-- aferido: fabrica.slugs_invalidos=0 natureza=relacao em=AAAA-MM-DD vence=nunca fonte=.claude/agents/ -->
+<!-- measured: fabrica.escritos_a_mao=0 natureza=relacao em=AAAA-MM-DD vence=60d fonte=.claude/agents/ -->
+<!-- measured: fabrica.specs_nao_compiladas=0 natureza=relacao em=AAAA-MM-DD vence=60d fonte=agentes/ -->
+<!-- measured: fabrica.artefato_desatualizado=0 natureza=relacao em=AAAA-MM-DD vence=7d fonte=mtime -->
+<!-- measured: fabrica.specs_recusadas=0 natureza=relacao em=AAAA-MM-DD vence=60d fonte=forja -->
+<!-- measured: fabrica.artefatos_sem_anti_descricao=0 natureza=relacao em=AAAA-MM-DD vence=60d fonte=.claude/agents/ -->
+<!-- measured: fabrica.slugs_invalidos=0 natureza=relacao em=AAAA-MM-DD vence=nunca fonte=.claude/agents/ -->
 ```
 
 **Todos de `relacao`, e nenhum deles deve andar quando você escreve um agente novo.** É isso que
@@ -36,22 +36,22 @@ tem de ser lido.
 ## As duas contagens
 
 ```markdown
-<!-- aferido: fabrica.artefatos=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=.claude/agents/ -->
-<!-- aferido: fabrica.specs=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=agentes/ -->
+<!-- measured: fabrica.artefatos=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=.claude/agents/ -->
+<!-- measured: fabrica.specs=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=agentes/ -->
 ```
 
 Estas duas andam quando alguém escreve. Divergiram, resele e siga.
 
 ⚠️ **Não escreva as duas na mesma frase que afirma um terceiro número.** *"Temos 9 agentes, todos
 compilados de 9 specs"* afirma três coisas e o selo cobre duas — a terceira (*todos*) é uma
-afirmação de relação que nenhuma métrica ali nomeia, e o veredito `PROSA_MUDA` existe exatamente
+afirmação de relação que nenhuma métrica ali nomeia, e o veredito `PROSE_DRIFT` existe exatamente
 para isso.
 
 ## O prazo é escolha, e ela tem dono
 
 ```markdown
 A pasta de agentes é reconferida a cada 60 dias.
-<!-- arbitrado: fabrica.prazo=60 por="quem adotou a operação" em=AAAA-MM-DD vence=180d
+<!-- arbitrated: fabrica.prazo=60 por="quem adotou a operação" em=AAAA-MM-DD vence=180d
      derruba="um time que cria agente toda semana, ou um repositório cujos agentes não mudam há um ano" -->
 ```
 

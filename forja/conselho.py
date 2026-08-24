@@ -100,7 +100,7 @@ def em_markdown(precisa: list[str], censo: dict | None, caminho_do_censo: str) -
 
     L += [
         "> **Este conselho vence.** Cada linha saiu de uma página aberta na data ao lado, e",
-        "> nenhuma sonda offline sabe o que mudou lá fora desde então. Rode `python -m aferido`",
+        "> nenhuma sonda offline sabe o que mudou lá fora desde então. Rode `python -m loadline`",
         "> no censo antes de apoiar decisão nele.",
         "",
     ]

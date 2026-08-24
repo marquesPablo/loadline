@@ -21,7 +21,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from aferido import sonda
+from loadline import sonda
 
 RAIZ = Path(__file__).parent
 CENSO = RAIZ / "censo" / "ecossistema.json"
@@ -76,9 +76,9 @@ def tamanho_do_cacho(metrica: str, _selo) -> int:
     raise LookupError(f"`{alvo}` não é um nome do censo")
 
 
-@sonda("nucleo.modulos", origem="arquivos .py em aferido/")
+@sonda("nucleo.modulos", origem="arquivos .py em loadline/")
 def modulos_do_nucleo() -> int:
-    return len(list((RAIZ / "aferido").glob("*.py")))
+    return len(list((RAIZ / "loadline").glob("*.py")))
 
 
 @sonda("nucleo.dependencias", origem="linhas não-vazias de requisitos.txt (ausente = 0)")
@@ -93,9 +93,9 @@ def dependencias() -> int:
     )
 
 
-@sonda("nucleo.vereditos", origem="len(ORDEM) em aferido/__main__.py")
+@sonda("nucleo.vereditos", origem="len(ORDEM) em loadline/__main__.py")
 def vereditos() -> int:
-    from aferido import __main__ as cli
+    from loadline import __main__ as cli
 
     return len(cli.ORDEM)
 

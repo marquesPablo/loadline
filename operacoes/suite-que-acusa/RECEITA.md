@@ -48,7 +48,7 @@ possível, e a menos provável.
 ## O que esta operação instala
 
 Seis sondas sobre a sua pasta de testes:
-<!-- aferido: operacao.suite.sondas=6 natureza=contagem em=2026-08-21 vence=nunca fonte=operacoes/suite-que-acusa/sondas.py -->
+<!-- measured: operacao.suite.sondas=6 natureza=contagem em=2026-08-21 vence=nunca fonte=operacoes/suite-que-acusa/sondas.py -->
 
 | Métrica | O que recomputa | Natureza |
 |---|---|---|
@@ -97,7 +97,7 @@ E, se o seu dialeto de teste não usa `test_` no nome, `_SU_NOME_DE_TESTE`.
 ```console
 $ cp operacoes/suite-que-acusa/sondas.py  /caminho/do/seu/repo/sondas.py
 $ cd /caminho/do/seu/repo
-$ PYTHONPATH=/caminho/para/aferido python -m aferido .
+$ PYTHONPATH=/caminho/para/loadline python -m loadline .
 ```
 
 ```console

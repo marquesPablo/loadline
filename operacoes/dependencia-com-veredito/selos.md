@@ -8,8 +8,8 @@ ele estiver noutro lugar, quem edita a tabela não vê o que ela prometia.
 ```markdown
 Toda dependência deste manifesto tem veredito de licença escrito, e nenhum veredito sobrevive à
 dependência que ele julgava.
-<!-- aferido: deps.sem_veredito=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=manifesto -->
-<!-- aferido: deps.veredito_orfao=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=manifesto -->
+<!-- measured: deps.sem_veredito=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=manifesto -->
+<!-- measured: deps.veredito_orfao=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=manifesto -->
 ```
 
 **Os dois de `relacao`, e nas duas direções.** Um deveria ser zero porque ninguém instala sem
@@ -19,12 +19,12 @@ processo, não contagem que andou — e a ferramenta manda parar e investigar em
 ## A distribuição, e o que ela não é
 
 ```markdown
-<!-- aferido: deps.declaradas=N natureza=contagem em=AAAA-MM-DD vence=60d fonte=manifesto -->
-<!-- aferido: deps.osi=N natureza=contagem em=AAAA-MM-DD vence=60d fonte=licencas.md -->
-<!-- aferido: deps.copyleft_forte=N natureza=contagem em=AAAA-MM-DD vence=60d fonte=licencas.md -->
-<!-- aferido: deps.nao_osi=N natureza=contagem em=AAAA-MM-DD vence=60d fonte=licencas.md -->
-<!-- aferido: deps.proprietarias=N natureza=contagem em=AAAA-MM-DD vence=60d fonte=licencas.md -->
-<!-- aferido: deps.nao_verificado=N natureza=contagem em=AAAA-MM-DD vence=30d fonte=licencas.md -->
+<!-- measured: deps.declaradas=N natureza=contagem em=AAAA-MM-DD vence=60d fonte=manifesto -->
+<!-- measured: deps.osi=N natureza=contagem em=AAAA-MM-DD vence=60d fonte=licencas.md -->
+<!-- measured: deps.copyleft_forte=N natureza=contagem em=AAAA-MM-DD vence=60d fonte=licencas.md -->
+<!-- measured: deps.nao_osi=N natureza=contagem em=AAAA-MM-DD vence=60d fonte=licencas.md -->
+<!-- measured: deps.proprietarias=N natureza=contagem em=AAAA-MM-DD vence=60d fonte=licencas.md -->
+<!-- measured: deps.nao_verificado=N natureza=contagem em=AAAA-MM-DD vence=30d fonte=licencas.md -->
 ```
 
 ⚠️ **Cuidado com estas seis.** Elas são de contagem porque andam quando alguém instala ou julga — e
@@ -42,7 +42,7 @@ Aí os dois lados ficam claramente separados: o texto que uma pessoa lê num lug
 
 ```markdown
 Uma dependência é reconferida a cada 30 dias.
-<!-- arbitrado: deps.prazo=30 por="quem adotou a operação" em=AAAA-MM-DD vence=180d
+<!-- arbitrated: deps.prazo=30 por="quem adotou a operação" em=AAAA-MM-DD vence=180d
      derruba="um projeto com dependência estável há anos, ou um que troque de stack a cada trimestre" -->
 ```
 

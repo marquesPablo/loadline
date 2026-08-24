@@ -8,8 +8,8 @@ o cliente e não deve carregar a instrumentação interna da sua esteira.
 ```markdown
 Este lote tem N achados, e todos os N são acionáveis: cada um com endereço, classificação com
 versão de catálogo, passo de verificação e veredito.
-<!-- aferido: seguranca.achados=N natureza=contagem em=AAAA-MM-DD vence=30d fonte=achados/ -->
-<!-- aferido: seguranca.acionaveis=N natureza=relacao em=AAAA-MM-DD vence=30d fonte=achados/ -->
+<!-- measured: seguranca.achados=N natureza=contagem em=AAAA-MM-DD vence=30d fonte=achados/ -->
+<!-- measured: seguranca.acionaveis=N natureza=relacao em=AAAA-MM-DD vence=30d fonte=achados/ -->
 ```
 
 **`acionaveis` é de RELAÇÃO e `achados` é de CONTAGEM, e a assimetria é a operação inteira.** O
@@ -19,11 +19,11 @@ andar**: se caiu, entrou achado pela metade no lote, e a resposta certa é abrir
 ## Os cinco do diagnóstico
 
 ```markdown
-<!-- aferido: seguranca.sem_framework=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=achados/ -->
-<!-- aferido: seguranca.sem_versao_de_framework=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=achados/ -->
-<!-- aferido: seguranca.sem_caminho_linha=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=achados/ -->
-<!-- aferido: seguranca.sem_passo_de_verificacao=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=achados/ -->
-<!-- aferido: seguranca.sem_veredito=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=achados/ -->
+<!-- measured: seguranca.sem_framework=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=achados/ -->
+<!-- measured: seguranca.sem_versao_de_framework=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=achados/ -->
+<!-- measured: seguranca.sem_caminho_linha=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=achados/ -->
+<!-- measured: seguranca.sem_passo_de_verificacao=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=achados/ -->
+<!-- measured: seguranca.sem_veredito=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=achados/ -->
 ```
 
 Os cinco existem para dizer **qual** conserto falta quando `acionaveis` cai. Sem eles você sabe que
@@ -35,7 +35,7 @@ feitos por pessoas diferentes.
 ```markdown
 <!-- ISTO ESTÁ ERRADO E NENHUMA SONDA DESTA OPERAÇÃO O SUSTENTA -->
 Este repositório não tem vulnerabilidades conhecidas.
-<!-- aferido: seguranca.vulnerabilidades=0 natureza=relacao em=... -->
+<!-- measured: seguranca.vulnerabilidades=0 natureza=relacao em=... -->
 ```
 
 **Não existe sonda para isso, e a ausência é deliberada.** As sondas contam a qualidade dos achados
@@ -50,18 +50,18 @@ O que você pode selar honestamente é **cobertura declarada**:
 
 ```markdown
 Esta revisão olhou 42 dos 87 arquivos de origem. Os outros 45 não foram olhados.
-<!-- arbitrado: seguranca.arquivos_revisados=42 por="quem conduziu a revisão" em=AAAA-MM-DD vence=30d
+<!-- arbitrated: seguranca.arquivos_revisados=42 por="quem conduziu a revisão" em=AAAA-MM-DD vence=30d
      derruba="qualquer commit que mexa num dos 45 que não foram olhados" -->
 ```
 
-`arbitrado:`, e não `aferido:` — o recorte foi **escolhido**, não medido. E `derruba=` é a parte
+`arbitrated:`, e não `measured:` — o recorte foi **escolhido**, não medido. E `derruba=` é a parte
 mais valiosa: ela diz o que faria essa escolha deixar de valer.
 
 ## O prazo, e por que 30 dias
 
 ```markdown
 Um lote de achados é reconferido a cada 30 dias.
-<!-- arbitrado: seguranca.prazo=30 por="quem conduz a revisão" em=AAAA-MM-DD vence=180d
+<!-- arbitrated: seguranca.prazo=30 por="quem conduz a revisão" em=AAAA-MM-DD vence=180d
      derruba="um repositório congelado, ou um que faz release diário" -->
 ```
 

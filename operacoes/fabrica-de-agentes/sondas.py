@@ -1,6 +1,6 @@
 """Sondas da operação `fabrica-de-agentes`.
 
-natureza: correcao — sonda que estoura vira `SEM_PROVA` no relatório, com o erro
+natureza: correcao — sonda que estoura vira `UNPROVEN` no relatório, com o erro
 por extenso. Ela nunca devolve um palpite.
 
 COPIE ESTE ARQUIVO para a raiz do seu repositório, como `sondas.py`.
@@ -27,7 +27,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from aferido import sonda
+from loadline import sonda
 
 RAIZ = Path(__file__).resolve().parent
 
@@ -82,7 +82,7 @@ def _fab_artefatos() -> dict[str, Path]:
 def _fab_ha_estado() -> None:
     """Zero artefato E zero spec não é um repositório saudável: é um repositório
     onde esta operação não tem o que dizer. Devolver 0 seria transformar *não
-    medido* em *zero*, que é o defeito que o `aferido` inteiro existe para
+    medido* em *zero*, que é o defeito que o `loadline` inteiro existe para
     proibir."""
     if not _fab_artefatos() and not _fab_specs():
         raise LookupError(
@@ -94,7 +94,7 @@ def _fab_ha_estado() -> None:
 
 
 def _fab_forja():
-    """A forja do `aferido`, ou o erro que explica por que ela não veio."""
+    """A forja do `loadline`, ou o erro que explica por que ela não veio."""
     try:
         from forja import ler  # noqa: PLC0415
         from forja.spec import Recusa  # noqa: PLC0415
@@ -102,7 +102,7 @@ def _fab_forja():
         raise LookupError(
             "o pacote `forja` não está no PYTHONPATH — esta sonda precisa dele para saber "
             "quais specs seriam recusadas. Rode com "
-            "`PYTHONPATH=/caminho/para/aferido python -m aferido .`, ou `pip install -e`. "
+            "`PYTHONPATH=/caminho/para/loadline python -m loadline .`, ou `pip install -e`. "
             f"({exc})"
         ) from exc
     return ler, Recusa
@@ -181,7 +181,7 @@ def fab_artefato_desatualizado() -> int:
 
 @sonda(
     "fabrica.specs_recusadas",
-    origem="specs que a forja do aferido RECUSA — as oito regras rodadas de verdade",
+    origem="specs que a forja do loadline RECUSA — as oito regras rodadas de verdade",
 )
 def fab_specs_recusadas() -> int:
     """De RELAÇÃO. Não é estilo: é a spec não compilar.

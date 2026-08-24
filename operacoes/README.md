@@ -5,7 +5,7 @@
 >
 > Você ajusta o que a `RECEITA.md` mandar ajustar — na maioria delas, no máximo dois campos — e roda.
 
-O núcleo do `aferido` responde *"isto que está escrito continua sendo verdade hoje?"*. Sozinho, ele
+O núcleo do `loadline` responde *"isto que está escrito continua sendo verdade hoje?"*. Sozinho, ele
 é um motor sem carga: chega num repositório novo, não conhece nenhuma métrica dele, e a primeira
 coisa que pede é trabalho — **escreva sua sonda**.
 
@@ -15,7 +15,7 @@ Esta pasta é a carga.
 
 ## As onze, por família
 
-<!-- aferido: operacoes.total=11 natureza=contagem em=2026-08-23 vence=nunca fonte=operacoes/ -->
+<!-- measured: operacoes.total=11 natureza=contagem em=2026-08-23 vence=nunca fonte=operacoes/ -->
 
 ### 🔧 Capacidade — o que você **passa a conseguir fazer**
 
@@ -48,7 +48,7 @@ Estas medem coisas que já existem e envelheceram caladas.
 
 ## A anatomia é fixa: se você aprendeu uma, aprendeu todas
 
-<!-- aferido: operacoes.arquivos_por_operacao=5 natureza=relacao em=2026-08-21 vence=nunca fonte=operacoes/ -->
+<!-- measured: operacoes.arquivos_por_operacao=5 natureza=relacao em=2026-08-21 vence=nunca fonte=operacoes/ -->
 
 | Arquivo | O que é |
 |---|---|
@@ -67,25 +67,25 @@ da anatomia estoura quando falta um.
 ## Os 60 segundos
 
 ```console
-$ git clone <este repo> && cd aferido
+$ git clone <este repo> && cd loadline
 
 $ cp operacoes/fronteira-de-agente/sondas.py /caminho/do/seu/repo/sondas.py
 $ cd /caminho/do/seu/repo
 
-$ PYTHONPATH=/caminho/para/aferido python -m aferido .
+$ PYTHONPATH=/caminho/para/loadline python -m loadline .
 ```
 
-### Como o `aferido` fica alcançável de dentro do SEU repositório
+### Como o `loadline` fica alcançável de dentro do SEU repositório
 
 Duas formas, e as duas funcionam. **Nenhuma baixa nada da internet.**
 
 | | Como | Quando |
 |---|---|---|
-| **sem instalar** | `PYTHONPATH=/caminho/para/aferido python -m aferido .` | experimentar, CI efêmero, máquina que você não administra |
-| **instalando** | `pip install -e /caminho/para/aferido`, e depois só `aferido .` | uso diário; o `pyproject.toml` declara o comando e **zero dependências** |
+| **sem instalar** | `PYTHONPATH=/caminho/para/loadline python -m loadline .` | experimentar, CI efêmero, máquina que você não administra |
+| **instalando** | `pip install -e /caminho/para/loadline`, e depois só `loadline .` | uso diário; o `pyproject.toml` declara o comando e **zero dependências** |
 
 Os exemplos das receitas usam a primeira forma, porque ela é a que funciona em qualquer lugar sem
-pedir permissão a ninguém. Se você instalou, troque `PYTHONPATH=... python -m aferido` por `aferido`
+pedir permissão a ninguém. Se você instalou, troque `PYTHONPATH=... python -m loadline` por `loadline`
 em todos eles.
 
 A primeira execução **não pede nada de você**. Ela devolve três listas, e a terceira é a que
@@ -93,11 +93,11 @@ importa: toda afirmação numérica dos seus arquivos que nenhum selo cobre, com
 selo pronto para colar.
 
 ```console
-$ python -m aferido . --selar
+$ python -m loadline . --selar
 ```
 
-Isso escreve os selos, todos como `arbitrado:` — porque ninguém mediu nada ainda. Onde a operação
-já traz sonda pronta, você troca `arbitrado:` por `aferido:` e o número passa a ser **recomputado**
+Isso escreve os selos, todos como `arbitrated:` — porque ninguém mediu nada ainda. Onde a operação
+já traz sonda pronta, você troca `arbitrated:` por `measured:` e o número passa a ser **recomputado**
 em vez de escolhido. A `RECEITA.md` de cada operação diz exatamente quais.
 
 ### Usando duas operações no mesmo repositório
@@ -141,7 +141,7 @@ valem para todas, e ficam escritas aqui para ninguém descobri-las usando:
    quem escreve.
 
 3. **Nenhuma delas instala, baixa, envia ou telefona para lugar nenhum.** Zero dependências, zero
-   rede, zero chave de API, zero telemetria. Se uma sonda precisar da internet, ela vira `SEM_PROVA`
+   rede, zero chave de API, zero telemetria. Se uma sonda precisar da internet, ela vira `UNPROVEN`
    com o erro escrito — nunca um palpite com cara de medida.
 
 **E uma quarta, que vale para as duas operações que trazem heurística** (`suite-que-acusa` e a

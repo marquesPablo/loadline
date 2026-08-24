@@ -25,7 +25,7 @@ arquivos estão certos, cada um por si. **O defeito mora entre eles.**
 ## O que esta operação instala
 
 Oito sondas sobre uma pasta de arquivos markdown:
-<!-- aferido: operacao.sala.sondas=8 natureza=contagem em=2026-08-21 vence=nunca fonte=operacoes/sala-de-decisao/sondas.py -->
+<!-- measured: operacao.sala.sondas=8 natureza=contagem em=2026-08-21 vence=nunca fonte=operacoes/sala-de-decisao/sondas.py -->
 
 | Métrica | O que recomputa | Natureza |
 |---|---|---|
@@ -86,7 +86,7 @@ ajuste os quatro `re.compile` do topo — eles estão em um bloco só, nomeados.
 ```console
 $ cp operacoes/sala-de-decisao/sondas.py  /caminho/do/seu/repo/sondas.py
 $ cd /caminho/do/seu/repo
-$ PYTHONPATH=/caminho/para/aferido python -m aferido .
+$ PYTHONPATH=/caminho/para/loadline python -m loadline .
 ```
 
 ```console

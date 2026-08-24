@@ -17,7 +17,7 @@ configuração diz o que está cercado; **os dois nunca são lidos juntos**. Est
 ## O que esta operação instala
 
 Doze sondas que cruzam `.claude/agents/*.md` com `.claude/settings.json`:
-<!-- aferido: operacao.fronteira.sondas=12 natureza=contagem em=2026-08-21 vence=nunca fonte=operacoes/fronteira-de-agente/sondas.py -->
+<!-- measured: operacao.fronteira.sondas=12 natureza=contagem em=2026-08-21 vence=nunca fonte=operacoes/fronteira-de-agente/sondas.py -->
 
 | Métrica | O que recomputa | Natureza |
 |---|---|---|
@@ -89,10 +89,10 @@ inofensivo é como uma cerca deixa de cercar sem ninguém ver.
 ```console
 $ cp operacoes/fronteira-de-agente/sondas.py  /caminho/do/seu/repo/sondas.py
 $ cd /caminho/do/seu/repo
-$ PYTHONPATH=/caminho/para/aferido python -m aferido .
+$ PYTHONPATH=/caminho/para/loadline python -m loadline .
 ```
 
-> Instalou com `pip install -e /caminho/para/aferido`? Então é só `aferido .`. As duas
+> Instalou com `pip install -e /caminho/para/loadline`? Então é só `loadline .`. As duas
 > formas estão em [`operacoes/README.md`](../README.md), e nenhuma baixa nada.
 
 E cole no seu `README.md` ou `AGENTS.md`:
@@ -101,9 +101,9 @@ E cole no seu `README.md` ou `AGENTS.md`:
 ## Fronteira dos agentes
 
 Nenhum subagente deste repositório usa rede ou escrita sem um hook que o cerque.
-<!-- aferido: agentes.rede_sem_cerca=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=.claude/settings.json -->
-<!-- aferido: agentes.escrita_sem_cerca=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=.claude/settings.json -->
-<!-- aferido: agentes.reprovariam_na_forja=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=.claude/agents -->
+<!-- measured: agentes.rede_sem_cerca=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=.claude/settings.json -->
+<!-- measured: agentes.escrita_sem_cerca=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=.claude/settings.json -->
+<!-- measured: agentes.reprovariam_na_forja=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=.claude/agents -->
 ```
 
 Se algum não for zero hoje, **sele o número de hoje mesmo assim**, com `vence=30d`. Um número

@@ -362,7 +362,7 @@ def receita(spec: Spec, emitidos: list[str], hoje: date | None = None) -> tuple[
     L = [
         f"# Receita — `{spec.slug}`",
         "",
-        f"<!-- aferido: forja.artefatos={len(emitidos)} natureza=contagem "
+        f"<!-- measured: forja.artefatos={len(emitidos)} natureza=contagem "
         f"em={hoje.isoformat()} vence=nunca fonte={spec.origem} -->",
         "",
         f"- **Spec de origem:** `{spec.origem}`",

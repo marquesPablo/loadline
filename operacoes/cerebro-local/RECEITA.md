@@ -84,7 +84,7 @@ mais cara que existe: a que devolve uma resposta plausível.
 
 ## As oito sondas
 
-<!-- aferido: operacao.cerebro.sondas=8 natureza=contagem em=2026-08-21 vence=nunca fonte=operacoes/cerebro-local/sondas.py -->
+<!-- measured: operacao.cerebro.sondas=8 natureza=contagem em=2026-08-21 vence=nunca fonte=operacoes/cerebro-local/sondas.py -->
 
 | Métrica | O que recomputa | Natureza |
 |---|---|---|

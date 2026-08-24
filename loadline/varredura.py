@@ -16,7 +16,7 @@ import sys
 from datetime import date
 from pathlib import Path
 
-from .eco import PROSA_MUDA, afirmacoes_sem_selo, confrontar
+from .eco import PROSE_DRIFT, afirmacoes_sem_selo, confrontar
 from .selo import Selo, SeloMalformado, ler_linha
 from .veredito import Achado, Relatorio, julgar
 
@@ -26,7 +26,7 @@ IGNORAR = {".git", "node_modules", "__pycache__", ".venv", "venv", "dist", "buil
 # Um arquivo que ENSINA a sintaxe do selo não pode ser lido como se afirmasse.
 # Sem isto, todo texto que documenta a ferramenta a sabota — inclusive o
 # exemplo de selo malformado, que precisa poder existir escrito.
-DIRETIVA_ESPECIME = "aferido-ignorar-arquivo"
+DIRETIVA_ESPECIME = "loadline-ignore-file"
 _CERCA = "```"
 
 
@@ -34,12 +34,12 @@ def _linhas_de_literal(texto: str) -> set[int]:
     """Linhas de um `.py` que estão DENTRO de uma string literal.
 
     Esta é a regra que separa o código que **declara** um selo do código que o
-    **emite**. Um selo num comentário (`# aferido: x=1`) é uma afirmação de
+    **emite**. Um selo num comentário (`# measured: x=1`) é uma afirmação de
     verdade: alguém escreveu aquele número e ele se recompute. Um selo dentro
     de uma string é outra coisa inteira — é o gerador montando o texto que o
     USUÁRIO vai escrever, ou a documentação ensinando a sintaxe.
 
-    Sem isto, todo emissor de selo sabota a si mesmo: `f"<!-- aferido:
+    Sem isto, todo emissor de selo sabota a si mesmo: `f"<!-- measured:
     x={n} -->"` é lido como se afirmasse que `x` vale a string `{n}`. É a mesma
     família de defeito que o controle negativo que sabota a si mesmo, e ela
     reaparece em toda ferramenta que gera a própria sintaxe.
@@ -71,7 +71,7 @@ def _regioes_de_especime(linhas: list[str], markdown: bool, python: bool = False
     """Linhas (1-based) que são espécime e não afirmação.
 
     Três regras, todas declaradas e nenhuma adivinhada:
-      1. arquivo com a diretiva `aferido-ignorar-arquivo` — o arquivo inteiro;
+      1. arquivo com a diretiva `loadline-ignore-file` — o arquivo inteiro;
       2. em Markdown, o que está dentro de cerca de código — uma cerca É a
          marca universal de "isto é ilustração", e ler ilustração como
          afirmação inventa fatos que ninguém escreveu;
@@ -181,7 +181,7 @@ def varrer(raiz: str | Path, hoje: date | None = None) -> Relatorio:
             for selo, numero, no_selo in discrepancias:
                 relatorio.achados.append(
                     Achado(
-                        PROSA_MUDA,
+                        PROSE_DRIFT,
                         "/".join(sorted(selo.metricas)) or "—",
                         numero,
                         ", ".join(sorted(no_selo)) or "—",

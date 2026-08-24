@@ -18,7 +18,7 @@ mesmo assim alcança quem usa em rede.
 ## O que esta operação instala
 
 Oito sondas que medem a **distância entre o manifesto e a tabela** — nunca a licença em si:
-<!-- aferido: operacao.dependencia.sondas=8 natureza=contagem em=2026-08-21 vence=nunca fonte=operacoes/dependencia-com-veredito/sondas.py -->
+<!-- measured: operacao.dependencia.sondas=8 natureza=contagem em=2026-08-21 vence=nunca fonte=operacoes/dependencia-com-veredito/sondas.py -->
 
 | Métrica | O que recomputa | Natureza |
 |---|---|---|
@@ -52,7 +52,7 @@ da dependência vai entre crases**, e a linha contém um dos sete vereditos do v
 ```
 
 **Não tem tabela?** Crie o arquivo vazio. A sonda passa a dizer quantas dependências ninguém olhou —
-que é a primeira coisa útil que ela tem a dizer. Arquivo ausente **estoura** e vira `SEM_PROVA`, de
+que é a primeira coisa útil que ela tem a dizer. Arquivo ausente **estoura** e vira `UNPROVEN`, de
 propósito: *não dá para conferir* nunca deve virar *zero*.
 
 ## O que você vê
@@ -77,10 +77,10 @@ um pacote que já saiu**. As duas últimas são as que a tabela sozinha nunca ia
 ```console
 $ cp operacoes/dependencia-com-veredito/sondas.py  /caminho/do/seu/repo/sondas.py
 $ cd /caminho/do/seu/repo
-$ PYTHONPATH=/caminho/para/aferido python -m aferido .
+$ PYTHONPATH=/caminho/para/loadline python -m loadline .
 ```
 
-> Instalou com `pip install -e /caminho/para/aferido`? Então é só `aferido .`. As duas
+> Instalou com `pip install -e /caminho/para/loadline`? Então é só `loadline .`. As duas
 > formas estão em [`operacoes/README.md`](../README.md), e nenhuma baixa nada.
 
 E cole na sua tabela de licenças:
@@ -88,8 +88,8 @@ E cole na sua tabela de licenças:
 ```markdown
 Toda dependência deste manifesto tem veredito de licença escrito, e nenhum veredito sobrevive à
 dependência que ele julgava.
-<!-- aferido: deps.sem_veredito=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=manifesto -->
-<!-- aferido: deps.veredito_orfao=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=manifesto -->
+<!-- measured: deps.sem_veredito=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=manifesto -->
+<!-- measured: deps.veredito_orfao=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=manifesto -->
 ```
 
 ## Os dois agentes, e por que são dois

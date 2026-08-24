@@ -1,6 +1,6 @@
 """Sondas da operação `readme-que-nao-mente`.
 
-natureza: correcao — sonda que estoura vira `SEM_PROVA` no relatório, com o erro
+natureza: correcao — sonda que estoura vira `UNPROVEN` no relatório, com o erro
 por extenso. Ela nunca devolve um palpite.
 
 COPIE ESTE ARQUIVO para a raiz do seu repositório, como `sondas.py`.
@@ -26,7 +26,7 @@ import subprocess
 import tomllib
 from pathlib import Path
 
-from aferido import sonda
+from loadline import sonda
 
 RAIZ = Path(__file__).resolve().parent
 
@@ -212,7 +212,7 @@ def maior_arquivo() -> int:
 
 @sonda("repo.contribuidores", origem="autores distintos em `git shortlog -sne --all`")
 def contribuidores() -> int:
-    """Sai de `git`. Sem repositório git, ela estoura e vira `SEM_PROVA` — que é
+    """Sai de `git`. Sem repositório git, ela estoura e vira `UNPROVEN` — que é
     a resposta certa: *não dá para conferir* nunca deve virar *zero*."""
     saida = subprocess.run(
         ["git", "-C", str(RAIZ), "shortlog", "-sne", "--all", "--no-merges"],

@@ -151,7 +151,7 @@ def gerar(hoje: date | None = None) -> str:
     A("> **Este arquivo é gerado.** Não o edite à mão — edite `censo/ecossistema.json` e rode")
     A("> `python censo/gerar.py`. O verificador reprova se os dois saírem de sincronia.")
     A("")
-    A(f"<!-- aferido: censo.gerado_em_dia=1 natureza=relacao em={hoje.isoformat()} vence=nunca fonte=censo/gerar.py -->")
+    A(f"<!-- measured: censo.gerado_em_dia=1 natureza=relacao em={hoje.isoformat()} vence=nunca fonte=censo/gerar.py -->")
     A("")
     A("Uma lista `awesome-*` não reprova quando envelhece. Este censo reprova.")
     A("")
@@ -271,7 +271,7 @@ def gerar(hoje: date | None = None) -> str:
     A("   estava creditado a quem postou no LinkedIn, não a quem escreveu o código.")
     A("2. Preencha `censo/ecossistema.json`. **`nao_verificado` é um valor legítimo** e nunca")
     A("   vira zero.")
-    A("3. Rode `python censo/gerar.py` e `python -m aferido .`. Se algum dos dois reprovar, a")
+    A("3. Rode `python censo/gerar.py` e `python -m loadline .`. Se algum dos dois reprovar, a")
     A("   entrada ainda não está pronta.")
     A("")
     return "\n".join(L) + "\n"

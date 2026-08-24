@@ -46,7 +46,7 @@ que roda antes da ferramenta e responde `deny`.
 ## O que esta operação instala
 
 Oito sondas sobre a sua pasta de achados:
-<!-- aferido: operacao.revisao.sondas=8 natureza=contagem em=2026-08-21 vence=nunca fonte=operacoes/revisao-de-seguranca/sondas.py -->
+<!-- measured: operacao.revisao.sondas=8 natureza=contagem em=2026-08-21 vence=nunca fonte=operacoes/revisao-de-seguranca/sondas.py -->
 
 | Métrica | O que recomputa | Natureza |
 |---|---|---|
@@ -79,7 +79,7 @@ PASTA_DE_ACHADOS = "achados"   # um arquivo .md por achado
 ```console
 $ cp operacoes/revisao-de-seguranca/sondas.py  /caminho/do/seu/repo/sondas.py
 $ cd /caminho/do/seu/repo
-$ PYTHONPATH=/caminho/para/aferido python -m aferido .
+$ PYTHONPATH=/caminho/para/loadline python -m loadline .
 ```
 
 ```console

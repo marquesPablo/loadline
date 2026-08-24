@@ -1,10 +1,10 @@
 """Sondas da operação `vitrine`.
 
-natureza: correcao — sonda que estoura vira `SEM_PROVA` no relatório, com o erro
+natureza: correcao — sonda que estoura vira `UNPROVEN` no relatório, com o erro
 por extenso. Ela nunca devolve um palpite.
 
 COPIE ESTE ARQUIVO **E** A PASTA `vitrine/` (a que fica na raiz deste repositório,
-ao lado de `aferido/` e `forja/`) para a raiz do seu repositório. É a única
+ao lado de `loadline/` e `forja/`) para a raiz do seu repositório. É a única
 operação da prateleira que traz um pacote inteiro além do `sondas.py` — como a
 `cerebro-local` traz `servidor.py`.
 
@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from aferido import sonda
+from loadline import sonda
 from vitrine import ler_pasta, vistoriar
 
 RAIZ = Path(__file__).resolve().parent

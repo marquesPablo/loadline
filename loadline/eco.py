@@ -1,6 +1,6 @@
 """Confronto prosa × selo — o número na FRASE bate com o número no SELO?
 
-aferido-ignorar-arquivo: este arquivo ENSINA o confronto, e os selos e frases
+loadline-ignore-file: este arquivo ENSINA o confronto, e os selos e frases
 escritos aqui são espécimes, não afirmações.
 
 natureza: correcao — este módulo só lê texto e devolve achados. Ele não escreve
@@ -9,9 +9,9 @@ no disco, não conserta a frase, e exceção aqui libera e avisa em vez de barra
 O defeito que ele existe para pegar, medido neste repositório em 2026-08-20:
 
     33 passaram · 0 reprovaram
-    <!-- aferido: nucleo.checks=36 natureza=contagem em=2026-08-16 vence=nunca -->
+    <!-- measured: nucleo.checks=36 natureza=contagem em=2026-08-16 vence=nunca -->
 
-O selo diz 36. A sonda mede 36. **O verificador devolve `VALE`** — e a frase
+O selo diz 36. A sonda mede 36. **O verificador devolve `MATCHES`** — e a frase
 três linhas acima diz 33, para sempre, sem nada olhando.
 
 É o buraco estrutural de todo mecanismo de selo: **o selo cobre o VALOR, e
@@ -55,7 +55,7 @@ from dataclasses import dataclass
 
 from .selo import SELO_NA_LINHA, Selo
 
-PROSA_MUDA = "PROSA_MUDA"
+PROSE_DRIFT = "PROSE_DRIFT"
 
 #: Trechos que são endereço, não asserção — retirados ANTES de procurar número.
 RUIDO = (

@@ -1,6 +1,6 @@
 """Autoteste — cada check reintroduz o defeito que ele existe para pegar.
 
-aferido-ignorar-arquivo: este arquivo escreve selos de mentira de propósito.
+loadline-ignore-file: este arquivo escreve selos de mentira de propósito.
 Julgá-los seria afirmar coisas que ninguém quis afirmar.
 
 Rode: `python autoteste.py`
@@ -22,14 +22,14 @@ from pathlib import Path
 
 from forja.__main__ import main as forja_main
 
-from aferido import (
-    ARBITRADO,
-    CONGELADO,
-    DERIVOU,
-    PROSA_MUDA,
-    SEM_PROVA,
-    VALE,
-    VENCIDO,
+from loadline import (
+    ARBITRATED,
+    FROZEN,
+    DRIFTED,
+    PROSE_DRIFT,
+    UNPROVEN,
+    MATCHES,
+    EXPIRED,
     SeloMalformado,
     julgar,
     ler_linha,
@@ -87,7 +87,7 @@ def _selo(texto: str):
 @check("A", "selo com métrica e SEM `natureza` é RECUSADO, não aceito calado")
 def _a():
     try:
-        _selo("<!-- aferido: x.y=3 em=2026-08-16 -->")
+        _selo("<!-- measured: x.y=3 em=2026-08-16 -->")
     except SeloMalformado as exc:
         assert "natureza" in str(exc), f"recusou pelo motivo errado: {exc}"
         return
@@ -100,28 +100,28 @@ def _a():
 @check("B", "`natureza` fora do vocabulário fechado é RECUSADA")
 def _b():
     try:
-        _selo("<!-- aferido: x.y=3 natureza=talvez em=2026-08-16 -->")
+        _selo("<!-- measured: x.y=3 natureza=talvez em=2026-08-16 -->")
     except SeloMalformado:
         return
     raise AssertionError("aceitou `natureza=talvez`; o vocabulário não é fechado de verdade")
 
 
-@check("C", "`congelado:` sem `motivo` é RECUSADO")
+@check("C", "`frozen:` sem `motivo` é RECUSADO")
 def _c():
     try:
-        _selo('<!-- congelado: x.y=3 em=2020-01-01 -->')
+        _selo('<!-- frozen: x.y=3 em=2020-01-01 -->')
     except SeloMalformado as exc:
         assert "motivo" in str(exc), f"recusou pelo motivo errado: {exc}"
         return
     raise AssertionError("congelar sem dizer por quê é o mesmo que apagar a medida")
 
 
-@check("D", "`vence` malformado vira SEM_PROVA, nunca VALE")
+@check("D", "`vence` malformado vira UNPROVEN, nunca MATCHES")
 def _d():
     registro.limpar()
     sonda("x.y", origem="teste")(lambda: 3)
-    achados = julgar(_selo("<!-- aferido: x.y=3 natureza=contagem em=2026-08-16 vence=semana -->"), HOJE)
-    assert achados[0].veredito == SEM_PROVA, f"esperava SEM_PROVA, veio {achados[0].veredito}"
+    achados = julgar(_selo("<!-- measured: x.y=3 natureza=contagem em=2026-08-16 vence=semana -->"), HOJE)
+    assert achados[0].veredito == UNPROVEN, f"esperava UNPROVEN, veio {achados[0].veredito}"
 
 
 # ------------------------------------------------------- os dois vermelhos
@@ -130,8 +130,8 @@ def _d():
 def _e():
     registro.limpar()
     sonda("x.y", origem="teste")(lambda: 9)
-    a = julgar(_selo("<!-- aferido: x.y=3 natureza=contagem em=2026-08-16 -->"), HOJE)[0]
-    assert a.veredito == DERIVOU, f"esperava DERIVOU, veio {a.veredito}"
+    a = julgar(_selo("<!-- measured: x.y=3 natureza=contagem em=2026-08-16 -->"), HOJE)[0]
+    assert a.veredito == DRIFTED, f"esperava DRIFTED, veio {a.veredito}"
     assert not a.e_defeito, "contagem divergindo NÃO é defeito"
     assert "resele" in a.acao.lower(), f"ação errada: {a.acao}"
 
@@ -140,8 +140,8 @@ def _e():
 def _f():
     registro.limpar()
     sonda("x.y", origem="teste")(lambda: 9)
-    a = julgar(_selo("<!-- aferido: x.y=3 natureza=relacao em=2026-08-16 -->"), HOJE)[0]
-    assert a.veredito == DERIVOU, f"esperava DERIVOU, veio {a.veredito}"
+    a = julgar(_selo("<!-- measured: x.y=3 natureza=relacao em=2026-08-16 -->"), HOJE)[0]
+    assert a.veredito == DRIFTED, f"esperava DRIFTED, veio {a.veredito}"
     assert a.e_defeito, (
         "relação divergindo passou como resselável — é aqui que se esconde o bug "
         "que o mecanismo inteiro existe para achar"
@@ -151,15 +151,15 @@ def _f():
 
 # ------------------------------------------------------------- vencimento
 
-@check("G", "valor CERTO + prazo vencido = VENCIDO (o motivo de este projeto existir)")
+@check("G", "valor CERTO + prazo vencido = EXPIRED (o motivo de este projeto existir)")
 def _g():
     registro.limpar()
     sonda("x.y", origem="teste")(lambda: 3)
     a = julgar(
-        _selo("<!-- aferido: x.y=3 natureza=contagem em=2026-01-01 vence=30d -->"), HOJE
+        _selo("<!-- measured: x.y=3 natureza=contagem em=2026-01-01 vence=30d -->"), HOJE
     )[0]
-    assert a.veredito == VENCIDO, (
-        f"esperava VENCIDO, veio {a.veredito} — um número que ninguém reconfere há meses "
+    assert a.veredito == EXPIRED, (
+        f"esperava EXPIRED, veio {a.veredito} — um número que ninguém reconfere há meses "
         "é um número que ainda não errou, não um número verificado"
     )
     assert a.escrito == a.medido == "3", "o valor batia; o que venceu foi a conferência"
@@ -169,21 +169,21 @@ def _g():
 def _h():
     registro.limpar()
     sonda("x.y", origem="teste")(lambda: 3)
-    a = julgar(_selo("<!-- aferido: x.y=3 natureza=relacao em=2001-01-01 vence=nunca -->"), HOJE)[0]
-    assert a.veredito == VALE, f"esperava VALE, veio {a.veredito}"
+    a = julgar(_selo("<!-- measured: x.y=3 natureza=relacao em=2001-01-01 vence=nunca -->"), HOJE)[0]
+    assert a.veredito == MATCHES, f"esperava MATCHES, veio {a.veredito}"
 
 
 # --------------------------------------------------- não medido ≠ zero
 
-@check("I", "métrica sem sonda vira SEM_PROVA, NUNCA VALE")
+@check("I", "métrica sem sonda vira UNPROVEN, NUNCA MATCHES")
 def _i():
     registro.limpar()
-    a = julgar(_selo("<!-- aferido: nao.existe=3 natureza=contagem em=2026-08-16 -->"), HOJE)[0]
-    assert a.veredito == SEM_PROVA, f"esperava SEM_PROVA, veio {a.veredito}"
+    a = julgar(_selo("<!-- measured: nao.existe=3 natureza=contagem em=2026-08-16 -->"), HOJE)[0]
+    assert a.veredito == UNPROVEN, f"esperava UNPROVEN, veio {a.veredito}"
     assert not a.verde, "não medido virou verde — é o defeito de contar ausência como zero"
 
 
-@check("J", "sonda que ESTOURA vira SEM_PROVA, e nunca passa como verde")
+@check("J", "sonda que ESTOURA vira UNPROVEN, e nunca passa como verde")
 def _j():
     registro.limpar()
 
@@ -191,8 +191,8 @@ def _j():
         raise RuntimeError("o disco sumiu")
 
     sonda("x.y", origem="teste")(quebrada)
-    a = julgar(_selo("<!-- aferido: x.y=3 natureza=contagem em=2026-08-16 -->"), HOJE)[0]
-    assert a.veredito == SEM_PROVA, f"esperava SEM_PROVA, veio {a.veredito}"
+    a = julgar(_selo("<!-- measured: x.y=3 natureza=contagem em=2026-08-16 -->"), HOJE)[0]
+    assert a.veredito == UNPROVEN, f"esperava UNPROVEN, veio {a.veredito}"
     assert "o disco sumiu" in a.detalhe, f"engoliu o erro: {a.detalhe}"
 
 
@@ -204,8 +204,8 @@ def _k():
         return 1 + "dois"  # noqa: RUF005
 
     sonda("x.y", origem="teste")(erra_por_dentro)
-    a = julgar(_selo("<!-- aferido: x.y=3 natureza=contagem em=2026-08-16 -->"), HOJE)[0]
-    assert a.veredito == SEM_PROVA, f"esperava SEM_PROVA, veio {a.veredito}"
+    a = julgar(_selo("<!-- measured: x.y=3 natureza=contagem em=2026-08-16 -->"), HOJE)[0]
+    assert a.veredito == UNPROVEN, f"esperava UNPROVEN, veio {a.veredito}"
     assert "TypeError" in a.detalhe, (
         f"o TypeError da sonda foi engolido pelo despacho de aridade: {a.detalhe}"
     )
@@ -219,7 +219,7 @@ def _l():
     with tempfile.TemporaryDirectory() as tmp:
         alvo = Path(tmp) / "doc.md"
         alvo.write_text(
-            "# doc\n\n```\n<!-- aferido: inventado=99 natureza=contagem em=2026-08-16 -->\n```\n",
+            "# doc\n\n```\n<!-- measured: inventado=99 natureza=contagem em=2026-08-16 -->\n```\n",
             encoding="utf-8",
         )
         r = varrer(alvo, hoje=HOJE)
@@ -233,12 +233,12 @@ def _m():
     with tempfile.TemporaryDirectory() as tmp:
         alvo = Path(tmp) / "doc.md"
         alvo.write_text(
-            "# doc\n\n<!-- aferido: inventado=99 natureza=contagem em=2026-08-16 -->\n",
+            "# doc\n\n<!-- measured: inventado=99 natureza=contagem em=2026-08-16 -->\n",
             encoding="utf-8",
         )
         r = varrer(alvo, hoje=HOJE)
     assert len(r.achados) == 1, f"esperava 1 achado, veio {len(r.achados)}"
-    assert r.achados[0].veredito == SEM_PROVA
+    assert r.achados[0].veredito == UNPROVEN
 
 
 # ----------------------------------------------------------- anti-espelho
@@ -260,8 +260,8 @@ def _n():
 @check("O", "congelado não é recomputado, e carrega o motivo até o relatório")
 def _o():
     registro.limpar()
-    a = julgar(_selo('<!-- congelado: x.y=3 em=2020-01-01 motivo="histórico do lançamento" -->'), HOJE)[0]
-    assert a.veredito == CONGELADO, f"esperava CONGELADO, veio {a.veredito}"
+    a = julgar(_selo('<!-- frozen: x.y=3 em=2020-01-01 motivo="histórico do lançamento" -->'), HOJE)[0]
+    assert a.veredito == FROZEN, f"esperava FROZEN, veio {a.veredito}"
     assert a.verde, "congelado com motivo é verde"
     assert "histórico do lançamento" in a.acao
 
@@ -281,9 +281,9 @@ def _p():
 
 @check("Q", "resselar reescreve o selo INTEIRO, nunca só metade dele")
 def _q():
-    from aferido import escrever
+    from loadline import escrever
 
-    velho = _selo("<!-- aferido: x.y=3 natureza=contagem em=2026-01-01 vence=30d -->")
+    velho = _selo("<!-- measured: x.y=3 natureza=contagem em=2026-01-01 vence=30d -->")
     novo = escrever(velho, **{"x.y": 9, "em": "2026-08-16"})
     assert "x.y=9" in novo, novo
     assert "em=2026-08-16" in novo, novo
@@ -613,10 +613,10 @@ def _ah():
 def _ai():
     fonte = (
         "def emitir(n):\n"
-        '    return f"<!-- aferido: forja.artefatos={n} natureza=contagem em=2026-08-16 -->"\n'
+        '    return f"<!-- measured: forja.artefatos={n} natureza=contagem em=2026-08-16 -->"\n'
         "\n"
         'DOC = """exemplo malformado que precisa poder existir escrito:\n'
-        "<!-- aferido: x.y=1 -->\n"
+        "<!-- measured: x.y=1 -->\n"
         '"""\n'
     )
     with tempfile.TemporaryDirectory() as tmp:
@@ -637,8 +637,8 @@ def _aj():
     registro.limpar()
     sonda("emissor.x")(lambda: 4)
     fonte = (
-        'DOC = """dentro da string, espécime: <!-- aferido: emissor.x=99 natureza=contagem -->"""\n'
-        "# aferido: emissor.x=1 natureza=contagem em=2026-08-16 vence=nunca\n"
+        'DOC = """dentro da string, espécime: <!-- measured: emissor.x=99 natureza=contagem -->"""\n'
+        "# measured: emissor.x=1 natureza=contagem em=2026-08-16 vence=nunca\n"
     )
     with tempfile.TemporaryDirectory() as tmp:
         (Path(tmp) / "misto.py").write_text(fonte, encoding="utf-8")
@@ -648,14 +648,14 @@ def _aj():
         f"esperava exatamente 1 achado (o do comentário), veio {len(achados)}: "
         f"{[str(a) for a in r.achados]} — a regra da string virou isenção do arquivo inteiro"
     )
-    assert achados[0].veredito == DERIVOU and achados[0].escrito == "1", achados[0]
+    assert achados[0].veredito == DRIFTED and achados[0].escrito == "1", achados[0]
 
 
 @check("AK", "`.py` que não parseia NÃO vira espécime — falhar calado é pior que falhar alto")
 def _ak():
     registro.limpar()
     sonda("quebrado.x")(lambda: 1)
-    fonte = "def ( isto não é python\n# aferido: quebrado.x=1 natureza=contagem em=2026-08-16\n"
+    fonte = "def ( isto não é python\n# measured: quebrado.x=1 natureza=contagem em=2026-08-16\n"
     with tempfile.TemporaryDirectory() as tmp:
         (Path(tmp) / "quebrado.py").write_text(fonte, encoding="utf-8")
         r = varrer(Path(tmp), hoje=HOJE)
@@ -669,7 +669,7 @@ def _ak():
 def _al():
     """O defeito real deste repositório entre 2026-08-16 e 2026-08-20, reintroduzido.
 
-    O selo diz 36, a sonda mede 36, e o veredito do selo é VALE — como sempre foi.
+    O selo diz 36, a sonda mede 36, e o veredito do selo é MATCHES — como sempre foi.
     O que mudou é que a FRASE, três linhas acima, passou a ser lida.
     """
     registro.limpar()
@@ -678,19 +678,19 @@ def _al():
 $ python autoteste.py
 33 passaram
 ```
-<!-- aferido: nucleo.checks=36 natureza=contagem em=2026-08-16 vence=nunca -->
+<!-- measured: nucleo.checks=36 natureza=contagem em=2026-08-16 vence=nunca -->
 """
     with tempfile.TemporaryDirectory() as tmp:
         (Path(tmp) / "leia.md").write_text(fonte, encoding="utf-8")
         r = varrer(Path(tmp), hoje=HOJE)
 
-    mudos = [a for a in r.achados if a.veredito == PROSA_MUDA]
+    mudos = [a for a in r.achados if a.veredito == PROSE_DRIFT]
     assert any(a.escrito == "33" for a in mudos), (
         "a frase diz 33 e o selo diz 36, e nada acusou — é o buraco que o "
-        f"PROSA_MUDA existe para fechar. Achados: {[str(a) for a in r.achados]}"
+        f"PROSE_DRIFT existe para fechar. Achados: {[str(a) for a in r.achados]}"
     )
-    assert any(a.veredito == VALE for a in r.achados), (
-        "o selo em si tem de continuar VALE: é exatamente por isso que o defeito "
+    assert any(a.veredito == MATCHES for a in r.achados), (
+        "o selo em si tem de continuar MATCHES: é exatamente por isso que o defeito "
         "sobreviveu quatro dias — o verificador olhava só o comentário"
     )
     assert r.reprova, "com a frase errada, a corrida tem de reprovar"
@@ -709,16 +709,16 @@ def _am():
     registro.limpar()
     sonda("x.y")(lambda: 1)
     fonte = """Um registro do ecossistema, e os dois lados saem da mesma fonte.
-<!-- aferido: x.y=1 natureza=contagem em=2026-08-16 vence=nunca -->
+<!-- measured: x.y=1 natureza=contagem em=2026-08-16 vence=nunca -->
 
 Prosa inteira que descreve o mecanismo e não afirma quantidade.
-<!-- aferido: x.y=1 natureza=contagem em=2026-08-16 vence=nunca -->
+<!-- measured: x.y=1 natureza=contagem em=2026-08-16 vence=nunca -->
 """
     with tempfile.TemporaryDirectory() as tmp:
         (Path(tmp) / "leia.md").write_text(fonte, encoding="utf-8")
         r = varrer(Path(tmp), hoje=HOJE)
 
-    mudos = [a for a in r.achados if a.veredito == PROSA_MUDA]
+    mudos = [a for a in r.achados if a.veredito == PROSE_DRIFT]
     assert not mudos, (
         "`Um registro` é artigo e `os dois lados` é pronome — nenhum dos dois "
         f"afirma quantidade. Falsos positivos: {[str(a) for a in mudos]}"
@@ -731,13 +731,13 @@ def _an():
     registro.limpar()
     sonda("nucleo.checks")(lambda: 36)
     fonte = """33 passaram, e este número é ilustração, não afirmação.
-<!-- aferido: nucleo.checks=36 eco=nao natureza=contagem em=2026-08-16 vence=nunca -->
+<!-- measured: nucleo.checks=36 eco=nao natureza=contagem em=2026-08-16 vence=nunca -->
 """
     with tempfile.TemporaryDirectory() as tmp:
         (Path(tmp) / "leia.md").write_text(fonte, encoding="utf-8")
         r = varrer(Path(tmp), hoje=HOJE)
 
-    assert not [a for a in r.achados if a.veredito == PROSA_MUDA], (
+    assert not [a for a in r.achados if a.veredito == PROSE_DRIFT], (
         "`eco=nao` tem de dispensar o bloco do confronto"
     )
     assert r.dispensados_do_eco, (
@@ -752,38 +752,38 @@ def _an():
 # ------------------------------- a terceira marca de selo, e a terceira lista
 
 
-@check("AO", "`arbitrado:` sem `por=` é MALFORMADO — escolha sem dono é palpite")
+@check("AO", "`arbitrated:` sem `por=` é MALFORMADO — escolha sem dono é palpite")
 def _ao():
     try:
-        _selo("<!-- arbitrado: retry.max=3 em=2026-08-16 vence=90d -->")
+        _selo("<!-- arbitrated: retry.max=3 em=2026-08-16 vence=90d -->")
     except SeloMalformado as exc:
         assert "por=" in str(exc), f"a recusa tem de dizer o que falta, e disse: {exc}"
     else:
         raise AssertionError(
-            "`arbitrado:` sem `por=` passou — um número escolhido e anônimo é "
+            "`arbitrated:` sem `por=` passou — um número escolhido e anônimo é "
             "exatamente o que esta marca existe para desmascarar"
         )
 
 
-@check("AP", "`arbitrado:` no prazo é verde, e NÃO chama sonda nenhuma")
+@check("AP", "`arbitrated:` no prazo é verde, e NÃO chama sonda nenhuma")
 def _ap():
     registro.limpar()  # nenhuma sonda registrada: se ele medir, estoura
-    selo = _selo('<!-- arbitrado: retry.max=3 por="plataforma" em=2026-08-16 vence=90d -->')
+    selo = _selo('<!-- arbitrated: retry.max=3 por="plataforma" em=2026-08-16 vence=90d -->')
     achados = julgar(selo, hoje=HOJE)
-    assert [a.veredito for a in achados] == [ARBITRADO], (
-        f"escolha no prazo tem de ser ARBITRADO, e veio {[a.veredito for a in achados]}"
+    assert [a.veredito for a in achados] == [ARBITRATED], (
+        f"escolha no prazo tem de ser ARBITRATED, e veio {[a.veredito for a in achados]}"
     )
-    assert achados[0].verde, "ARBITRADO é verde: alguém assinou, e o prazo não venceu"
+    assert achados[0].verde, "ARBITRATED é verde: alguém assinou, e o prazo não venceu"
     assert achados[0].medido is None, (
         "número arbitrado não tem medida — inventar uma seria a mentira que a marca persegue"
     )
 
 
-@check("AQ", "`arbitrado:` VENCIDO reprova — escolha sem prazo é escolha esquecida")
+@check("AQ", "`arbitrated:` EXPIRED reprova — escolha sem prazo é escolha esquecida")
 def _aq():
-    selo = _selo('<!-- arbitrado: teto=10 por="board" em=2026-08-16 vence=30d -->')
+    selo = _selo('<!-- arbitrated: teto=10 por="board" em=2026-08-16 vence=30d -->')
     achados = julgar(selo, hoje=date(2026, 12, 1))
-    assert [a.veredito for a in achados] == [VENCIDO], (
+    assert [a.veredito for a in achados] == [EXPIRED], (
         f"escolha fora do prazo tem de vencer, e veio {[a.veredito for a in achados]}"
     )
     assert not achados[0].verde, (
@@ -836,8 +836,8 @@ Temos 12 endpoints.
         escritos, problemas = selar(antes.sem_prova_nenhuma, hoje=HOJE)
         assert not problemas, f"selar não podia falhar aqui: {problemas}"
         assert len(escritos) == 1, f"um selo, uma linha afirmante — vieram {len(escritos)}"
-        assert "arbitrado:" in escritos[0].texto, (
-            "tem de emitir `arbitrado:` e nunca `aferido:` — ninguém mediu nada, e "
+        assert "arbitrated:" in escritos[0].texto, (
+            "tem de emitir `arbitrated:` e nunca `measured:` — ninguém mediu nada, e "
             "emitir a outra marca seria a ferramenta inventando que houve medição"
         )
         assert "por=?" in escritos[0].texto, (
@@ -847,8 +847,8 @@ Temos 12 endpoints.
 
         depois = varrer(Path(tmp), hoje=HOJE)
 
-    assert [a.veredito for a in depois.achados] == [ARBITRADO], (
-        f"o selo escrito tem de voltar como ARBITRADO, e veio {[a.veredito for a in depois.achados]}"
+    assert [a.veredito for a in depois.achados] == [ARBITRATED], (
+        f"o selo escrito tem de voltar como ARBITRATED, e veio {[a.veredito for a in depois.achados]}"
     )
     assert not depois.sem_prova_nenhuma, "depois de selar, a lista 3 tem de esvaziar"
     assert depois.codigo_de_saida == 0, (
@@ -883,15 +883,15 @@ def _at():
     fonte = """# t
 
 Temos 12 endpoints.
-<!-- arbitrado: endpoints=12 por="a" em=2026-08-16 vence=90d -->
+<!-- arbitrated: endpoints=12 por="a" em=2026-08-16 vence=90d -->
 Temos 40 testes.
-<!-- arbitrado: testes=40 por="a" em=2026-08-16 vence=90d -->
+<!-- arbitrated: testes=40 por="a" em=2026-08-16 vence=90d -->
 """
     with tempfile.TemporaryDirectory() as tmp:
         (Path(tmp) / "leia.md").write_text(fonte, encoding="utf-8")
         r = varrer(Path(tmp), hoje=HOJE)
 
-    mudas = [a for a in r.achados if a.veredito == PROSA_MUDA]
+    mudas = [a for a in r.achados if a.veredito == PROSE_DRIFT]
     assert not mudas, (
         "cada selo cobre o SEU parágrafo. Acusação aqui quer dizer que o "
         f"reconhecedor de bloco não enxergou a marca nova e fundiu os dois: {mudas}"
@@ -1015,7 +1015,7 @@ def _aw():
         try:
             valor = registro.medir("operacoes.arquivos_por_operacao", None)
         except LookupError:
-            pass  # é o que tem de acontecer: vira SEM_PROVA, com o nome do que falta
+            pass  # é o que tem de acontecer: vira UNPROVEN, com o nome do que falta
         else:
             raise AssertionError(
                 f"uma operação sem `{casa.ANATOMIA[-1]}` devolveu {valor} em vez de estourar"
@@ -1201,10 +1201,10 @@ def _az():
 def _ba():
     # O defeito que este check trava era real e estava no ponto de entrada: um
     # caminho inexistente varria zero arquivo, não achava afirmação nenhuma, e
-    # saía VERDE com código 0. `aferido ./sr` por `./src` deixava o gate do CI
+    # saía VERDE com código 0. `loadline ./sr` por `./src` deixava o gate do CI
     # aprovando para sempre — *não medido* virando *zero*, dentro da ferramenta
     # cuja tese inteira é que isso não pode acontecer.
-    from aferido.__main__ import main as cli
+    from loadline.__main__ import main as cli
 
     for alvo in ("esta-pasta-nao-existe-em-lugar-nenhum", "--bandeira-que-nao-existe"):
         assert cli([alvo]) == 2, f"`{alvo}` não foi recusado com código 2"
@@ -1469,7 +1469,7 @@ def _bk():
 
     with tempfile.TemporaryDirectory() as tmp:
         raiz = Path(tmp)
-        corpo = 'from __future__ import annotations\n\nfrom aferido import sonda\n\n\n@sonda(\n    "x.y",\n    origem="teste",\n)\ndef _f() -> int:\n    return 1\n'
+        corpo = 'from __future__ import annotations\n\nfrom loadline import sonda\n\n\n@sonda(\n    "x.y",\n    origem="teste",\n)\ndef _f() -> int:\n    return 1\n'
         for nome in ("uma", "outra"):
             (raiz / nome).mkdir()
             (raiz / nome / "sondas.py").write_text(corpo, encoding="utf-8")
@@ -1492,7 +1492,7 @@ def _bk():
 # que essa suíte está VIVA — que ela reprovaria se o próprio detector emudecesse
 # — em vez de só confirmar que ela existe. BM prova a camada que os controles do
 # pacote não tocam: o contrato de saída da CLI (`python -m blind`), nos mesmos
-# moldes de BA/BE/BF para `aferido`/`forja`.
+# moldes de BA/BE/BF para `loadline`/`forja`.
 
 from blind import controles as _blindctl  # noqa: E402
 
@@ -1534,8 +1534,59 @@ def _bm():
         )
 
 
+@check("BN", "cerca declarada só no FRONTMATTER conta — V3 não acusa quem faz certo")
+def _bn():
+    # O defeito, medido em 2026-08-24 sobre o roster do P3G4ZUZ: `saida_cercada`
+    # é literalmente uma das marcas de `DIZ_ONDE_ESCREVE`, mas `_contem` só olha
+    # `descricao + corpo` — o frontmatter é descartado depois de `name`/
+    # `description`/`tools`. Um agente que declara a cerca do jeito CERTO (campo
+    # estruturado, o que o próprio harness lê em runtime) reprovava V3 pela
+    # MESMA razão que reprovaria um agente sem cerca nenhuma.
+    so_frontmatter = """---
+name: cercado
+description: "Escreve relatorio. Usar quando pedirem. NUNCA usar para outra coisa."
+tools: Read, Write
+saida_cercada: "relatorios/"
+---
+Lacunas: nao mede fora do disco. Golden: resposta esperada a mao.
+"""
+    with tempfile.TemporaryDirectory() as tmp:
+        pasta = _roster(tmp, {"cercado.md": so_frontmatter})
+        assert "V3" not in _regras(pasta), (
+            "`saida_cercada` estava no frontmatter, campo estruturado, e V3 acusou do mesmo "
+            "jeito que acusaria zero declaração — falso negativo na própria marca que dá "
+            "nome à constante `DIZ_ONDE_ESCREVE`"
+        )
+
+    # O controle negativo: tirar o campo tem de trazer V3 de volta — sem isto,
+    # o conserto acima poderia ser "V3 nunca acusa nada", que é pior que o bug.
+    sem_cerca = so_frontmatter.replace('saida_cercada: "relatorios/"\n', "")
+    with tempfile.TemporaryDirectory() as tmp:
+        pasta = _roster(tmp, {"cercado.md": sem_cerca})
+        assert "V3" in _regras(pasta), (
+            "tirei `saida_cercada` do frontmatter e V3 continuou calado: o conserto do "
+            "falso negativo virou um falso negativo permanente, não um conserto"
+        )
+
+    # Mesma régua para rede: `dominios_permitidos` só no frontmatter.
+    so_rede = """---
+name: pesquisador
+description: "Pesquisa na web. Usar quando pedirem fonte externa. NUNCA usar para outra coisa."
+tools: Read, WebFetch
+dominios_permitidos: "example.com"
+---
+Lacunas: nao mede fora do disco. Golden: resposta esperada a mao.
+"""
+    with tempfile.TemporaryDirectory() as tmp:
+        pasta = _roster(tmp, {"pesquisador.md": so_rede})
+        assert "V3" not in _regras(pasta), (
+            "`dominios_permitidos` estava no frontmatter e V3 acusou como se a rede não "
+            "tivesse dono — mesmo defeito, na outra fronteira"
+        )
+
+
 def main() -> int:
-    print("autoteste do aferido — cada check reintroduz o defeito que ele pega\n")
+    print("autoteste do loadline — cada check reintroduz o defeito que ele pega\n")
     ordem = sorted(
         (nome for nome in globals() if nome.startswith("_") and len(nome) == 2),
         key=lambda n: n[1],

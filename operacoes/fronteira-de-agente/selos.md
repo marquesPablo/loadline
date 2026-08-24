@@ -9,10 +9,10 @@ Cole no `README.md` ou no `AGENTS.md` do repositório onde os agentes moram.
 
 Nenhum subagente deste repositório usa rede, escrita ou shell sem um hook registrado que o cerque,
 e todos dizem em que caso NÃO devem ser usados.
-<!-- aferido: agentes.rede_sem_cerca=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=.claude/settings.json -->
-<!-- aferido: agentes.escrita_sem_cerca=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=.claude/settings.json -->
-<!-- aferido: agentes.execucao_sem_cerca=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=.claude/settings.json -->
-<!-- aferido: agentes.sem_anti_descricao=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=.claude/agents -->
+<!-- measured: agentes.rede_sem_cerca=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=.claude/settings.json -->
+<!-- measured: agentes.escrita_sem_cerca=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=.claude/settings.json -->
+<!-- measured: agentes.execucao_sem_cerca=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=.claude/settings.json -->
+<!-- measured: agentes.sem_anti_descricao=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=.claude/agents -->
 ```
 
 **Todos de `relacao`, e o motivo importa.** Estes números deveriam ser sempre zero. Quando um sai de
@@ -30,21 +30,21 @@ incômodo não escrito é uma dívida que ninguém vai lembrar.
 
 ```markdown
 Três subagentes ainda usam rede sem hook que os cerque. É dívida declarada, com prazo.
-<!-- aferido: agentes.rede_sem_cerca=3 natureza=relacao em=AAAA-MM-DD vence=30d fonte=.claude/settings.json -->
+<!-- measured: agentes.rede_sem_cerca=3 natureza=relacao em=AAAA-MM-DD vence=30d fonte=.claude/settings.json -->
 ```
 
-Quando você cercar os três, o número cai para 0, a sonda mede 0, o selo diz 3 → **`DERIVOU`**. E
+Quando você cercar os três, o número cai para 0, a sonda mede 0, o selo diz 3 → **`DRIFTED`**. E
 está certo que reprove: alguém precisa reescrever a frase e o selo juntos. Melhorar também é mudar.
 
 ## Os de contexto
 
 ```markdown
-<!-- aferido: agentes.total=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=.claude/agents -->
-<!-- aferido: agentes.com_rede=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=.claude/agents -->
-<!-- aferido: agentes.com_escrita=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=.claude/agents -->
-<!-- aferido: agentes.com_execucao=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=.claude/agents -->
-<!-- aferido: agentes.hooks=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=.claude/settings.json -->
-<!-- aferido: agentes.ferramentas_desconhecidas=N natureza=relacao em=AAAA-MM-DD vence=90d fonte=.claude/agents -->
+<!-- measured: agentes.total=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=.claude/agents -->
+<!-- measured: agentes.com_rede=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=.claude/agents -->
+<!-- measured: agentes.com_escrita=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=.claude/agents -->
+<!-- measured: agentes.com_execucao=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=.claude/agents -->
+<!-- measured: agentes.hooks=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=.claude/settings.json -->
+<!-- measured: agentes.ferramentas_desconhecidas=N natureza=relacao em=AAAA-MM-DD vence=90d fonte=.claude/agents -->
 ```
 
 `agentes.ferramentas_desconhecidas` é de **relação** e as outras cinco são de **contagem**. Nomes
@@ -62,6 +62,6 @@ Se o time quiser um teto, ele é **escolha**, não medida, e a marca é a tercei
 
 ```markdown
 Nenhum agente deste repositório recebe ferramenta de execução.
-<!-- arbitrado: agentes.teto_de_execucao=0 por="time de plataforma" em=AAAA-MM-DD vence=180d
+<!-- arbitrated: agentes.teto_de_execucao=0 por="time de plataforma" em=AAAA-MM-DD vence=180d
      derruba="o primeiro trabalho que só se faça rodando comando, com autorização de escopo escrita" -->
 ```

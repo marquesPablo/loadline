@@ -1,6 +1,6 @@
 """Sondas da operação `dependencia-com-veredito`.
 
-natureza: correcao — sonda que estoura vira `SEM_PROVA` no relatório, com o erro
+natureza: correcao — sonda que estoura vira `UNPROVEN` no relatório, com o erro
 por extenso. Ela nunca devolve um palpite.
 
 COPIE ESTE ARQUIVO para a raiz do seu repositório, como `sondas.py`.
@@ -30,7 +30,7 @@ import re
 import tomllib
 from pathlib import Path
 
-from aferido import sonda
+from loadline import sonda
 
 RAIZ = Path(__file__).resolve().parent
 
@@ -114,7 +114,7 @@ def _dep_tabela() -> dict[str, str]:
     """Nome -> veredito, lido da tabela escrita à mão. Ausente devolve vazio.
 
     Ausente NUNCA vira "todas sem veredito por zero dependências": as sondas que
-    dependem da tabela estouram quando ela não existe, e viram `SEM_PROVA`.
+    dependem da tabela estouram quando ela não existe, e viram `UNPROVEN`.
     """
     arquivo = RAIZ / TABELA_DE_VEREDITOS
     if not arquivo.is_file():

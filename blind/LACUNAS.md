@@ -38,7 +38,7 @@ qualquer coisa sob uma pasta `.claude/`. É a lista de nomes que os harnesses
 de hoje usam — **não** um padrão do formato. Um harness que inventar outro
 nome de arquivo de instrução não é reconhecido aqui.
 
-<!-- aferido: blind.declaracao=5 natureza=contagem em=2026-08-23 vence=nunca fonte=blind/limites.py -->
+<!-- measured: blind.declaracao=5 natureza=contagem em=2026-08-23 vence=nunca fonte=blind/limites.py -->
 
 ## 4 · `blind` não prova o que a SUA ferramenta faz
 

@@ -1,14 +1,14 @@
-"""CLI: `python -m aferido <caminho>` — o relatório de evidência de uma corrida.
+"""CLI: `python -m loadline <caminho>` — o relatório de evidência de uma corrida.
 
 natureza: correcao — a saída é sempre impressa por inteiro, mesmo quando
 reprova. Um relatório que só aparece quando passa não é evidência.
 
-    python -m aferido .              # varre o projeto
-    python -m aferido README.md      # varre um arquivo
-    python -m aferido . --sondas     # mostra de onde cada sonda tira o valor
-    python -m aferido . --selar      # ESCREVE: anota o que ninguém confere
-    python -m aferido . --hoje 2027-01-01   # simula o futuro; é assim que se
-                                            # prova que o vencimento reprova
+    python -m loadline .              # varre o projeto
+    python -m loadline README.md      # varre um arquivo
+    python -m loadline . --sondas     # mostra de onde cada sonda tira o valor
+    python -m loadline . --selar      # ESCREVE: anota o que ninguém confere
+    python -m loadline . --hoje 2027-01-01   # simula o futuro; é assim que se
+                                             # prova que o vencimento reprova
 
 Toda rodada devolve TRÊS listas, e a terceira é a que faz a primeira execução
 valer alguma coisa num repositório que nunca anotou nada:
@@ -33,9 +33,9 @@ from pathlib import Path
 from .registro import explicar
 from .selar import selar
 from .varredura import carregar_sondas, varrer
-from .veredito import ARBITRADO, CONGELADO, DERIVOU, PROSA_MUDA, SEM_PROVA, VALE, VENCIDO
+from .veredito import ARBITRATED, FROZEN, DRIFTED, PROSE_DRIFT, UNPROVEN, MATCHES, EXPIRED
 
-ORDEM = (DERIVOU, PROSA_MUDA, VENCIDO, SEM_PROVA, CONGELADO, ARBITRADO, VALE)
+ORDEM = (DRIFTED, PROSE_DRIFT, EXPIRED, UNPROVEN, FROZEN, ARBITRATED, MATCHES)
 
 
 def _console_em_utf8() -> None:
@@ -73,7 +73,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # ⚠️ Alvo que não existe é RECUSA, nunca `PASSA`.
     #
-    # Sem isto, `aferido ./sr` (por `./src`) varria zero arquivo, não achava
+    # Sem isto, `loadline ./sr` (por `./src`) varria zero arquivo, não achava
     # nenhuma afirmação, e saía **verde com código 0** — um erro de digitação no
     # CI deixava o gate aprovando para sempre. É exatamente *não medido* virando
     # *zero*, no ponto de entrada da ferramenta cuja tese inteira é que isso não
@@ -81,7 +81,7 @@ def main(argv: list[str] | None = None) -> int:
     # lida como caminho, e nenhum caminho chamado `--sondaz` existe.
     caminho_do_alvo = Path(alvo)
     if not caminho_do_alvo.exists():
-        print(f"aferido · {alvo} · em {hoje.isoformat()}")
+        print(f"loadline · {alvo} · em {hoje.isoformat()}")
         print("=" * 72)
         if alvo.startswith("-"):
             print(f"`{alvo}` não é uma bandeira conhecida, e não existe como caminho.")
@@ -101,7 +101,7 @@ def main(argv: list[str] | None = None) -> int:
 
     relatorio = varrer(alvo, hoje=hoje)
 
-    print(f"aferido · {alvo} · em {hoje.isoformat()}")
+    print(f"loadline · {alvo} · em {hoje.isoformat()}")
     print("=" * 72)
     for veredito in ORDEM:
         for achado in relatorio.por(veredito):
@@ -134,7 +134,7 @@ def main(argv: list[str] | None = None) -> int:
             arquivos = len({e.arquivo for e in escritos})
             print(
                 f"escrevi {len(escritos)} selo(s) em {arquivos} arquivo(s), todos como "
-                "`arbitrado:` — ninguém mediu nada ainda."
+                "`arbitrated:` — ninguém mediu nada ainda."
             )
             for e in escritos:
                 print(f"  {e.arquivo}:{e.linha}  {e.texto}")

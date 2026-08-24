@@ -146,7 +146,7 @@ def main(argv: list[str] | None = None) -> int:
     saida.write_text(texto, encoding="utf-8")
     print(f"✓ {saida}  ·  {len(nomes)} operações, {quantos} sondas, 0 colisões")
     print()
-    print("  Confira com:  python -m aferido /caminho/do/seu/repo --sondas")
+    print("  Confira com:  python -m loadline /caminho/do/seu/repo --sondas")
     return 0
 
 

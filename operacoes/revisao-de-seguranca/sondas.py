@@ -1,6 +1,6 @@
 """Sondas da operação `revisao-de-seguranca`.
 
-natureza: correcao — sonda que estoura vira `SEM_PROVA` no relatório, com o erro
+natureza: correcao — sonda que estoura vira `UNPROVEN` no relatório, com o erro
 por extenso. Ela nunca devolve um palpite.
 
 COPIE ESTE ARQUIVO para a raiz do seu repositório, como `sondas.py`.
@@ -28,7 +28,7 @@ import os
 import re
 from pathlib import Path
 
-from aferido import sonda
+from loadline import sonda
 
 RAIZ = Path(__file__).resolve().parent
 

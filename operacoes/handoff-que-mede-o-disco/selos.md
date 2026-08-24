@@ -13,9 +13,9 @@ Um selo sobre o handoff guardado no README é um aviso pendurado na porta errada
 ```markdown
 Este arquivo foi escrito lendo o disco: nenhum caminho citado está morto, nenhum comando perdeu o
 alvo, e o que ele diz sobre o estado do repositório é o que o git diz.
-<!-- aferido: handoff.caminhos_mortos=0 natureza=relacao em=AAAA-MM-DD vence=7d fonte=disco -->
-<!-- aferido: handoff.comandos_sem_alvo=0 natureza=relacao em=AAAA-MM-DD vence=7d fonte=disco -->
-<!-- aferido: handoff.deriva_de_git=0 natureza=relacao em=AAAA-MM-DD vence=7d fonte=git -->
+<!-- measured: handoff.caminhos_mortos=0 natureza=relacao em=AAAA-MM-DD vence=7d fonte=disco -->
+<!-- measured: handoff.comandos_sem_alvo=0 natureza=relacao em=AAAA-MM-DD vence=7d fonte=disco -->
+<!-- measured: handoff.deriva_de_git=0 natureza=relacao em=AAAA-MM-DD vence=7d fonte=git -->
 ```
 
 **`vence=7d` nos três, e é o prazo mais curto de toda a prateleira** — junto com o da fila de
@@ -31,8 +31,8 @@ coisa sobre o estado e o git afirma outra?"*. Se o documento **não afirma nada*
 
 ```markdown
 Escrito depois do commit N. Nada entrou desde então.
-<!-- aferido: handoff.commits_desde=0 natureza=contagem em=AAAA-MM-DD vence=7d fonte=git -->
-<!-- aferido: handoff.sessoes_desde=0 natureza=contagem em=AAAA-MM-DD vence=7d fonte=harness -->
+<!-- measured: handoff.commits_desde=0 natureza=contagem em=AAAA-MM-DD vence=7d fonte=git -->
+<!-- measured: handoff.sessoes_desde=0 natureza=contagem em=AAAA-MM-DD vence=7d fonte=harness -->
 ```
 
 De contagem: elas andam sozinhas, todo dia, e é essa a graça. **Divergiram, resele — mas leia o
@@ -43,13 +43,13 @@ o documento, e o resselo é a consequência.
 estouram para o total. **Não leia o verde delas no CI como prova** — e se o seu CI rodar esta
 operação, leia a advertência que está no `ci.yml`.
 
-## O tamanho, e por que ele é `arbitrado:` e não `aferido:`
+## O tamanho, e por que ele é `arbitrated:` e não `measured:`
 
 ```markdown
 Este arquivo cabe em 400 linhas. Passou disso, alguma coisa aqui virou histórico e devia sair.
-<!-- arbitrado: handoff.teto_de_linhas=400 por="quem cuida do projeto" em=AAAA-MM-DD vence=180d
+<!-- arbitrated: handoff.teto_de_linhas=400 por="quem cuida do projeto" em=AAAA-MM-DD vence=180d
      derruba="um projeto com muitas frentes paralelas, ou um handoff que passou a ser lido por gente de fora" -->
-<!-- aferido: handoff.linhas=N natureza=contagem em=AAAA-MM-DD vence=30d fonte=disco -->
+<!-- measured: handoff.linhas=N natureza=contagem em=AAAA-MM-DD vence=30d fonte=disco -->
 ```
 
 **O teto é uma escolha, não uma medida** — por isso a terceira marca. Um handoff morre de duas
