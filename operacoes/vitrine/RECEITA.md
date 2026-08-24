@@ -23,13 +23,19 @@ Duas sondas que recomputam a vitrine outra vez a cada rodada — nunca a partir 
 | Métrica | O que recomputa | Natureza |
 |---|---|---|
 | `vitrine.skills` | quantos `SKILL.md` existem sob o caminho declarado | contagem |
-| **`vitrine.reprovas`** | **quantas dessas skills têm ⛔ em alguma das dez regras da `vitrine`** (nome divergente da pasta, gramática do nome, sem gatilho de uso, sem gatilho negativo) | **relação** |
+| **`vitrine.reprovas`** | **quantas dessas skills têm ⛔ em alguma das onze regras da `vitrine`** (nome divergente da pasta, gramática do nome, sem gatilho de uso, sem gatilho negativo, duas skills se confundindo) | **relação** |
 
 A segunda é o coração. Ela deveria ser sempre `0`; quando sai de zero, isso não é "o número mudou",
 é **defeito** — uma skill ficou invisível ou vai ficar, e a ferramenta diz isso com essas palavras.
 
-As dez regras completas, cada uma citando a fonte pública de onde sai, estão em
+As onze regras completas, cada uma citando a fonte pública de onde sai, estão em
 `vitrine/regras.py`. Rodar o linter isolado, fora deste selo: `python -m vitrine <caminho>`.
+
+**A vitrine também sabe CRIAR uma skill nova**, não só auditar as que já existem —
+`python -m vitrine --colher <slug> --diz "o que ela faz"` recusa nascer se colidir com uma skill já
+existente (mesma régua `S11`) e escreve um `SKILL.md` que já nasce limpo nas regras estruturais,
+com `?` só nos dois campos que ninguém além de quem viveu o trabalho sabe preencher: o gatilho
+positivo e o negativo. Sem modelo, sem chave de API — ver `vitrine/colheita.py`.
 
 ## O ajuste
 

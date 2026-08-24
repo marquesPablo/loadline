@@ -74,6 +74,26 @@ PESSOA_ERRADA = (
 #: sabe rodar.
 PONTO_DE_ENTRADA = ("__main__", "argparse", "sys.argv", "click.command", "typer")
 
+#: Palavra de 5+ letras, para o mesmo motivo do `forja/vistoria.py`: string curta
+#: (`ui`, `api`, `css`) não distingue nada e infla falso positivo.
+_PALAVRA = re.compile(r"[a-z0-9]{5,}")
+
+#: Palavras que aparecem em toda descrição de skill e não distinguem nada. Sem
+#: esta lista, duas skills quaisquer "se parecem" e o `S11` vira ruído — a
+#: mesma lição que o `V6` da forja já pagou do lado dos agentes.
+VAZIAS = frozenset(
+    """
+    skill skills usar usa used using quando when sempre nunca apenas outro
+    outra sobre cada todos todas mesmo mesma porque coisa coisas forma
+    partir depois antes ainda tambem projeto arquivo arquivos pasta pastas
+    """.split()
+)
+
+#: Mesmo limiar do `V6` (`forja/vistoria.py`) — 30% de palavras em comum entre
+#: duas `description`. ESCOLHIDO olhando rosters reais, não medido; está aqui
+#: com o motivo ao lado, não enterrado num `if`. Ver `LACUNAS.md` §9.
+LIMIAR_CONFUSAO = 0.30
+
 
 @dataclass
 class Skill:
@@ -265,6 +285,24 @@ def _tem(texto: str, marcas: tuple[str, ...]) -> bool:
     return any(m in baixo for m in marcas)
 
 
+def _significativas(descricao: str) -> set[str]:
+    """As palavras de uma `description` que de fato a distinguem das outras."""
+    return {p for p in _PALAVRA.findall(descricao.lower())} - VAZIAS
+
+
+def _confusao(a: Skill, b: Skill) -> float:
+    """Quanto duas `description` disputam o mesmo despacho. Jaccard, sem mistério."""
+    pa, pb = _significativas(a.descricao), _significativas(b.descricao)
+    if not pa or not pb:
+        return 0.0
+    return len(pa & pb) / len(pa | pb)
+
+
+def _um_nomeia_o_outro(a: Skill, b: Skill) -> bool:
+    """Gatilho negativo de verdade é nominal: cita o irmão pelo slug."""
+    return a.slug in b.descricao.lower() or b.slug in a.descricao.lower()
+
+
 def _profundidade(arquivo: Path, pasta_ref: Path) -> int:
     """Quantos níveis de pasta abaixo de `references/`. Plano = 0."""
     return len(arquivo.relative_to(pasta_ref).parts) - 1
@@ -445,5 +483,25 @@ def vistoriar(skills: list[Skill]) -> list[Achado]:
         [(s.slug, "1 commit") for s in skills if s.commits == 1],
         grave=False,
     )
+
+    # S11 — duas skills se confundem --------------------------------------------
+    pares = [
+        (f"{a.slug} × {b.slug}", f"{round(_confusao(a, b) * 100)}% das palavras em comum")
+        for i, a in enumerate(skills)
+        for b in skills[i + 1 :]
+        if _confusao(a, b) >= LIMIAR_CONFUSAO and not _um_nomeia_o_outro(a, b)
+    ]
+    registrar(
+        "S11",
+        "DUAS SKILLS SE CONFUNDEM",
+        "descrições disputando o mesmo despacho, e nenhuma nomeia a outra. O\n"
+        "       conserto é nominal: cada `description` cita a irmã no que NUNCA\n"
+        "       faz — é o mesmo gatilho negativo que o `S4` já cobra, só que\n"
+        "       apontado para um nome, não em aberto.",
+        FONTE_BP,
+        pares,
+    )
+    if pares:
+        achados[-1].skills = set()  # um par não é uma skill; não entra no denominador
 
     return achados

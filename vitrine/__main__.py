@@ -3,9 +3,13 @@
     $ python -m vitrine ~/.claude/skills
     $ python -m vitrine .claude/skills --sem-git
     $ python -m vitrine caminho/para/uma/SKILL.md
+    $ python -m vitrine --colher nome-da-skill --diz "o que ela faz, uma frase"
 
 Reprova com exit 1 quando houver ⛔. Aviso (⚠️) não reprova: ele existe para o
 caso em que a regra tem exceção legítima, e nesse caso quem decide é você.
+
+`--colher` é o outro sentido: em vez de auditar o que já existe, ele recusa
+ou escreve uma `SKILL.md` nova — ver `colheita.py`.
 
 Sem dependência. Sem chave de API. Sem chamada de modelo. Roda offline.
 """
@@ -38,9 +42,13 @@ def relatorio(skills: list[Skill], achados: list[Achado], alvo: Path, hoje: str)
         linhas.append("   para o alvo real.")
         return linhas
 
-    for achado in sorted(achados, key=lambda a: (not a.grave, -len(a.skills))):
+    for achado in sorted(achados, key=lambda a: (not a.grave, -len(a.itens))):
         marca = "⛔" if achado.grave else "⚠️"
-        contagem = f"{len(achado.skills)} de {len(skills)}"
+        contagem = (
+            f"{len(achado.itens)} par(es)"
+            if achado.regra == "S11"
+            else f"{len(achado.skills)} de {len(skills)}"
+        )
         cabeca = f"{marca} {achado.titulo}"
         recuo = max(1, LARGURA - len(cabeca) - len(contagem) - 1)
         linhas.append(f"{cabeca}{' ' * recuo}{contagem}")
@@ -71,6 +79,43 @@ def relatorio(skills: list[Skill], achados: list[Achado], alvo: Path, hoje: str)
     return linhas
 
 
+def _colher(argv: list[str]) -> int:
+    """`--colher <slug> --diz "..." [--pasta <caminho>]` — ver `colheita.py`."""
+    from .colheita import Recusa, colher
+
+    args = [a for a in argv if a != "--colher"]
+    if not args or args[0].startswith("--"):
+        print(
+            'vitrine --colher: falta o slug — python -m vitrine --colher '
+            '<slug> --diz "o que a skill faz"',
+            file=sys.stderr,
+        )
+        return 2
+    slug, args = args[0], args[1:]
+
+    descricao = ""
+    pasta = Path(".claude/skills")
+    i = 0
+    while i < len(args):
+        if args[i] == "--diz" and i + 1 < len(args):
+            descricao, i = args[i + 1], i + 2
+        elif args[i] == "--pasta" and i + 1 < len(args):
+            pasta, i = Path(args[i + 1]).expanduser(), i + 2
+        else:
+            i += 1
+
+    try:
+        escrito = colher(slug, descricao, pasta)
+    except Recusa as recusa:
+        print(f"vitrine --colher: {recusa}", file=sys.stderr)
+        return 1
+
+    print(f"✓ {escrito}")
+    print('  faltam 3 "?" — gatilho positivo (S3), gatilho negativo (S4) e o corpo.')
+    print(f"  Depois de preencher: python -m vitrine {pasta}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     from datetime import date
 
@@ -82,6 +127,9 @@ def main(argv: list[str] | None = None) -> int:
         pass
 
     args = list(sys.argv[1:] if argv is None else argv)
+    if "--colher" in args:
+        return _colher(args)
+
     com_git = "--sem-git" not in args
     args = [a for a in args if not a.startswith("--")]
 
