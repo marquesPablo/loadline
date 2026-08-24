@@ -36,22 +36,22 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: instalar o aferido
+      - name: instalar o loadline
         run: |
-          git clone --depth 1 https://github.com/SEU-USUARIO/aferido.git /tmp/aferido
-          echo "PYTHONPATH=/tmp/aferido" >> "$GITHUB_ENV"
+          git clone --depth 1 https://github.com/marquesPablo/loadline.git /tmp/loadline
+          echo "PYTHONPATH=/tmp/loadline" >> "$GITHUB_ENV"
 
       - name: conferir a fronteira declarada de cada agente
         run: |
           set +e
-          python -m aferido . | tee relatorio.txt
+          python -m loadline . | tee relatorio.txt
           codigo=${PIPESTATUS[0]}
           set -e
           case "$codigo" in
             0) echo "toda fronteira declarada bate com os hooks registrados" ;;
             1) echo "::error::poder concedido sem cerca, ou selo de fronteira divergindo"; exit 1 ;;
-            2) echo "::error::nenhum selo de fronteira neste repositório. Rode \`python -m aferido . --selar\` e leia operacoes/fronteira-de-agente/selos.md"; exit 1 ;;
-            *) echo "::error::o aferido não pôde rodar"; exit 1 ;;
+            2) echo "::error::nenhum selo de fronteira neste repositório. Rode \`python -m loadline . --selar\` e leia operacoes/fronteira-de-agente/selos.md"; exit 1 ;;
+            *) echo "::error::o loadline não pôde rodar"; exit 1 ;;
           esac
 
 # ⚠️ Este job mede fronteira DECLARADA, nunca segurança. Um hook registrado pode

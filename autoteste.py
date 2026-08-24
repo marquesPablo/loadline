@@ -914,10 +914,11 @@ def _au():
     from forja import ler
     from forja.spec import Recusa, validar
 
-    # `agente*.toml`, e não `agente.toml`: uma operação pode trazer uma ESTEIRA
-    # (a `revisao-de-seguranca` traz três specs). Globar só o nome exato deixaria
-    # duas delas nunca serem compiladas por check nenhum — e uma spec que não
-    # compila só é descoberta por quem tentar usá-la.
+    # `agente*.toml`, e não `agente.toml`: uma operação PODE trazer uma ESTEIRA
+    # — mais de uma spec na mesma pasta (nenhuma traz hoje, depois do corte do
+    # ADR-117; a `revisao-de-seguranca`, cortada, era o exemplo). Globar só o
+    # nome exato deixaria specs extras nunca serem compiladas por check nenhum
+    # — e uma spec que não compila só é descoberta por quem tentar usá-la.
     specs = sorted((RAIZ_DA_CASA / "operacoes").glob("*/agente*.toml"))
     assert specs, "a prateleira não tem nenhuma operação com spec de agente"
     por_operacao = {c.parent.name for c in specs}
@@ -1144,8 +1145,8 @@ def _az():
     from forja import ler
     from forja.__main__ import compilar
 
-    spec = ler(RAIZ_DA_CASA / "operacoes" / "revisao-de-seguranca" / "agente-redator.toml")
-    assert spec.saida_cercada == ["relatorios/"], spec.saida_cercada
+    spec = ler(RAIZ_DA_CASA / "operacoes" / "handoff-que-mede-o-disco" / "agente.toml")
+    assert spec.saida_cercada == ["retomada/"], spec.saida_cercada
 
     with tempfile.TemporaryDirectory() as tmp:
         raiz = Path(tmp)
@@ -1173,10 +1174,10 @@ def _az():
                 timeout=60,
             ).stdout
 
-        fora = julgar_caminho("docs/seguranca.md")
-        assert '"deny"' in fora, f"a cerca NÃO negou fora de `relatorios/`: {fora[:120]!r}"
+        fora = julgar_caminho("docs/outra.md")
+        assert '"deny"' in fora, f"a cerca NÃO negou fora de `retomada/`: {fora[:120]!r}"
 
-        dentro = julgar_caminho("relatorios/laudo.md")
+        dentro = julgar_caminho("retomada/CONTINUAR.md")
         assert '"deny"' not in dentro, (
             f"a cerca negou DENTRO do caminho declarado: {dentro[:120]!r} — uma cerca que "
             "nega tudo é indistinguível de uma quebrada"

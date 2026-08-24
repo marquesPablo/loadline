@@ -35,16 +35,16 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: instalar o aferido
+      - name: instalar o loadline
         run: |
-          git clone --depth 1 https://github.com/SEU-USUARIO/aferido.git /tmp/aferido
-          echo "PYTHONPATH=/tmp/aferido" >> "$GITHUB_ENV"
+          git clone --depth 1 https://github.com/marquesPablo/loadline.git /tmp/loadline
+          echo "PYTHONPATH=/tmp/loadline" >> "$GITHUB_ENV"
 
       - name: conferir o que a documentação afirma
         id: aferir
         continue-on-error: true
         run: |
-          python -m aferido . | tee relatorio.txt
+          python -m loadline . | tee relatorio.txt
           echo "codigo=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
 
       - name: comentar no PR
@@ -58,7 +58,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: '### aferido\n\n```\n' + corpo.slice(0, 60000) + '\n```',
+              body: '### loadline\n\n```\n' + corpo.slice(0, 60000) + '\n```',
             });
 
       - name: decidir
@@ -66,6 +66,6 @@ jobs:
           case "${{ steps.aferir.outputs.codigo }}" in
             0) echo "tudo conferido e no prazo" ;;
             1) echo "::warning::alguma coisa escrita não bate mais — veja o comentário no PR" ;;
-            2) echo "::warning::há afirmação que nenhum selo cobre — rode \`python -m aferido . --selar\`" ;;
-            *) echo "::error::o aferido não pôde rodar"; exit 1 ;;
+            2) echo "::warning::há afirmação que nenhum selo cobre — rode \`python -m loadline . --selar\`" ;;
+            *) echo "::error::o loadline não pôde rodar"; exit 1 ;;
           esac

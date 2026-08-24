@@ -33,26 +33,26 @@ jobs:
         with:
           python-version: "3.11"   # `tomllib` é stdlib a partir daqui
 
-      - name: instalar o aferido
+      - name: instalar o loadline
         run: |
-          git clone --depth 1 https://github.com/SEU-USUARIO/aferido.git /tmp/aferido
-          echo "PYTHONPATH=/tmp/aferido" >> "$GITHUB_ENV"
+          git clone --depth 1 https://github.com/marquesPablo/loadline.git /tmp/loadline
+          echo "PYTHONPATH=/tmp/loadline" >> "$GITHUB_ENV"
 
       - name: conferir o que os arquivos de instrução prometem
         id: aferir
         continue-on-error: true
-        run: python -m aferido .
+        run: python -m loadline .
 
       - name: decidir
         run: |
           case "${{ steps.aferir.outcome }}" in
             success) echo "tudo conferido e no prazo" ;;
             *)
-              python -m aferido . || codigo=$?
+              python -m loadline . || codigo=$?
               case "${codigo:-0}" in
                 1) echo "::error::alguma coisa escrita não bate mais com o repositório"; exit 1 ;;
-                2) echo "::warning::há afirmação que nenhum selo cobre — rode \`python -m aferido . --selar\`"; exit 0 ;;
-                *) echo "::error::o aferido não pôde rodar"; exit 1 ;;
+                2) echo "::warning::há afirmação que nenhum selo cobre — rode \`python -m loadline . --selar\`"; exit 0 ;;
+                *) echo "::error::o loadline não pôde rodar"; exit 1 ;;
               esac
               ;;
           esac

@@ -11,7 +11,7 @@ Um comando, sem configurar nada, sem escrever nada. Clone, e rode contra o roste
 vem junto — ou troque o caminho pelo do seu projeto:
 
 ```console
-$ git clone https://github.com/USUARIO/loadline && cd loadline
+$ git clone https://github.com/marquesPablo/loadline && cd loadline
 $ python -m forja exemplos/roster-de-exemplo
 vistoria · exemplos\roster-de-exemplo\.claude\agents · em 2026-08-22
 ==========================================================================
@@ -138,7 +138,7 @@ recusa que não diz a saída treina quem a lê a contorná-la.
 ## Instalação
 
 ```console
-$ git clone https://github.com/USUARIO/loadline && cd loadline
+$ git clone https://github.com/marquesPablo/loadline && cd loadline
 $ python -m forja /caminho/do/seu/projeto
 ```
 
@@ -191,8 +191,8 @@ Conferido em 2026-08-20, lendo a página pública de cada um. Nenhum foi clonado
 - [`loadline/`](loadline/) — a mesma régua aplicada ao **texto**: uma afirmação escrita ganha prazo de
   validade e uma sonda que a recomputa, e a sonda **não pode ler a fonte que produziu o número**.
   `python -m loadline .`
-- [`operacoes/`](operacoes/) — onze trabalhos prontos que rodam no seu repositório sem configuração.
-  <!-- measured: operacoes.total=11 natureza=contagem em=2026-08-23 vence=nunca fonte=operacoes/ -->
+- [`operacoes/`](operacoes/) — nove trabalhos prontos que rodam no seu repositório sem configuração.
+  <!-- measured: operacoes.total=9 natureza=contagem em=2026-08-24 vence=nunca fonte=operacoes/ -->
 - [`censo/`](censo/) — um registro do ecossistema de agentes de IA onde cada entrada **vence**.
 - [`blind/`](blind/) — a fronteira que uma varredura ingênua atravessa em silêncio: junction,
   symlink de diretório, e a regra de `.gitignore` que esconde mesmo de quem atravessa a fronteira

@@ -36,15 +36,15 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: instalar o aferido
+      - name: instalar o loadline
         run: |
-          git clone --depth 1 https://github.com/SEU-USUARIO/aferido.git /tmp/aferido
-          echo "PYTHONPATH=/tmp/aferido" >> "$GITHUB_ENV"
+          git clone --depth 1 https://github.com/marquesPablo/loadline.git /tmp/loadline
+          echo "PYTHONPATH=/tmp/loadline" >> "$GITHUB_ENV"
 
       - name: o que reprova — teste que não pode falhar, e a terceira lista
         run: |
           set +e
-          python -m aferido . | tee relatorio.txt
+          python -m loadline . | tee relatorio.txt
           codigo=${PIPESTATUS[0]}
           set -e
           case "$codigo" in
@@ -58,7 +58,7 @@ jobs:
               echo "::error::nenhum selo cobre a suíte. Leia operacoes/suite-que-acusa/selos.md"
               exit 1
               ;;
-            *) echo "::error::o aferido não pôde rodar"; exit 1 ;;
+            *) echo "::error::o loadline não pôde rodar"; exit 1 ;;
           esac
 
       # A metade que AVISA. Ela nunca sai diferente de zero — é `warning`, por
@@ -70,7 +70,7 @@ jobs:
           python - <<'PY'
           import importlib.util, os, sys
           sys.path.insert(0, os.environ.get("PYTHONPATH", ""))
-          from aferido import registro
+          from loadline import registro
           spec = importlib.util.spec_from_file_location("sondas", "sondas.py")
           modulo = importlib.util.module_from_spec(spec); spec.loader.exec_module(modulo)
           try:

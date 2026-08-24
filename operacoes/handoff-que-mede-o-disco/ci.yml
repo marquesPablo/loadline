@@ -13,7 +13,7 @@
 # documento contra o CONTEÚDO do repositório, e sobrevivem a qualquer clone.
 #
 # Por isso este job usa `--so` para nomear o que confere. Se a sua versão do
-# aferido não tiver essa bandeira, deixe o job rodar tudo e IGNORE por escrito o
+# loadline não tiver essa bandeira, deixe o job rodar tudo e IGNORE por escrito o
 # vermelho das duas de idade — nunca as resele para o valor do CI, porque isso
 # grava no documento um número que só existe dentro de um checkout efêmero.
 
@@ -49,15 +49,15 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: instalar o aferido
+      - name: instalar o loadline
         run: |
-          git clone --depth 1 https://github.com/SEU-USUARIO/aferido.git /tmp/aferido
-          echo "PYTHONPATH=/tmp/aferido" >> "$GITHUB_ENV"
+          git clone --depth 1 https://github.com/marquesPablo/loadline.git /tmp/loadline
+          echo "PYTHONPATH=/tmp/loadline" >> "$GITHUB_ENV"
 
       - name: o documento de retomada corresponde ao repositório
         run: |
           set +e
-          python -m aferido . | tee relatorio.txt
+          python -m loadline . | tee relatorio.txt
           codigo=${PIPESTATUS[0]}
           set -e
           case "$codigo" in
@@ -72,7 +72,7 @@ jobs:
               echo "::error::nenhum selo cobre o arquivo de retomada. Leia operacoes/handoff-que-mede-o-disco/selos.md"
               exit 1
               ;;
-            *) echo "::error::o aferido não pôde rodar"; exit 1 ;;
+            *) echo "::error::o loadline não pôde rodar"; exit 1 ;;
           esac
 
 # ⚠️ Um verde aqui NÃO diz que a sua retomada está boa. Diz que ela não afirma

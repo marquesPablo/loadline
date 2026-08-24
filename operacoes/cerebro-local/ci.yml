@@ -29,15 +29,15 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: instalar o aferido
+      - name: instalar o loadline
         run: |
-          git clone --depth 1 https://github.com/SEU-USUARIO/aferido.git /tmp/aferido
-          echo "PYTHONPATH=/tmp/aferido" >> "$GITHUB_ENV"
+          git clone --depth 1 https://github.com/marquesPablo/loadline.git /tmp/loadline
+          echo "PYTHONPATH=/tmp/loadline" >> "$GITHUB_ENV"
 
       - name: conferir os selos do vault
         run: |
           set +e
-          python -m aferido . | tee relatorio.txt
+          python -m loadline . | tee relatorio.txt
           codigo=${PIPESTATUS[0]}
           set -e
           case "$codigo" in
@@ -51,7 +51,7 @@ jobs:
               echo "::error::nenhum selo cobre o vault. Leia cerebro/selos.md"
               exit 1
               ;;
-            *) echo "::error::o aferido não pôde rodar"; exit 1 ;;
+            *) echo "::error::o loadline não pôde rodar"; exit 1 ;;
           esac
 
       # A metade que importa: o servidor tem de RODAR, e tem de RECUSAR.

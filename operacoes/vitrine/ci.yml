@@ -25,10 +25,10 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: instalar o aferido e a vitrine
+      - name: instalar o loadline e a vitrine
         run: |
-          git clone --depth 1 https://github.com/SEU-USUARIO/aferido.git /tmp/aferido
-          echo "PYTHONPATH=/tmp/aferido" >> "$GITHUB_ENV"
+          git clone --depth 1 https://github.com/marquesPablo/loadline.git /tmp/loadline
+          echo "PYTHONPATH=/tmp/loadline" >> "$GITHUB_ENV"
 
       - name: confiar no linter primeiro — controles negativos
         run: python -m vitrine.controles

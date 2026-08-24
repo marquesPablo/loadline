@@ -45,7 +45,7 @@ forja = "forja.__main__:main"
 loadline = "loadline.__main__:main"
 
 [project.urls]
-Repository = "https://github.com/USUARIO/loadline"
+Repository = "https://github.com/marquesPablo/loadline"
 
 [tool.hatch.build.targets.wheel]
 packages = ["loadline", "forja", "censo", "vitrine", "blind", "placar"]

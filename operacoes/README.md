@@ -13,9 +13,14 @@ Esta pasta é a carga.
 
 ---
 
-## As onze, por família
+## As nove, por família
 
-<!-- measured: operacoes.total=11 natureza=contagem em=2026-08-23 vence=nunca fonte=operacoes/ -->
+<!-- measured: operacoes.total=9 natureza=contagem em=2026-08-24 vence=nunca fonte=operacoes/ -->
+
+> ⚠️ **Cortadas pelo `ADR-117`** (2026-08-24), por serem puro alarme: `dependencia-com-veredito`
+> (não lia licença nenhuma) e `revisao-de-seguranca` (pressupunha um `.md` por achado onde scanner
+> real cospe SARIF). A numeração abaixo é a que sobrou, não renumerada desde a origem — os números
+> pulados marcam as duas cortadas, não um erro de contagem.
 
 ### 🔧 Capacidade — o que você **passa a conseguir fazer**
 
@@ -26,7 +31,6 @@ Estas instalam um trabalho que você não fazia. Comece por aqui.
 | 5 | [`fabrica-de-agentes`](fabrica-de-agentes/) | seus agentes passam a ter **fonte**: uma spec declarativa que compila em 7 artefatos, incluindo o hook que nega | **0–2 campos** |
 | 6 | [`cerebro-local`](cerebro-local/) | um **servidor MCP somente-leitura sobre as suas notas**, num arquivo, sem chave de API, sem nuvem | **1 campo** |
 | 7 | [`sala-de-decisao`](sala-de-decisao/) | um registro de decisões que responde **o que está parado esperando você, e há quantos dias** | **1 campo** |
-| 8 | [`revisao-de-seguranca`](revisao-de-seguranca/) | uma **esteira de três agentes** — acha, classifica, redige — em que só um pode escrever, e num caminho só | **1 campo** |
 | 9 | [`suite-que-acusa`](suite-que-acusa/) | a régua que responde **quais dos seus testes passariam se o mecanismo fosse removido** | **2 campos** |
 | 10 | [`handoff-que-mede-o-disco`](handoff-que-mede-o-disco/) | o arquivo de retomada passa a ser **escrito do disco** — commits desde, caminho morto, comando sem alvo, deriva de git | **1 campo** |
 
@@ -39,8 +43,20 @@ Estas medem coisas que já existem e envelheceram caladas.
 | 1 | [`instrucao-que-nao-mente`](instrucao-que-nao-mente/) | seu `AGENTS.md` manda rodar um comando que não existe mais, e editar uma pasta deletada | **0 campos** |
 | 2 | [`readme-que-nao-mente`](readme-que-nao-mente/) | o README afirma números que ninguém recomputa desde que foram escritos | **0 campos** |
 | 3 | [`fronteira-de-agente`](fronteira-de-agente/) | você tem subagentes escritos à mão e nenhum declara onde escreve nem para onde fala | **1 campo** |
-| 4 | [`dependencia-com-veredito`](dependencia-com-veredito/) | entrou dependência nova e ninguém olhou a licença dela | **1 campo** |
 | 11 | [`vitrine`](vitrine/) | um agente decide carregar sua skill lendo só `name` e `description` — **26 de 31 skills oficiais da Anthropic** não declaram quando não usar, e uma delas tem `name` divergente da própria pasta | **1 campo** |
+
+> ⚠️ **`fabrica-de-agentes` (5) e `fronteira-de-agente` (3) têm destino nomeado, e não decidido, no
+> `ADR-117`:** a decisão as descreve como "já saídas por efeito do ADR-112" (a vistoria de roster já
+> produz o que as duas prometiam), mas nenhum ADR mandou removê-las fisicamente daqui, e o `ADR-117`
+> não lista essa remoção entre o que falta executar. Seguem na prateleira até o board decidir.
+>
+> **`sala-de-decisao` (7) e `suite-que-acusa` (9) também têm destino em aberto:** a auditoria de
+> 2026-08-22 que o `ADR-117` aceitou não fechou a conta das duas — nem cortou, nem confirmou que
+> ficam. Seguem aqui até essa lacuna nomeada ser respondida.
+>
+> **`vitrine` (11) nunca foi julgada pela régua do corte:** ela nasceu em 2026-08-23, um dia depois
+> da auditoria de 2026-08-22 que o `ADR-117` usou como base. Não é omissão do `ADR-117` — é uma
+> operação que ainda não existia quando aquele julgamento rodou.
 
 **A prateleira cresce por decisão, não por acúmulo.**
 
@@ -58,9 +74,8 @@ Estas medem coisas que já existem e envelheceram caladas.
 | `selos.md` | os selos que esta operação instala, com a natureza e o prazo de cada um |
 | `ci.yml` | o job que faz isso reprovar no CI, para copiar em `.github/workflows/` |
 
-Uma operação pode trazer **mais** do que os cinco — a `cerebro-local` traz o `servidor.py`, a
-`revisao-de-seguranca` traz três specs em vez de uma. O que ela não pode é trazer **menos**: a sonda
-da anatomia estoura quando falta um.
+Uma operação pode trazer **mais** do que os cinco — a `cerebro-local` traz o `servidor.py`. O que
+ela não pode é trazer **menos**: a sonda da anatomia estoura quando falta um.
 
 ---
 
@@ -103,13 +118,14 @@ em vez de escolhido. A `RECEITA.md` de cada operação diz exatamente quais.
 ### Usando duas operações no mesmo repositório
 
 As sondas são escritas para poderem conviver. Nenhum nome de função auxiliar colide entre elas —
-cada operação usa um prefixo próprio (`_instr_`, `_repo_`, `_front_`, `_dep_`, `_fab_`, `_cer_`,
-`_dec_`, `_seg_`, `_su_`, `_hand_`) — e nenhum padrão de métrica colide entre as dez.
+oito das nove usam um prefixo próprio (`_instr_`, `_repo_`, `_front_`, `_fab_`, `_cer_`,
+`_dec_`, `_su_`, `_hand_`); a `vitrine` foge do padrão (`_skills()`, sem prefixo de operação) e não
+foi conferida por este parágrafo — e nenhum padrão de métrica colide entre as nove.
 
 **Mas não junte com `cat`.** Todo `sondas.py` abre com `from __future__ import annotations`, e o
 Python exige que essa linha seja a primeira instrução do arquivo. Concatenado, o segundo arquivo
 põe a dele no meio, e o resultado morre com `SyntaxError` na importação — depois de já ter
-sobrescrito o `sondas.py` de quem tentou. Medido: **os 45 pares possíveis quebram, os 45.**
+sobrescrito o `sondas.py` de quem tentou. Medido: **os 36 pares possíveis quebram, os 36.**
 
 ```console
 $ python operacoes/juntar.py instrucao-que-nao-mente readme-que-nao-mente \
@@ -122,7 +138,7 @@ padrão de métrica — em Python a segunda sombrearia a primeira sem erro nenhu
 sombreada sumiria do relatório sem nunca ter reprovado. Quando ele recusa, não escreve nada: um
 `sondas.py` pela metade importa, roda, e devolve verde sobre o que ficou de fora.
 
-Nenhum **padrão de métrica** colide entre as dez, e isso é gateado por um check com controle
+Nenhum **padrão de métrica** colide entre as nove, e isso é gateado por um check com controle
 negativo — uma colisão sombrearia a sonda mais velha sem erro nenhum.
 
 ---
