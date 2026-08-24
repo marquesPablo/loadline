@@ -1586,6 +1586,368 @@ Lacunas: nao mede fora do disco. Golden: resposta esperada a mao.
         )
 
 
+# ------------------------------------------- evidencia: o relatório --html ---
+
+from evidencia import pagina as _pagina  # noqa: E402
+
+
+@check("BO", "`evidencia.pagina` é autocontida — nenhuma tag que busca recurso externo, e a cor segue o código")
+def _bo():
+    ok = _pagina("teste", "alvo", "2026-08-24", ["✅ PASSA"], 0)
+    reprova = _pagina("teste", "alvo", "2026-08-24", ["⛔ REPROVA"], 1)
+    recusa = _pagina("teste", "alvo", "2026-08-24", ["RECUSADO"], 2)
+
+    for pg in (ok, reprova, recusa):
+        assert "<script" not in pg, "uma página autocontida não pode carregar script externo"
+        assert "<link" not in pg, "uma página autocontida não pode referenciar `<link>` externo"
+        assert "http://" not in pg and "https://" not in pg, (
+            "página autocontida não pode citar URL nenhuma — o CSS inteiro é `<style>` inline"
+        )
+
+    assert 'class="veredito ok"' in ok, "código 0 tinha de virar veredito verde"
+    assert 'class="veredito grave"' in reprova, "código 1 tinha de virar veredito grave"
+    assert 'class="veredito grave"' in recusa, (
+        "código 2 (RECUSADO) também é grave — não é neutro, e não é o mesmo texto que REPROVA"
+    )
+    assert "REPROVA" in reprova and "RECUSADO" in recusa and "PASSA" in ok
+
+    # O controle negativo: se a classificação de linha (`_classe`) parasse de
+    # reconhecer ⛔/⚠️/✅, toda linha cairia no CSS neutro e o relatório deixaria
+    # de colorir o que importa — sem isso o teste acima passaria mesmo com o
+    # detector morto, porque ele só olha o veredito do cabeçalho, não as linhas.
+    corpo_colorido = _pagina("teste", "alvo", "2026-08-24", ["⛔ grave", "⚠️ aviso", "✅ ok", "neutro"], 0)
+    assert 'class="grave"' in corpo_colorido and 'class="aviso"' in corpo_colorido and 'class="ok"' in corpo_colorido
+
+
+@check("BP", "`python -m forja . --html ARQUIVO` escreve, e o arquivo carrega o MESMO achado do terminal")
+def _bp():
+    with tempfile.TemporaryDirectory() as tmp:
+        raiz = Path(tmp)
+        _roster(tmp, {"completo.md": AGENTE_COMPLETO})
+        alvo_html = raiz / "relatorio.html"
+        assert not alvo_html.exists()
+        codigo = forja_main([str(raiz), "--html", str(alvo_html)])
+        assert codigo == 0, "o roster de fixture (AGENTE_COMPLETO) não tem achado — tinha de passar"
+        assert alvo_html.is_file(), "`--html` foi pedido e o arquivo não foi escrito"
+        conteudo = alvo_html.read_text(encoding="utf-8")
+        assert "PASSA" in conteudo and 'class="veredito ok"' in conteudo
+
+
+# ------------------------------------------------------- forja: --baseline ---
+
+from forja import baseline as _baseline  # noqa: E402
+
+AGENTE_SEM_REDE = """---
+name: leitor
+description: "Le arquivo. Usar quando precisar ler algo do disco. NUNCA usar para escrever nada."
+tools: Read
+---
+Lacunas: nao mede fora do disco. Golden: resposta esperada escrita a mao.
+"""
+
+AGENTE_COM_REDE_SEM_DONO = """---
+name: buscador
+description: "Busca na web. Usar quando precisar de fonte externa. NUNCA usar para ler arquivo local."
+tools: Read, WebFetch
+---
+Lacunas: nao mede fora do disco. Golden: resposta esperada escrita a mao.
+"""
+
+
+@check("BQ", "`--baseline` sem arquivo gravado RECUSA (exit 2), e nunca finge que nada mudou")
+def _bq():
+    with tempfile.TemporaryDirectory() as tmp:
+        raiz = Path(tmp)
+        _roster(tmp, {"leitor.md": AGENTE_SEM_REDE})
+        assert not (raiz / _baseline.ARQUIVO_PADRAO).exists()
+        codigo = forja_main([str(raiz), "--baseline"])
+        assert codigo == 2, "sem baseline gravado, `--baseline` tinha de recusar — nunca comparar com o vazio"
+
+
+@check("BR", "`--baseline --gravar` escreve, e a rodada seguinte só acusa o que É NOVO")
+def _br():
+    with tempfile.TemporaryDirectory() as tmp:
+        raiz = Path(tmp)
+        pasta = _roster(tmp, {"leitor.md": AGENTE_SEM_REDE})
+        arquivo = raiz / _baseline.ARQUIVO_PADRAO
+
+        assert forja_main([str(raiz), "--baseline", "--gravar"]) == 0
+        assert arquivo.is_file(), "`--gravar` tinha de escrever o baseline"
+
+        # Nada mudou: a rodada seguinte tem de passar limpa.
+        assert forja_main([str(raiz), "--baseline"]) == 0, "nada mudou desde o baseline — tinha de passar"
+
+        # Introduz uma regressão real: o agente ganha ferramenta de rede sem dono.
+        (pasta / "leitor.md").write_text(AGENTE_COM_REDE_SEM_DONO, encoding="utf-8")
+        assert forja_main([str(raiz), "--baseline"]) == 1, (
+            "um achado NOVO surgiu desde o baseline — `--baseline` tinha de reprovar"
+        )
+
+        # O controle negativo: sem o mecanismo de diff, rodar a vistoria pura
+        # (sem `--baseline`) já reprovaria de qualquer forma — o que prova que
+        # `--baseline` está de fato comparando contra o arquivo, e não só
+        # repetindo o exit code da vistoria, é o caso abaixo: gravando o novo
+        # estado como baseline, a MESMA árvore volta a passar.
+        assert forja_main([str(raiz), "--baseline", "--gravar"]) == 0
+        assert forja_main([str(raiz), "--baseline"]) == 0, (
+            "depois de regravar o baseline sobre o estado novo, nada mais é NOVO"
+        )
+
+
+@check("BS", "baseline corrompido (JSON inválido) é lido como AUSENTE, não como estourar")
+def _bs():
+    with tempfile.TemporaryDirectory() as tmp:
+        raiz = Path(tmp)
+        raiz.mkdir(exist_ok=True)
+        (raiz / _baseline.ARQUIVO_PADRAO).write_text("{ isto não é json", encoding="utf-8")
+        assert _baseline.ler(raiz / _baseline.ARQUIVO_PADRAO) is None, (
+            "JSON corrompido tinha de virar `None` (mesma leitura de 'não há baseline'), "
+            "nunca uma exceção que derruba a rodada inteira"
+        )
+
+
+# ---------------------------------------------------------- forja: --explain ---
+
+from forja import explicar as _explicar_mod  # noqa: E402
+
+
+@check("BT", "`--explain` de todo achado real (V1–V7) cita algo lido de README.md e de LACUNAS.md")
+def _bt():
+    for regra in _explicar_mod.CODIGOS:
+        linhas = _explicar_mod.explicar(regra)
+        texto = "\n".join(linhas)
+        assert "O que ele acha:" in texto, f"{regra}: não achou a linha da tabela do README"
+        assert f"citado ao vivo de {_explicar_mod.README.name}" in texto
+        assert "⚠️ não consegui ler" not in texto, f"{regra}: README mudou de forma e a citação quebrou"
+
+
+@check("BU", "`--explain` de código fora do vocabulário fechado é RECUSADO, e lista os sete válidos")
+def _bu():
+    try:
+        _explicar_mod.explicar("V9")
+    except _explicar_mod.RegraDesconhecida as exc:
+        assert "V1" in str(exc) and "V7" in str(exc), "a recusa tinha de listar o vocabulário fechado"
+    else:
+        raise AssertionError("`V9` não é um dos sete achados, e foi aceito — vocabulário não é fechado de verdade")
+
+    # Via CLI, o mesmo código de recusa é 2 — nunca uma exceção crua até o usuário.
+    assert forja_main(["--explain", "V9"]) == 2
+
+
+@check("BV", "`--explain` MUDA se a doutrina mudar — não é uma cópia congelada num terceiro lugar")
+def _bv():
+    original = _explicar_mod.README.read_text(encoding="utf-8")
+    try:
+        marca = "TEXTO-DE-TESTE-QUE-NAO-EXISTE-NA-DOUTRINA-REAL"
+        alterado = original.replace(
+            "não diz o que **nunca** faz", f"não diz o que **nunca** faz ({marca})", 1
+        )
+        assert alterado != original, "a linha de V1 na tabela do README mudou de texto — ajuste o fixture"
+        _explicar_mod.README.write_text(alterado, encoding="utf-8")
+        texto = "\n".join(_explicar_mod.explicar("V1"))
+        assert marca in texto, (
+            "editei o README e a explicação de V1 não mudou — `--explain` está copiando a doutrina "
+            "para um segundo lugar, em vez de lê-la ao vivo"
+        )
+    finally:
+        _explicar_mod.README.write_text(original, encoding="utf-8")
+
+
+# --------------------------------------------------- forja: modo comparação ---
+
+from forja import comparar as _comparar_mod  # noqa: E402
+
+
+@check("BW", "`forja repoA repoB` agrega numa tabela só, e um alvo sem pasta de agentes aparece com erro nomeado")
+def _bw():
+    with tempfile.TemporaryDirectory() as tmp_a, tempfile.TemporaryDirectory() as tmp_b:
+        _roster(tmp_a, {"completo.md": AGENTE_COMPLETO})
+        raiz_b = Path(tmp_b)  # sem pasta .claude/agents — o segundo alvo é vazio de propósito
+
+        resultados = _comparar_mod.comparar([Path(tmp_a), raiz_b])
+        assert len(resultados) == 2, "o denominador da comparação tem de contar TODO alvo pedido"
+        a, b = resultados
+        assert a.erro is None and a.agentes == 1 and a.ausentes == 0
+        assert b.erro is not None, "alvo sem pasta de agentes tinha de sair com erro NOMEADO, não sumir da tabela"
+
+        linhas = _comparar_mod.relatorio(resultados, "2026-08-24")
+        texto = "\n".join(linhas)
+        assert str(tmp_a) in texto and str(raiz_b) in texto, (
+            "os DOIS alvos têm de aparecer na tabela — o modo antigo (silenciosamente só o "
+            "primeiro) é exatamente o defeito que este modo substitui"
+        )
+        assert "total" in texto
+
+        codigo = forja_main([tmp_a, str(raiz_b)])
+        assert codigo == 2, (
+            "`a` passa limpo e `b` nem tem pasta — parte da comparação não foi medida, e isso "
+            "nunca pode sair 0 (verde) nem 1 (que diria 'achei declaração ausente', o que não é "
+            "o caso aqui): tem de ser 2, a mesma leitura de RECUSA que a vistoria de alvo único já dá"
+        )
+
+        # O controle negativo: com um achado REAL num dos alvos válidos, a severidade muda — a
+        # declaração ausente pesa mais que o alvo não lido, e o código vira 1, não 2.
+        with tempfile.TemporaryDirectory() as tmp_c:
+            _roster(tmp_c, {"buscador.md": AGENTE_COM_REDE_SEM_DONO})  # este TEM achado (V3)
+            codigo_com_defeito = forja_main([tmp_c, str(raiz_b)])
+            assert codigo_com_defeito == 1, (
+                "um alvo com declaração ausente de verdade tinha de dominar sobre o alvo não lido"
+            )
+
+
+@check("BX", "um único diretório continua vistoria normal — o modo comparação só liga com DOIS alvos ou mais")
+def _bx():
+    with tempfile.TemporaryDirectory() as tmp:
+        _roster(tmp, {"completo.md": AGENTE_COMPLETO})
+        codigo = forja_main([tmp])
+        assert codigo == 0, "um alvo só continua sendo vistoria simples, não comparação"
+
+
+# ------------------------------------------- vendorizar.py: o forja.py sozinho ---
+
+import importlib.util as _ilu  # noqa: E402
+
+
+def _carregar_vendorizado():
+    caminho = RAIZ_DA_CASA / "vendorizado" / "forja.py"
+    nome = "_forja_vendorizado_carregado"
+    spec = _ilu.spec_from_file_location(nome, caminho)
+    assert spec and spec.loader, f"não consegui carregar {caminho}"
+    modulo = _ilu.module_from_spec(spec)
+    # `dataclass` resolve `cls.__module__` via `sys.modules` para checar
+    # anotação — sem registrar aqui, `@dataclass(frozen=True)` do vendorizado
+    # (a classe `Caso`) estoura `AttributeError` num módulo que Python nunca
+    # viu, mesmo com a execução por si só correta.
+    sys.modules[nome] = modulo
+    try:
+        spec.loader.exec_module(modulo)
+    finally:
+        del sys.modules[nome]
+    return modulo
+
+
+@check("BY", "`vendorizado/forja.py` no disco bate com o que `vendorizar.py` geraria AGORA")
+def _by():
+    import vendorizar as _vz
+
+    gerado = _vz.gerar()
+    compile(gerado, "<vendorizado>", "exec")  # falha alto se a fonte real quebrar a splice
+
+    assert _vz.SAIDA.is_file(), f"{_vz.SAIDA} não existe — rode `python vendorizar.py` antes de commitar"
+    no_disco = _vz.SAIDA.read_text(encoding="utf-8")
+    assert no_disco == gerado, (
+        f"{_vz.SAIDA} diverge do pacote `forja` de agora — quem editou `forja/spec.py` ou "
+        "`forja/vistoria.py` sem regerar o vendorizado deixou um gêmeo desatualizado no disco"
+    )
+
+    # O controle negativo: sem hastear o `from __future__` no topo, um arquivo com DOIS
+    # future-imports (um deles fora do topo) NÃO compila — prova que a splice de verdade
+    # está sendo exercitada, e que só comparar texto não bastaria para provar isso.
+    dobrado = "x = 1\nfrom __future__ import annotations\n" + gerado
+    try:
+        compile(dobrado, "<future-fora-do-topo>", "exec")
+    except SyntaxError:
+        pass
+    else:
+        raise AssertionError(
+            "`from __future__` fora da primeira linha tinha de estourar `SyntaxError` — se não "
+            "estourou, o controle negativo deste check não prova nada"
+        )
+
+
+@check("BZ", "`forja.py` vendorizado RODA sozinho (sem o pacote `forja`) e é BIT A BIT igual ao pacote de verdade")
+def _bz():
+    modulo = _carregar_vendorizado()
+
+    with tempfile.TemporaryDirectory() as tmp:
+        pasta = _roster(tmp, {"completo.md": AGENTE_COMPLETO, "buscador.md": AGENTE_COM_REDE_SEM_DONO})
+        hoje = "2026-08-24"
+
+        # De dentro do módulo carregado a partir do ARQUIVO vendorizado — nenhuma
+        # importação do pacote `forja` acontece para produzir este resultado.
+        roster_v = modulo.ler_roster(pasta)
+        achados_v = modulo.vistoriar(roster_v)
+        relatorio_v = modulo.relatorio(roster_v, achados_v, pasta, hoje)
+
+        # Do pacote de verdade, sobre o MESMO roster no disco:
+        roster_r = _v.ler_roster(pasta)
+        achados_r = _v.vistoriar(roster_r)
+        relatorio_r = _v.relatorio(roster_r, achados_r, pasta, hoje)
+
+        assert relatorio_v == relatorio_r, (
+            "a mesma pasta produziu relatório DIFERENTE no vendorizado e no pacote — a splice "
+            "divergiu da lógica real, e é exatamente o gêmeo que apodrece que este check existe "
+            "para pegar"
+        )
+
+    texto_no_disco = (RAIZ_DA_CASA / "vendorizado" / "forja.py").read_text(encoding="utf-8")
+    assert "from .spec import" not in texto_no_disco and "from .vistoria import" not in texto_no_disco, (
+        "sobrou um import relativo ao pacote — o arquivo não é standalone de verdade"
+    )
+
+
+# ------------------------------------------------ action.yml: o gate em Python ---
+
+
+def _gate():
+    caminho = RAIZ_DA_CASA / "acao" / "gate.py"
+    spec = _ilu.spec_from_file_location("_acao_gate_carregado", caminho)
+    assert spec and spec.loader, f"não consegui carregar {caminho}"
+    modulo = _ilu.module_from_spec(spec)
+    spec.loader.exec_module(modulo)
+    return modulo
+
+
+@check("CA", "`falhar-em=nenhuma` nunca quebra o job, mesmo com as três ferramentas acusando algo")
+def _ca():
+    gate = _gate()
+    assert gate.decidir("nenhuma", {"forja": 1, "placar": 1, "loadline": 2}) == 0, (
+        "o default `nenhuma` existe para a Action ser diagnóstico puro na primeira rodada — "
+        "reprovar aqui quebraria o build de todo mundo que só instalou a Action para OLHAR"
+    )
+
+
+@check("CB", "`falhar-em` reprova só pela(s) ferramenta(s) NOMEADA(S) — as outras acusarem não pesa")
+def _cb():
+    gate = _gate()
+    codigos = {"forja": 1, "placar": 0, "loadline": 0}
+    assert gate.decidir("forja", codigos) == 1, "forja acusou (código 1) e foi citada em `falhar-em` — tinha de reprovar"
+    assert gate.decidir("placar", codigos) == 0, "placar passou limpo — `falhar-em=placar` não pode reprovar por causa da forja"
+    assert gate.decidir("placar,loadline", codigos) == 0, "nem placar nem loadline acusaram — a combinação tinha de passar"
+    assert gate.decidir("forja,placar", codigos) == 1, "forja está na combinação e acusou — tinha de reprovar"
+
+    # O controle negativo: código 2 (RECUSA/sem denominador) TAMBÉM conta como "acusou algo" —
+    # sem isto, uma ferramenta que nem conseguiu ler o alvo passaria o gate calada.
+    assert gate.decidir("loadline", {"forja": 0, "placar": 0, "loadline": 2}) == 1, (
+        "código 2 (recusa) é diferente de 0 — tinha de reprovar o gate igual a um 1"
+    )
+
+
+@check("CC", "`falhar-em` com ferramenta fora do vocabulário fechado RECUSA — nunca ignora em silêncio")
+def _cc():
+    gate = _gate()
+    try:
+        gate.decidir("vitrine", {"forja": 0, "placar": 0, "loadline": 0})
+    except gate.FerramentaDesconhecida as exc:
+        assert "vitrine" in str(exc) and "forja" in str(exc), "a recusa tinha de nomear o que não reconheceu e o vocabulário válido"
+    else:
+        raise AssertionError("`vitrine` não é uma das três ferramentas do gate, e foi aceita em silêncio")
+
+    # Via CLI (a superfície que o YAML de fato chama): mesma recusa, código 2.
+    assert gate.main(["vitrine", "0", "0", "0"]) == 2
+
+
+@check("CD", "a CLI do gate propaga o código de saída de `decidir`, e recusa entrada não-numérica")
+def _cd():
+    gate = _gate()
+    assert gate.main(["nenhuma", "1", "1", "1"]) == 0
+    assert gate.main(["forja", "1", "0", "0"]) == 1
+    assert gate.main(["forja", "abacate", "0", "0"]) == 2, (
+        "código de saída não-numérico (o YAML passaria isto se um step nem rodasse) tinha de "
+        "recusar com 2, nunca estourar até derrubar o job com um traceback cru"
+    )
+
+
 def main() -> int:
     print("autoteste do loadline — cada check reintroduz o defeito que ele pega\n")
     ordem = sorted(

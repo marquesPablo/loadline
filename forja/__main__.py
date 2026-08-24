@@ -9,6 +9,11 @@ conserto é a metade útil de um compilador.
     python -m forja exemplos/revisor-de-licenca.toml
     python -m forja exemplos/*.toml --saida build/
     python -m forja spec.toml --conferir     # não escreve; sai 1 se estiver stale
+    python -m forja . --html relatorio.html  # ESCREVE, além do terminal: página autocontida
+    python -m forja . --baseline             # diff contra .loadline-baseline.json
+    python -m forja . --baseline --gravar    # ESCREVE o baseline com o estado de agora
+    python -m forja --explain V3             # explica um achado, citando LACUNAS.md ao vivo
+    python -m forja repoA repoB repoC        # comparação: uma tabela só, vários repositórios
 """
 
 from __future__ import annotations
@@ -17,7 +22,10 @@ import sys
 from datetime import date
 from pathlib import Path
 
-from . import alvos, conselho, vistoria
+import evidencia
+
+from . import alvos, comparar as _comparar, conselho, explicar as _explicar, vistoria
+from .baseline import ARQUIVO_PADRAO, diff, gravar, ler as ler_baseline
 from .spec import Recusa, Spec, ler
 
 CENSO_PADRAO = Path(__file__).resolve().parent.parent / "censo" / "ecossistema.json"
@@ -60,36 +68,91 @@ def _stale(raiz: Path, artefatos: dict[str, str]) -> list[str]:
     return fora
 
 
-def _vistoria(raiz: Path, *, adotar: bool, saida: Path, saida_explicita: bool) -> int:
+def _vistoria(
+    raiz: Path,
+    *,
+    adotar: bool,
+    saida: Path,
+    saida_explicita: bool,
+    html: Path | None = None,
+    baseline: bool = False,
+    baseline_gravar: bool = False,
+) -> int:
     """`python -m forja` sem argumento: lê os agentes que já existem."""
     hoje = date.today().isoformat()
     pasta = vistoria.achar_pasta(raiz)
+    linhas: list[str] = []
+
+    def emitir(texto: str = "") -> None:
+        linhas.append(texto)
+        print(texto)
+
+    def fechar(codigo: int) -> int:
+        if html is not None:
+            html.write_text(evidencia.pagina("forja", str(raiz), hoje, linhas, codigo), encoding="utf-8")
+            emitir(f"\nrelatório HTML autocontido escrito em {html}")
+        return codigo
 
     # ⚠️ Pasta que não existe é RECUSA, e nunca verde. Um erro de digitação no
     # caminho não pode deixar um gate aprovando para sempre — é *não medido*
     # virando *zero*, no ponto de entrada.
     if pasta is None:
-        print(f"vistoria · {raiz} · em {hoje}")
-        print("=" * vistoria.LARGURA)
-        print("Não achei pasta de agentes aqui. Procurei, nesta ordem:")
+        emitir(f"vistoria · {raiz} · em {hoje}")
+        emitir("=" * vistoria.LARGURA)
+        emitir("Não achei pasta de agentes aqui. Procurei, nesta ordem:")
         for relativo in vistoria.PASTAS:
-            print(f"     {raiz / relativo}")
-        print()
-        print("RECUSADO — não li nada, e não vou devolver verde por isso.      (exit 2)")
-        return 2
+            emitir(f"     {raiz / relativo}")
+        emitir()
+        emitir("RECUSADO — não li nada, e não vou devolver verde por isso.      (exit 2)")
+        return fechar(2)
 
     roster = vistoria.ler_roster(pasta)
     if not roster:
-        print(f"vistoria · {pasta} · em {hoje}")
-        print("=" * vistoria.LARGURA)
-        print("A pasta existe e não há nenhum agente dentro dela.")
-        print()
-        print("RECUSADO — zero agente lido não é zero defeito.                 (exit 2)")
-        return 2
+        emitir(f"vistoria · {pasta} · em {hoje}")
+        emitir("=" * vistoria.LARGURA)
+        emitir("A pasta existe e não há nenhum agente dentro dela.")
+        emitir()
+        emitir("RECUSADO — zero agente lido não é zero defeito.                 (exit 2)")
+        return fechar(2)
 
     achados = vistoria.vistoriar(roster)
     for linha in vistoria.relatorio(roster, achados, pasta, hoje):
-        print(linha)
+        emitir(linha)
+
+    if baseline:
+        raiz_projeto = vistoria.raiz_do_projeto(pasta)
+        arquivo_baseline = raiz_projeto / ARQUIVO_PADRAO
+        if baseline_gravar:
+            gravar(arquivo_baseline, achados, hoje)
+            emitir()
+            emitir(f"gravei o baseline em {arquivo_baseline} — {sum(len(a.itens) for a in achados)} item(ns).")
+            emitir("A próxima rodada com `--baseline` (sem `--gravar`) mostra só o que MUDOU.")
+            return fechar(0)
+
+        anterior = ler_baseline(arquivo_baseline)
+        if anterior is None:
+            emitir()
+            emitir(f"RECUSADO — não há baseline em {arquivo_baseline}.            (exit 2)")
+            emitir(f"  Grave um com `python -m forja {raiz} --baseline --gravar`, e rode de novo.")
+            return fechar(2)
+
+        novos, resolvidos = diff(anterior, achados)
+        emitir()
+        emitir(f"baseline de {anterior.gravado_em} · {len(novos)} novo(s) · {len(resolvidos)} resolvido(s)")
+        if novos:
+            emitir("⛔ NOVO DESDE O BASELINE")
+            for item in novos:
+                emitir(f"     {item}")
+        if resolvidos:
+            emitir("✅ RESOLVIDO DESDE O BASELINE")
+            for item in resolvidos:
+                emitir(f"     {item}")
+        emitir()
+        if novos:
+            emitir("REPROVA — há achado novo desde o baseline.                     (exit 1)")
+            return fechar(1)
+        emitir("PASSA — nada novo desde o baseline.                             (exit 0)")
+        return fechar(0)
 
     if adotar:
         # ⚠️ A spec do leitor nasce ao lado dos AGENTES DELE, e não dentro do
@@ -100,27 +163,27 @@ def _vistoria(raiz: Path, *, adotar: bool, saida: Path, saida_explicita: bool) -
         # quando alguém a escreve por extenso.
         destino = (saida if saida_explicita else vistoria.raiz_do_projeto(pasta) / "build") / "specs"
         destino.mkdir(parents=True, exist_ok=True)
-        print()
-        print(f"escrevi {len(roster)} spec(s) em {destino}/ — uma por agente lido:")
+        emitir()
+        emitir(f"escrevi {len(roster)} spec(s) em {destino}/ — uma por agente lido:")
         for lido in roster:
             arquivo = destino / f"{lido.slug}.toml"
             arquivo.write_text(vistoria.adotar(lido, hoje, arquivo), encoding="utf-8")
-            print(f"  ✓ {arquivo}")
-        print()
-        print("  Cada `?` é um buraco que já existia no agente e que ninguém tinha onde")
-        print("  ver. Preencha, e rode `python -m forja " + str(destino) + "/*.toml`.")
+            emitir(f"  ✓ {arquivo}")
+        emitir()
+        emitir("  Cada `?` é um buraco que já existia no agente e que ninguém tinha onde")
+        emitir("  ver. Preencha, e rode `python -m forja " + str(destino) + "/*.toml`.")
 
-    print()
+    emitir()
     if not achados:
-        print("PASSA — todo agente lido declara as seis coisas.                (exit 0)")
-        return 0
-    print("REPROVA                                                        (exit 1)")
+        emitir("PASSA — todo agente lido declara as seis coisas.                (exit 0)")
+        return fechar(0)
+    emitir("REPROVA                                                        (exit 1)")
     if not adotar:
-        print()
-        print("  `python -m forja --adotar` escreve a spec de cada um a partir do que já")
-        print("  está lá, com um `?` em cada buraco. Aí a forja compila os artefatos que")
-        print("  faltam — inclusive o hook que NEGA, que é o único que o runtime lê.")
-    return 1
+        emitir()
+        emitir("  `python -m forja --adotar` escreve a spec de cada um a partir do que já")
+        emitir("  está lá, com um `?` em cada buraco. Aí a forja compila os artefatos que")
+        emitir("  faltam — inclusive o hook que NEGA, que é o único que o runtime lê.")
+    return fechar(1)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -142,6 +205,36 @@ def main(argv: list[str] | None = None) -> int:
     if adotar_agentes:
         argv.remove("--adotar")
 
+    html_arg: Path | None = None
+    if "--html" in argv:
+        i = argv.index("--html")
+        html_arg = Path(argv[i + 1])
+        del argv[i : i + 2]
+
+    baseline_arg = "--baseline" in argv
+    if baseline_arg:
+        argv.remove("--baseline")
+
+    baseline_gravar = "--gravar" in argv
+    if baseline_gravar:
+        argv.remove("--gravar")
+
+    if "--explain" in argv:
+        i = argv.index("--explain")
+        if i + 1 >= len(argv):
+            print(_explicar.__doc__.strip().splitlines()[0])
+            print(f"Achados válidos: {', '.join(_explicar.CODIGOS)}")
+            return 2
+        regra = argv[i + 1]
+        del argv[i : i + 2]
+        try:
+            for linha in _explicar.explicar(regra):
+                print(linha)
+        except _explicar.RegraDesconhecida as exc:
+            print(f"RECUSADO — {exc}                                          (exit 2)")
+            return 2
+        return 0
+
     especes = [Path(a) for a in argv if not a.startswith("-")]
 
     # Sem argumento nenhum, a forja NÃO imprime a ajuda: ela olha o que você já
@@ -150,6 +243,33 @@ def main(argv: list[str] | None = None) -> int:
     # nunca o pedágio dela.
     # Diretório é sempre vistoria; `.toml` é sempre compilação. O argumento diz
     # qual das duas direções você quer, e nunca é preciso decorar uma bandeira.
+    #
+    # Dois ou mais alvos, NENHUM `.toml`, é o modo COMPARAÇÃO: cada um é
+    # vistoriado, e o resultado sai numa tabela só — nunca mais o comportamento
+    # antigo (e nunca documentado) de vistoriar só o primeiro e ENGOLIR os
+    # demais em silêncio.
+    if len(especes) >= 2 and all(e.suffix != ".toml" for e in especes):
+        faltando = [e for e in especes if not e.exists()]
+        if faltando:
+            print(f"forja · comparação de {len(especes)} repositório(s) · em {date.today().isoformat()}")
+            print("=" * vistoria.LARGURA)
+            for e in faltando:
+                print(f"`{e}` não existe.")
+            print()
+            print("RECUSADO — não li nada, e não vou devolver verde por isso.      (exit 2)")
+            return 2
+
+        resultados = _comparar.comparar(especes)
+        linhas = _comparar.relatorio(resultados, date.today().isoformat())
+        for linha in linhas:
+            print(linha)
+        codigo = _comparar.codigo_de_saida(resultados)
+        if html_arg is not None:
+            alvo_html = ", ".join(str(e) for e in especes)
+            html_arg.write_text(evidencia.pagina("forja", alvo_html, date.today().isoformat(), linhas, codigo), encoding="utf-8")
+            print(f"\nrelatório HTML autocontido escrito em {html_arg}")
+        return codigo
+
     # ⚠️ Alvo que não existe é RECUSA, nunca outra coisa — e este bug nasceu de
     # novo aqui depois de já ter sido consertado no varredor: sem esta linha,
     # `forja ./agentez` caía na compilação, morria lendo a spec e devolvia 1.
@@ -164,12 +284,15 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     aponta_pasta = bool(especes) and especes[0].is_dir()
-    if adotar_agentes or not especes or aponta_pasta:
+    if adotar_agentes or not especes or aponta_pasta or baseline_arg:
         return _vistoria(
             especes[0] if aponta_pasta else Path("."),
             adotar=adotar_agentes,
             saida=saida,
             saida_explicita=saida_explicita,
+            html=html_arg,
+            baseline=baseline_arg,
+            baseline_gravar=baseline_gravar,
         )
 
     censo = conselho.carregar(CENSO_PADRAO)

@@ -1,0 +1,99 @@
+name: loadline
+description: >-
+  forja (vistoria do roster de agentes), placar (as sete portas) e loadline
+  (afirmação × selo) rodados contra o repositório de quem adota. Zero Docker,
+  zero serviço externo, zero chave de API, zero infra própria — só a stdlib
+  do Python, no runner de quem chama.
+author: marquesPablo
+branding:
+  icon: shield
+  color: gray-dark
+
+inputs:
+  caminho:
+    description: 'Pasta a varrer, relativa à raiz do repositório que chama esta Action.'
+    required: false
+    default: '.'
+  falhar-em:
+    description: >-
+      Quais ferramentas devem quebrar o job quando acusam algo: combinação
+      separada por vírgula de "forja,placar,loadline", ou "nenhuma" para só
+      relatar. Default "nenhuma" — a primeira rodada é diagnóstico, não gate;
+      quem adota liga o gate quando decidir que está pronto.
+    required: false
+    default: 'nenhuma'
+  html:
+    description: 'Se "true", cada ferramenta também escreve um relatório HTML autocontido (loadline-<ferramenta>.html), publicado como artefato do job.'
+    required: false
+    default: 'false'
+
+outputs:
+  codigo-forja:
+    description: 'Código de saída da vistoria da forja (0 passa · 1 reprova · 2 recusa).'
+    value: ${{ steps.forja.outputs.codigo }}
+  codigo-placar:
+    description: 'Código de saída do placar (0 sete de sete · 1 alguma porta reprova · 2 sem harness).'
+    value: ${{ steps.placar.outputs.codigo }}
+  codigo-loadline:
+    description: 'Código de saída do loadline (0 tudo verde · 1 reprova · 2 sem denominador).'
+    value: ${{ steps.loadline.outputs.codigo }}
+
+runs:
+  using: composite
+  steps:
+    - name: python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: forja — vistoria do roster de agentes
+      id: forja
+      shell: bash
+      run: |
+        set +e
+        if [ "${{ inputs.html }}" = "true" ]; then
+          PYTHONPATH="${{ github.action_path }}" python -m forja "${{ inputs.caminho }}" --html loadline-forja.html
+        else
+          PYTHONPATH="${{ github.action_path }}" python -m forja "${{ inputs.caminho }}"
+        fi
+        echo "codigo=$?" >> "$GITHUB_OUTPUT"
+
+    - name: placar — as sete portas
+      id: placar
+      shell: bash
+      run: |
+        set +e
+        if [ "${{ inputs.html }}" = "true" ]; then
+          PYTHONPATH="${{ github.action_path }}" python -m placar "${{ inputs.caminho }}" --html loadline-placar.html
+        else
+          PYTHONPATH="${{ github.action_path }}" python -m placar "${{ inputs.caminho }}"
+        fi
+        echo "codigo=$?" >> "$GITHUB_OUTPUT"
+
+    - name: loadline — afirmação × selo
+      id: loadline
+      shell: bash
+      run: |
+        set +e
+        if [ "${{ inputs.html }}" = "true" ]; then
+          PYTHONPATH="${{ github.action_path }}" python -m loadline "${{ inputs.caminho }}" --html loadline-loadline.html
+        else
+          PYTHONPATH="${{ github.action_path }}" python -m loadline "${{ inputs.caminho }}"
+        fi
+        echo "codigo=$?" >> "$GITHUB_OUTPUT"
+
+    - name: relatórios HTML como artefato do job
+      if: ${{ inputs.html == 'true' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: loadline-report
+        path: loadline-*.html
+        if-no-files-found: warn
+
+    - name: aplica o gate declarado em `falhar-em`
+      shell: bash
+      run: |
+        python "${{ github.action_path }}/acao/gate.py" "${{ inputs.falhar-em }}" \
+          "${{ steps.forja.outputs.codigo }}" \
+          "${{ steps.placar.outputs.codigo }}" \
+          "${{ steps.loadline.outputs.codigo }}"

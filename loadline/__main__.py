@@ -7,6 +7,7 @@ reprova. Um relatório que só aparece quando passa não é evidência.
     python -m loadline README.md      # varre um arquivo
     python -m loadline . --sondas     # mostra de onde cada sonda tira o valor
     python -m loadline . --selar      # ESCREVE: anota o que ninguém confere
+    python -m loadline . --html relatorio.html  # ESCREVE, além do terminal
     python -m loadline . --hoje 2027-01-01   # simula o futuro; é assim que se
                                              # prova que o vencimento reprova
 
@@ -29,6 +30,8 @@ from __future__ import annotations
 import sys
 from datetime import date
 from pathlib import Path
+
+import evidencia
 
 from .registro import explicar
 from .selar import selar
@@ -69,7 +72,24 @@ def main(argv: list[str] | None = None) -> int:
     if escrever_selos:
         argv.remove("--selar")
 
+    html_arg: Path | None = None
+    if "--html" in argv:
+        i = argv.index("--html")
+        html_arg = Path(argv[i + 1])
+        del argv[i : i + 2]
+
     alvo = argv[0] if argv else "."
+    linhas: list[str] = []
+
+    def emitir(texto: str = "") -> None:
+        linhas.append(texto)
+        print(texto)
+
+    def fechar(codigo: int) -> int:
+        if html_arg is not None:
+            html_arg.write_text(evidencia.pagina("loadline", alvo, hoje.isoformat(), linhas, codigo), encoding="utf-8")
+            emitir(f"\nrelatório HTML autocontido escrito em {html_arg}")
+        return codigo
 
     # ⚠️ Alvo que não existe é RECUSA, nunca `PASSA`.
     #
@@ -81,75 +101,75 @@ def main(argv: list[str] | None = None) -> int:
     # lida como caminho, e nenhum caminho chamado `--sondaz` existe.
     caminho_do_alvo = Path(alvo)
     if not caminho_do_alvo.exists():
-        print(f"loadline · {alvo} · em {hoje.isoformat()}")
-        print("=" * 72)
+        emitir(f"loadline · {alvo} · em {hoje.isoformat()}")
+        emitir("=" * 72)
         if alvo.startswith("-"):
-            print(f"`{alvo}` não é uma bandeira conhecida, e não existe como caminho.")
-            print("Bandeiras: --selar · --sondas · --hoje AAAA-MM-DD")
+            emitir(f"`{alvo}` não é uma bandeira conhecida, e não existe como caminho.")
+            emitir("Bandeiras: --selar · --sondas · --html ARQUIVO · --hoje AAAA-MM-DD")
         else:
-            print(f"`{alvo}` não existe.")
-        print()
-        print("RECUSADO — não varri nada, e não vou devolver verde por isso.   (exit 2)")
-        return 2
+            emitir(f"`{alvo}` não existe.")
+        emitir()
+        emitir("RECUSADO — não varri nada, e não vou devolver verde por isso.   (exit 2)")
+        return fechar(2)
 
     usado = carregar_sondas(caminho_do_alvo)
     if mostrar_sondas:
-        print(f"sondas carregadas de: {usado or '(nenhum sondas.py encontrado)'}")
+        emitir(f"sondas carregadas de: {usado or '(nenhum sondas.py encontrado)'}")
         for padrao, origem in explicar():
-            print(f"  {padrao:<28} ← {origem}")
-        print()
+            emitir(f"  {padrao:<28} ← {origem}")
+        emitir()
 
     relatorio = varrer(alvo, hoje=hoje)
 
-    print(f"loadline · {alvo} · em {hoje.isoformat()}")
-    print("=" * 72)
+    emitir(f"loadline · {alvo} · em {hoje.isoformat()}")
+    emitir("=" * 72)
     for veredito in ORDEM:
         for achado in relatorio.por(veredito):
-            print(achado)
+            emitir(str(achado))
     for problema in relatorio.malformados:
-        print(f"MALFORMADO {problema}")
+        emitir(f"MALFORMADO {problema}")
 
     if relatorio.sem_prova_nenhuma:
-        print()
-        print("⚠️  NINGUÉM CONSEGUE CONFERIR ISTO — são suspeitas, não defeitos.")
-        print("    Um número que ninguém confere não é um número errado; é um número")
-        print("    sobre o qual nada aqui tem o que dizer. `--selar` anota todos eles.")
+        emitir()
+        emitir("⚠️  NINGUÉM CONSEGUE CONFERIR ISTO — são suspeitas, não defeitos.")
+        emitir("    Um número que ninguém confere não é um número errado; é um número")
+        emitir("    sobre o qual nada aqui tem o que dizer. `--selar` anota todos eles.")
         for afirmacao in relatorio.sem_prova_nenhuma:
-            print(f"      {afirmacao}")
+            emitir(f"      {afirmacao}")
 
-    print("-" * 72)
-    print(relatorio.resumo())
+    emitir("-" * 72)
+    emitir(str(relatorio.resumo()))
 
     if relatorio.defeitos:
-        print()
-        print("⚠️  Divergência de RELAÇÃO não se resela. Ela só anda se o medidor ou o")
-        print("    corpus quebrou — resselar aqui é esconder o defeito, não corrigi-lo:")
+        emitir()
+        emitir("⚠️  Divergência de RELAÇÃO não se resela. Ela só anda se o medidor ou o")
+        emitir("    corpus quebrou — resselar aqui é esconder o defeito, não corrigi-lo:")
         for achado in relatorio.defeitos:
-            print(f"      {achado.selo.arquivo}:{achado.selo.linha}  {achado.metrica}")
+            emitir(f"      {achado.selo.arquivo}:{achado.selo.linha}  {achado.metrica}")
 
     if escrever_selos:
         escritos, problemas = selar(relatorio.sem_prova_nenhuma, hoje=hoje)
-        print()
+        emitir()
         if escritos:
             arquivos = len({e.arquivo for e in escritos})
-            print(
+            emitir(
                 f"escrevi {len(escritos)} selo(s) em {arquivos} arquivo(s), todos como "
                 "`arbitrated:` — ninguém mediu nada ainda."
             )
             for e in escritos:
-                print(f"  {e.arquivo}:{e.linha}  {e.texto}")
-            print()
-            print("  Agora troque cada `por=?` por quem escolheu o número, e renomeie a")
-            print("  métrica se o nome que eu chutei não for o certo — ele saiu da palavra")
-            print("  ao lado do número, não de entender o que ele significa.")
+                emitir(f"  {e.arquivo}:{e.linha}  {e.texto}")
+            emitir()
+            emitir("  Agora troque cada `por=?` por quem escolheu o número, e renomeie a")
+            emitir("  métrica se o nome que eu chutei não for o certo — ele saiu da palavra")
+            emitir("  ao lado do número, não de entender o que ele significa.")
         else:
-            print("nada a selar: ou não há afirmação sem prova, ou o lugar já tem selo.")
+            emitir("nada a selar: ou não há afirmação sem prova, ou o lugar já tem selo.")
         for problema in problemas:
-            print(f"  ⛔ {problema}")
+            emitir(f"  ⛔ {problema}")
 
-    print()
-    print(relatorio.veredito_da_corrida)
-    return relatorio.codigo_de_saida
+    emitir()
+    emitir(str(relatorio.veredito_da_corrida))
+    return fechar(relatorio.codigo_de_saida)
 
 
 if __name__ == "__main__":

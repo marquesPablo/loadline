@@ -146,6 +146,47 @@ Não há segundo passo.
 
 ---
 
+## CI — sem infra própria, sem Docker, só o runner de quem adota
+
+Uma Action composite roda `forja`, `placar` e `loadline` inteiros no seu próprio runner —
+nenhuma chamada sai para fora dele.
+
+```yaml
+# .github/workflows/loadline.yml
+name: loadline
+on: [pull_request]
+jobs:
+  loadline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: marquesPablo/loadline@main
+        with:
+          html: 'true'          # escreve loadline-{forja,placar,loadline}.html
+          falhar-em: 'nenhuma'  # default: diagnóstico, não quebra o build
+```
+
+`falhar-em` liga o gate quando você decidir que está pronto — `'forja'`, `'placar,loadline'`, ou
+qualquer combinação das três. Com `html: 'true'`, os três relatórios sobem como artefato do job
+(`loadline-report`); um link para eles, no seu README, é a evidência real que falta para um badge
+não ser só um número que promete sem provar:
+
+```markdown
+[📄 relatório loadline](LINK-PARA-O-ARTEFATO-OU-PÁGINA-QUE-VOCÊ-HOSPEDAR)
+```
+
+**Por que não um badge pronto de `shields.io`.** Um badge que só afirma "passou", sem link
+clicável para a evidência que o gerou, já foi proposto para este projeto e **retirado**: é
+gameável do mesmo jeito que qualquer selo verde sem prova atrás. O link acima aponta para o
+`--html` de verdade — a mesma rodada que o badge estaria resumindo — porque um verde sem clique
+não é diferente de uma afirmação de cabeça.
+
+⚠️ **A Action ainda não está no GitHub Marketplace** (exige repositório público), e este
+repositório é privado hoje — o `uses: marquesPablo/loadline@main` acima passa a funcionar de fora
+quando os dois mudarem. Escrever e testar a Action local não depende de nenhum dos dois.
+
+---
+
 ## O que isto NÃO faz
 
 - **Não julga a qualidade** do seu agente. Ele responde *"esta declaração existe?"*, nunca *"esta
@@ -161,9 +202,9 @@ Não há segundo passo.
 - **Não roda o seu agente.** Nada aqui sabe se ele responde bem; só se existe alguma coisa capaz de
   dizer que ele respondeu mal.
 
-As treze lacunas declaradas estão em [`LACUNAS.md`](LACUNAS.md).
+As quinze lacunas declaradas estão em [`LACUNAS.md`](LACUNAS.md).
 
-<!-- measured: nucleo.lacunas=13 natureza=contagem em=2026-08-22 vence=nunca fonte=LACUNAS.md -->
+<!-- measured: nucleo.lacunas=15 natureza=contagem em=2026-08-24 vence=nunca fonte=LACUNAS.md -->
 
 Toda ferramenta publica o que passou e o que falhou; quase nenhuma publica **o que nunca olhou**, e
 é essa terceira lista que decide se um verde significa alguma coisa.
@@ -208,11 +249,11 @@ Conferido em 2026-08-20, lendo a página pública de cada um. Nenhum foi clonado
 
 ```console
 $ python autoteste.py
-65 checks declarados · 65 executados · 0 fora do denominador
+81 checks declarados · 81 executados · 0 fora do denominador
 PASSOU
 ```
 
-<!-- measured: nucleo.checks=65 nucleo.fora=0 natureza=contagem em=2026-08-24 vence=nunca fonte=autoteste.py -->
+<!-- measured: nucleo.checks=81 nucleo.fora=0 natureza=contagem em=2026-08-24 vence=nunca fonte=autoteste.py -->
 
 **Cada check reintroduz o defeito que ele existe para pegar.** Um check que só confirma o caminho
 feliz passa igual se o mecanismo for removido — ele não prova nada, e o custo dele é dar a alguém a

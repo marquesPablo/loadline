@@ -108,6 +108,28 @@ Achar sinônimo exigiria um modelo, e um verificador que depende de um modelo n�
 silêncio dele não é prova de que o seu roster não se confunde. A pergunta que ele não faz, e que
 continua sendo sua: *se eu escondesse os nomes, eu saberia qual dos dois despachar?*
 
+## 14 · `--baseline` identifica achado por TEXTO, não por identidade estável
+
+A chave de cada item é `"REGRA: texto do item"` (`forja/baseline.py`) — o mesmo texto que aparece
+na tela. Renomear um agente (`tradutor.md` → `traducao.md`) faz o item antigo sumir e um item novo
+com cara idêntica aparecer: `--baseline` relata isso como **1 resolvido + 1 novo**, não como
+**0 mudanças**. Rastrear identidade de verdade exigiria uma chave que sobrevive ao rename — nome
+de arquivo é a única coisa disponível, e ela é exatamente o que muda no rename.
+
+**O custo:** um repositório que só renomeia arquivos, sem tocar em nenhuma declaração, vê
+`--baseline` acusar barulho. É falso positivo de RUÍDO, nunca falso negativo de defeito real —
+o item "novo" existe de fato, só não é novo no sentido que a pessoa lendo o diff esperava.
+
+## 15 · `action.yml` nunca rodou de verdade num runner do GitHub
+
+O `acao/gate.py` — a única parte com ramificação real — tem controle negativo no `autoteste.py`
+(`CA`–`CD`). O `action.yml` em si (a composição de steps, `${{ github.action_path }}`,
+`actions/upload-artifact@v4`) só foi conferido por leitura e por rodar os mesmos comandos
+manualmente com `PYTHONPATH` simulando o que `github.action_path` resolveria. **Não existe teste
+automatizado que suba um workflow real e confirme que o YAML compõe como este arquivo promete** —
+isso exigiria um repositório público com Actions habilitado, que é exatamente o gate que o
+`ADR-104`/`ADR-119` reservam para o Pablo.
+
 ## Fechadas
 
 Uma lacuna sai desta lista quando o mecanismo que a fechava passa a existir e a ter controle

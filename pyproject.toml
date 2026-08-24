@@ -48,7 +48,7 @@ loadline = "loadline.__main__:main"
 Repository = "https://github.com/marquesPablo/loadline"
 
 [tool.hatch.build.targets.wheel]
-packages = ["loadline", "forja", "censo", "vitrine", "blind", "placar"]
+packages = ["loadline", "forja", "censo", "vitrine", "blind", "placar", "evidencia"]
 
 [tool.hatch.build.targets.sdist]
 include = [
@@ -58,10 +58,15 @@ include = [
     "/vitrine",
     "/blind",
     "/placar",
+    "/evidencia",
     "/operacoes",
     "/exemplos",
+    "/acao",
+    "/vendorizado",
     "/sondas.py",
     "/autoteste.py",
+    "/vendorizar.py",
+    "/action.yml",
     "/README.md",
     "/LACUNAS.md",
     "/LICENSE",

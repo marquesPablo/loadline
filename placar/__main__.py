@@ -2,6 +2,7 @@
 
     $ python -m placar .
     $ python -m placar /caminho/do/seu/projeto
+    $ python -m placar . --html relatorio.html   # ESCREVE, além do terminal
 
 Código de saída: 0 sete de sete · 1 alguma porta reprova · 2 não havia
 harness de agente para ler (nenhum `CLAUDE.md`, `AGENTS.md` ou `.claude/`).
@@ -14,6 +15,8 @@ from __future__ import annotations
 import sys
 from datetime import date
 from pathlib import Path
+
+import evidencia
 
 from .portas import Placar, Porta, avaliar
 
@@ -61,11 +64,19 @@ def main(argv: list[str] | None = None) -> int:
         pass
 
     args = list(sys.argv[1:] if argv is None else argv)
+
+    html_arg: Path | None = None
+    if "--html" in args:
+        i = args.index("--html")
+        html_arg = Path(args[i + 1])
+        del args[i : i + 2]
+
     if not args:
         print(__doc__)
         return 2
 
     alvo = Path(args[0]).expanduser()
+    hoje = date.today().isoformat()
     if not alvo.exists():
         print(f"placar: caminho não existe — {alvo}", file=sys.stderr)
         return 2
@@ -76,10 +87,15 @@ def main(argv: list[str] | None = None) -> int:
         print("        (procurei CLAUDE.md, AGENTS.md e .claude/ na raiz e um nível abaixo)", file=sys.stderr)
         return 2
 
-    for linha in relatorio(placar, date.today().isoformat()):
+    linhas = relatorio(placar, hoje)
+    for linha in linhas:
         print(linha)
 
-    return 1 if placar.reprova else 0
+    codigo = 1 if placar.reprova else 0
+    if html_arg is not None:
+        html_arg.write_text(evidencia.pagina("placar", str(alvo), hoje, linhas, codigo), encoding="utf-8")
+        print(f"\nrelatório HTML autocontido escrito em {html_arg}")
+    return codigo
 
 
 if __name__ == "__main__":
