@@ -1,0 +1,54 @@
+# Copie para `.github/workflows/nome-da-sua-operacao.yml`.
+#
+# TODO — se sua sonda mede algo que só piora com INAÇÃO (como `sala-de-decisao`
+# mede fila parada), considere `schedule` diário em vez de só `pull_request` —
+# um item que não muda não dispara evento nenhum, e sem cron ele fica invisível
+# até alguém precisar dele.
+
+name: nome-da-sua-operacao
+
+on:
+  pull_request:
+    paths:
+      - "TODO/**"
+  workflow_dispatch:
+
+jobs:
+  aferir:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: instalar o loadline
+        run: |
+          git clone --depth 1 https://github.com/marquesPablo/loadline.git /tmp/loadline
+          echo "PYTHONPATH=/tmp/loadline" >> "$GITHUB_ENV"
+
+      - name: conferir
+        run: |
+          set +e
+          python -m loadline . | tee relatorio.txt
+          codigo=${PIPESTATUS[0]}
+          set -e
+          case "$codigo" in
+            0) echo "íntegro: todo selo bate com a sonda" ;;
+            1)
+              echo "::error::divergência entre o que está escrito e o que a sonda mediu agora"
+              echo "::notice::relacao divergindo = PARE e investigue. contagem = leia o número, depois resele."
+              exit 1
+              ;;
+            2)
+              echo "::error::nenhum selo cobre a métrica desta operação. Leia comunidade/nome-da-sua-operacao/selos.md"
+              exit 1
+              ;;
+            *) echo "::error::o loadline não pôde rodar"; exit 1 ;;
+          esac
+
+# TODO — releia LACUNAS.md antes de decidir se este job REPROVA (exit 1) ou só
+# AVISA (::warning::, sem exit). Métrica heurística (erra nos dois sentidos)
+# nunca deve reprovar sozinha — treina quem usa a escrever código para agradar
+# a régua, não para corrigir o problema real.

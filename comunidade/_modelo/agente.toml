@@ -1,0 +1,40 @@
+# TODO — uma frase dizendo o que este agente responde e por que isso dói.
+#
+# Compile com:  python -m forja comunidade/nome-da-sua-operacao/agente.toml
+# A forja tem oito recusas, e todas falham fechadas — se a sua spec pedir rede
+# sem declarar domínio, ou escrita sem declarar caminho, ela não compila, e a
+# recusa vem com o conserto escrito. Rode antes de abrir o PR.
+
+[agente]
+slug = "TODO-nome-curto-do-agente"
+nome = "TODO — Nome legível"
+uma_frase = """
+TODO — o que ele lê e devolve, em uma frase objetiva. Sempre com "arquivo e linha de cada \
+afirmação" no final, se aplicável — é o padrão da casa.\
+"""
+usar_quando = [
+  "TODO — situação concreta em que alguém chamaria este agente",
+]
+nunca_usar = [
+  "TODO — pelo menos um caso que parece óbvio e NÃO é para este agente; cite o agente certo se houver um na prateleira",
+]
+
+[fronteira]
+# Liste só as ferramentas que este agente PRECISA. Ausência de `tools:` nos
+# harnesses de hoje quer dizer TODAS — declarar de menos é mais seguro que
+# esquecer de declarar.
+ferramentas = ["Read", "Grep", "Glob"]
+toca_alvo = false
+
+[prova]
+lacunas = [
+  "TODO — pelo menos duas. O que este agente lê mas não sabe interpretar; o que ele nunca vê porque não virou arquivo; etc.",
+]
+
+[[prova.golden]]
+pergunta = "TODO — uma pergunta real, com um caso concreto (não genérico: 'um arquivo X faz Y, o que acontece?')"
+esperado = """
+TODO — a resposta que um humano competente daria, citando o mecanismo real (não uma explicação \
+de manual). Termine explicando O PORQUÊ do comportamento, não só o quê.\
+"""
+derivado_de = "comunidade/nome-da-sua-operacao/sondas.py — TODO: qual sonda ou regra sustenta esta resposta"
