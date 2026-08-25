@@ -1,0 +1,57 @@
+{
+  "nomes": [
+    "AgentGuard",
+    "AgentSkillOS",
+    "Awesome A2A",
+    "Corbell",
+    "DeepSearcher",
+    "DeepTeam",
+    "DeerFlow",
+    "Harness-R1",
+    "MateClaw",
+    "Mind Viruses",
+    "PANO",
+    "PandaProbe",
+    "PicoAgents",
+    "SILENTCHAIN AI",
+    "Semantica",
+    "SkillSpector",
+    "awesome-agent-skills",
+    "deepagents",
+    "deja-vu",
+    "mem9",
+    "old-coder",
+    "repowise",
+    "reverse-skill"
+  ],
+  "nomes_com_colisao": [
+    "AgentGuard",
+    "Awesome A2A",
+    "MateClaw",
+    "PicoAgents",
+    "SILENTCHAIN AI",
+    "deja-vu",
+    "repowise",
+    "reverse-skill"
+  ],
+  "por_estagio": {
+    "adversarial": 2,
+    "ameaca": 1,
+    "aprendizado": 1,
+    "capacidade": 3,
+    "controle": 2,
+    "entendimento": 2,
+    "memoria": 2,
+    "ontologia": 2,
+    "prova": 2,
+    "runtime": 4,
+    "sem_estagio_classificado": 2
+  },
+  "por_licenca": {
+    "nao_osi": 3,
+    "nao_verificado": 6,
+    "osi": 13,
+    "osi_copyleft_forte": 1
+  },
+  "total": 23
+}
