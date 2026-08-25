@@ -572,7 +572,13 @@ def _af():
     # ensina a ignorar o `git status`.
     original = g.FONTE.read_bytes()
     try:
-        g.FONTE.write_bytes(original.replace(b'"nomes_buscados": 15', b'"nomes_buscados": 99'))
+        # 15 -> 23 em 2026-08-25: oito nomes novos verificados na fonte primária
+        # (SkillSpector, awesome-agent-skills, mem9, MateClaw, SILENTCHAIN AI,
+        # PandaProbe, DeepSearcher, Awesome A2A). O literal aqui tem de ser o
+        # valor REAL de `nomes_buscados` na fonte, porque `bytes.replace` num
+        # trecho que não existe mais é um no-op silencioso — e um no-op aqui é
+        # exatamente o check espelho que este controle existe para pegar.
+        g.FONTE.write_bytes(original.replace(b'"nomes_buscados": 23', b'"nomes_buscados": 99'))
         assert publicado != g.gerar(), (
             "mudei a fonte e o gerado saiu idêntico — o `--conferir` estaria comparando "
             "o arquivo consigo mesmo, e é check espelho"

@@ -161,9 +161,15 @@ def gerar(hoje: date | None = None) -> str:
     A("")
 
     # --- o achado, primeiro: é o motivo de o censo existir --------------------
+    # ⚠️ O TÍTULO e a contagem abaixo saem de `len(colisoes)`, nunca de um número
+    # escrito à mão — um "cinco nomes" fixo no código sobreviveu à primeira
+    # versão só porque, na época, `colisoes` tinha exatamente cinco entradas.
+    # Acrescentar uma sexta colisão (medido: `Awesome A2A`, `MateClaw`,
+    # `SILENTCHAIN AI`) deixou o título mentindo sobre a própria tabela dele —
+    # a mesma família de defeito que este projeto inteiro existe para proibir.
     A("---")
     A("")
-    A("## O achado: cinco nomes não identificam um projeto")
+    A(f"## O achado: {len(colisoes)} nomes não identificam um projeto")
     A("")
     A("Estes nomes identificam um **cacho de projetos independentes** — mesmo nome, mesmo")
     A("problema, sem se citarem:")
@@ -175,9 +181,12 @@ def gerar(hoje: date | None = None) -> str:
         tem = "sim" if canonico.get("repo") else "⛔ **não**"
         A(f"| `{nome}` | **{quantos}** | {tem} |")
     A("")
-    A("Quem ouve *\"instala o AgentGuard\"* não tem como saber qual dos seis. **Nenhum dos seis")
-    A("lista os outros cinco.** Isso não é *\"existem muitos projetos\"* — é o mesmo projeto")
-    A("feito seis vezes no escuro.")
+    pior_nome, pior_quantos = colisoes[0] if colisoes else ("—", 0)
+    A(
+        f"Quem ouve *\"instala o `{pior_nome}`\"* não tem como saber qual dos {pior_quantos}. "
+        f"**Nenhum lista os outros.** Isso não é \"existem muitos projetos\" — é o mesmo projeto"
+    )
+    A(f"feito {pior_quantos} vezes no escuro, no pior caso desta leitura.")
     A("")
     A("> **Denominador, e ele importa:** isto é o que **uma busca por nome, num dia** devolveu.")
     A("> Não é censo do GitHub. **É piso, não teto** — o número real é maior, nunca menor.")
@@ -249,6 +258,11 @@ def gerar(hoje: date | None = None) -> str:
     A(f"| **Sem** repositório canônico — e essa ausência **é** o achado | {den['sem_repo_canonico']} |")
     A(f"| São paper, não repositório | {den['sao_paper_nao_repo']} |")
     A(f"| **Clonados, instalados ou executados** | **{den['clonados_ou_executados']}** |")
+    if den.get("sem_estagio_classificado"):
+        A(
+            "| Têm repositório (ou cacho), mas nenhum dos dez estágios cobre o que fazem "
+            f"| {den['sem_estagio_classificado']} |"
+        )
     A("")
     A(f"⚠️ {den['aviso']}")
     A("")

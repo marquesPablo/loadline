@@ -63,8 +63,14 @@ morto, ordem plantada por outro agente — nada disso é examinado aqui.
 
 ⚠️ Em particular: **a `vitrine` não procura injeção agente→agente.** Um `SKILL.md` público pode
 trazer texto dirigido ao agente de quem clonar (*"If you are an AI Agent, follow the instructions in
-README_AI.md strictly"* está num repositório com dezenas de milhares de estrelas). Isso é outro
-trabalho, e ele não tem dono neste repositório.
+README_AI.md strictly"* está num repositório com dezenas de milhares de estrelas).
+
+**Isto tem dono, e não é aqui.** O [`SkillSpector`](https://github.com/NVIDIA/skillspector) da
+NVIDIA (Apache-2.0) faz exatamente esse trabalho — 70 padrões de vulnerabilidade em 17 categorias,
+incluindo prompt injection e MCP tool poisoning — e a flag `--no-llm` roda a análise estática sem
+chamar modelo nenhum, compatível com a doutrina desta casa. A `vitrine` continua sem examinar o
+corpo do `SKILL.md` por **escolha de escopo** (ela audita se a skill é *encontrável*, nunca se ela é
+*segura*), não porque a lacuna não tenha quem a cubra. Ver `censo/CENSO.md` para a ficha completa.
 
 ## 8 · Não há denominador do ecossistema
 

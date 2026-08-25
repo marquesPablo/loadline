@@ -3,17 +3,17 @@
 > **Este arquivo é gerado.** Não o edite à mão — edite `censo/ecossistema.json` e rode
 > `python censo/gerar.py`. O verificador reprova se os dois saírem de sincronia.
 
-<!-- measured: censo.gerado_em_dia=1 natureza=relacao em=2026-08-16 vence=nunca fonte=censo/gerar.py -->
+<!-- measured: censo.gerado_em_dia=1 natureza=relacao em=2026-08-25 vence=nunca fonte=censo/gerar.py -->
 
 Uma lista `awesome-*` não reprova quando envelhece. Este censo reprova.
 
-**15 projetos.** Cada entrada foi lida **na página do repositório**, nunca no
+**23 projetos.** Cada entrada foi lida **na página do repositório**, nunca no
 post que o citou. O que não foi verificado está escrito como não verificado — nunca
 preenchido por plausibilidade, e nunca convertido em zero.
 
 ---
 
-## O achado: cinco nomes não identificam um projeto
+## O achado: 8 nomes não identificam um projeto
 
 Estes nomes identificam um **cacho de projetos independentes** — mesmo nome, mesmo
 problema, sem se citarem:
@@ -21,14 +21,16 @@ problema, sem se citarem:
 | Nome | Projetos independentes | Existe canônico? |
 |---|---:|---|
 | `AgentGuard` | **6** | ⛔ **não** |
+| `Awesome A2A` | **6** | ⛔ **não** |
 | `reverse-skill` | **6** | ⛔ **não** |
 | `PicoAgents` | **4** | sim |
+| `SILENTCHAIN AI` | **3** | sim |
+| `MateClaw` | **2** | sim |
 | `deja-vu` | **2** | sim |
 | `repowise` | **2** | sim |
 
-Quem ouve *"instala o AgentGuard"* não tem como saber qual dos seis. **Nenhum dos seis
-lista os outros cinco.** Isso não é *"existem muitos projetos"* — é o mesmo projeto
-feito seis vezes no escuro.
+Quem ouve *"instala o `AgentGuard`"* não tem como saber qual dos 6. **Nenhum lista os outros.** Isso não é "existem muitos projetos" — é o mesmo projeto
+feito 6 vezes no escuro, no pior caso desta leitura.
 
 > **Denominador, e ele importa:** isto é o que **uma busca por nome, num dia** devolveu.
 > Não é censo do GitHub. **É piso, não teto** — o número real é maior, nunca menor.
@@ -43,13 +45,13 @@ Ordenado pelo ciclo de vida de um agente, não pelo alfabeto — porque o que in
 | Estágio | O que é | Quem ocupa |
 |---|---|---|
 | **Entender o repositório** | o agente lê a base de código antes de agir | repowise · Corbell |
-| **Ter capacidade** | de onde vem a habilidade que o agente ainda não tem | AgentSkillOS · reverse-skill |
-| **Ter memória** | o que sobrevive ao contexto apagado entre sessões | deja-vu |
+| **Ter capacidade** | de onde vem a habilidade que o agente ainda não tem | AgentSkillOS · reverse-skill · awesome-agent-skills |
+| **Ter memória** | o que sobrevive ao contexto apagado entre sessões | deja-vu · mem9 |
 | **Saber o que é o quê** | entidades, relações e de onde veio cada fato | Semantica · PANO |
-| **Rodar o laço** | quem executa o agente, com sandbox e subagente | DeerFlow · deepagents · PicoAgents |
-| **Bloquear em runtime** | o guarda que decide o que o agente não faz | AgentGuard |
-| **Provar que passou** | a evidência que o humano lê no lugar do diff | old-coder |
-| **Atacar** | quem tenta quebrar o agente de propósito | DeepTeam |
+| **Rodar o laço** | quem executa o agente, com sandbox e subagente | DeerFlow · deepagents · PicoAgents · MateClaw |
+| **Bloquear em runtime** | o guarda que decide o que o agente não faz | AgentGuard · SkillSpector |
+| **Provar que passou** | a evidência que o humano lê no lugar do diff | old-coder · PandaProbe |
+| **Atacar** | quem tenta quebrar o agente de propósito | DeepTeam · SILENTCHAIN AI |
 | **Aprender com a falha** | o que converte falha em conserto | Harness-R1 |
 | **A ameaça medida** | pesquisa, não ferramenta | Mind Viruses |
 
@@ -64,19 +66,27 @@ não é OSI não vira open source por o projeto se chamar de aberto.
 |---|---|---|---|---:|
 | **AgentGuard** | — | varia por projeto | ◻️ não verificado | **6** |
 | **AgentSkillOS** | [ynulihao/AgentSkillOS](https://github.com/ynulihao/AgentSkillOS) | MIT | ✅ OSI | 1 |
+| **Awesome A2A** | — | varia por projeto | ◻️ não verificado | **6** |
+| **awesome-agent-skills** | [VoltAgent/awesome-agent-skills](https://github.com/VoltAgent/awesome-agent-skills) | MIT | ✅ OSI | 1 |
 | **Corbell** | [Corbell-AI/Corbell](https://github.com/Corbell-AI/Corbell) | Apache-2.0 | ◻️ não verificado | 1 |
 | **deepagents** | [langchain-ai/deepagents](https://github.com/langchain-ai/deepagents) | MIT | ◻️ não verificado | 1 |
+| **DeepSearcher** | [zilliztech/deep-searcher](https://github.com/zilliztech/deep-searcher) | Apache-2.0 | ✅ OSI | 1 |
 | **DeepTeam** | [confident-ai/deepteam](https://github.com/confident-ai/deepteam) | Apache-2.0 | ✅ OSI | 1 |
 | **DeerFlow** | [bytedance/deer-flow](https://github.com/bytedance/deer-flow) | MIT | ✅ OSI | 1 |
 | **deja-vu** | [vshulcz/deja-vu](https://github.com/vshulcz/deja-vu) | MIT | ✅ OSI | **2** |
 | **Harness-R1** | [DeepExperience/Harness-R1](https://github.com/DeepExperience/Harness-R1) | Apache-2.0 | ✅ OSI | 1 |
+| **MateClaw** | [matevip/mateclaw](https://github.com/matevip/mateclaw) | Apache-2.0 | ✅ OSI | **2** |
+| **mem9** | [mem9-ai/mem9](https://github.com/mem9-ai/mem9) | Apache-2.0 | ✅ OSI | 1 |
 | **Mind Viruses** | `arXiv:2608.10218` | paper | ⛔ não é open source | 1 |
 | **old-coder** | [AmazingAng/old-coder](https://github.com/AmazingAng/old-coder) | MIT | ✅ OSI | 1 |
+| **PandaProbe** | [chirpz-ai/pandaprobe](https://github.com/chirpz-ai/pandaprobe) | Apache-2.0 | ✅ OSI | 1 |
 | **PANO** | [ALW1EZ/PANO](https://github.com/ALW1EZ/PANO) | CC BY-NC | ⛔ não é open source | 1 |
 | **PicoAgents** | [victordibia/designing-multiagent-systems](https://github.com/victordibia/designing-multiagent-systems) | nao verificado | ◻️ não verificado | **4** |
 | **repowise** | [repowise-dev/repowise](https://github.com/repowise-dev/repowise) | AGPL-3.0 | ⚠️ OSI, copyleft forte | **2** |
 | **reverse-skill** | — | varia por projeto | ◻️ não verificado | **6** |
 | **Semantica** | [semantica-agi/semantica](https://github.com/semantica-agi/semantica) | MIT | ✅ OSI | 1 |
+| **SILENTCHAIN AI** | [silentchainai/SILENTCHAIN](https://github.com/silentchainai/SILENTCHAIN) | proprietaria, source-visible | ⛔ não é open source | **3** |
+| **SkillSpector** | [NVIDIA/skillspector](https://github.com/NVIDIA/skillspector) | Apache-2.0 | ✅ OSI | 1 |
 
 **As três portas de uma licença não-OSI**, porque tratá-las como uma só é o erro comum:
 
@@ -123,6 +133,15 @@ não é OSI não vira open source por o projeto se chamar de aberto.
 - **Sobre a contagem de colisão:** AgentSkillOS/SkillAnything e' da mesma organizacao, e agentskills/agentskills e' a ESPECIFICACAO mantida pela Anthropic. Nome parecido, projeto diferente — nao e' colisao e nao entra na contagem.
 - **Lido em:** 2026-08-16
 
+#### awesome-agent-skills
+
+- **Repositório:** https://github.com/VoltAgent/awesome-agent-skills
+- **Licença:** MIT — ✅ OSI
+- **Faz:** Indice curado de 1497+ Agent Skills oficiais (Anthropic, Google Labs, Vercel, Stripe, Cloudflare, Netlify, Trail of Bits, Sentry, Expo, Hugging Face, Figma) mais skills da comunidade, compativel com Claude Code, Codex, Antigravity, Gemini CLI, Cursor, GitHub Copilot, OpenCode, Windsurf.
+- **Depende de:** nenhuma - e' uma lista curada, sem servico proprio
+- **Peso:** sem LLM no caminho · sem embedding
+- **Lido em:** 2026-08-25
+
 #### reverse-skill
 
 - **Repositório canônico:** ⛔ **não existe** — ver a seção de colisão
@@ -145,6 +164,15 @@ não é OSI não vira open source por o projeto se chamar de aberto.
 - **Alegação do autor** (não medida por este censo): 84,9% hit@1 no LongMemEval-S; ~1,5 ms mediano sobre 3,5 GB
 - **Colide com:** `acoyfellow/deja`
 - **Lido em:** 2026-08-16
+
+#### mem9
+
+- **Repositório:** https://github.com/mem9-ai/mem9
+- **Licença:** Apache-2.0 — ✅ OSI
+- **Faz:** Memoria persistente e compartilhada entre agentes, sessoes e maquinas (OpenClaw, Claude Code, OpenCode, Codex, Dify, Hermes Agent), com hybrid recall (semantica + palavra-chave) e dashboard visual. Ao contrario do deja-vu (mesmo estagio), usa LLM e embedding no caminho: smart-ingest extrai fato com LLM (default gpt-4o-mini) e o recall hibrido depende de embedding.
+- **Depende de:** servidor Go + TiDB (ou PostgreSQL); hosted API disponivel; smart-ingest exige LLM compativel com a API da OpenAI
+- **Peso:** ⚠️ **custa dinheiro** (chave de API ou serviço pago)
+- **Lido em:** 2026-08-25
 
 ### Saber o que é o quê
 
@@ -190,6 +218,16 @@ não é OSI não vira open source por o projeto se chamar de aberto.
 - **Peso:** ⚠️ **custa dinheiro** (chave de API ou serviço pago)
 - **Lido em:** 2026-08-16
 
+#### MateClaw
+
+- **Repositório:** https://github.com/matevip/mateclaw
+- **Licença:** Apache-2.0 — ✅ OSI
+- **Faz:** Harness de orquestracao multi-agente (ReAct + Plan-and-Execute sobre StateGraph) empacotado num JAR Spring Boot so, com skills, memoria, MCP e suporte multi-canal. Multi-vendor failover entre LLM (DashScope, OpenAI, Anthropic, Gemini, DeepSeek, Ollama).
+- **Depende de:** Java 21 + Spring Boot 3.5; PostgreSQL 16 ou MySQL 8 em producao; Ollama permite rodar sem chave paga
+- **Peso:** ⚠️ **custa dinheiro** (chave de API ou serviço pago)
+- **Colide com:** `mateaix/mateclaw`
+- **Lido em:** 2026-08-25
+
 #### PicoAgents
 
 - **Repositório:** https://github.com/victordibia/designing-multiagent-systems
@@ -211,6 +249,14 @@ não é OSI não vira open source por o projeto se chamar de aberto.
 - **Colide com:** `GoPlusSecurity/agentguard` · `hidearmoon/agentguard` · `WhitzardAgent/AgentGuard` · `filipw/AgentGuard` · `JeongJaeSoon/agent-guard` · `bmdhodl/agent47`
 - **Lido em:** 2026-08-16
 
+#### SkillSpector
+
+- **Repositório:** https://github.com/NVIDIA/skillspector
+- **Licença:** Apache-2.0 — ✅ OSI
+- **Faz:** Scanner de seguranca para SKILL.md antes de instalar — 70 padroes de vulnerabilidade em 17 categorias (prompt injection, exfiltracao de dado, MCP tool poisoning, escalada de privilegio, entre outras). Nao e' guarda de RUNTIME como o resto desta categoria: decide o que INSTALA, nao o que o agente ja instalado pode fazer.
+- **Depende de:** Python 3.12+; --no-llm roda so a analise estatica; o segundo estagio (avaliacao semantica, OPCIONAL) aceita OpenAI/Anthropic/AWS Bedrock/NVIDIA/agente CLI local
+- **Lido em:** 2026-08-25
+
 ### Provar que passou
 
 #### old-coder
@@ -223,6 +269,15 @@ não é OSI não vira open source por o projeto se chamar de aberto.
 - **Nota:** O v6 atribuiu este repo a Andre Lindenberg. Andre Lindenberg postou a peca no LinkedIn; a autoria e' de AmazingAng.
 - **Lido em:** 2026-08-16
 
+#### PandaProbe
+
+- **Repositório:** https://github.com/chirpz-ai/pandaprobe
+- **Licença:** Apache-2.0 — ✅ OSI
+- **Faz:** Observabilidade de agente: trace, eval e metricas (LangGraph, CrewAI, Claude Agent SDK), self-host ou cloud gerenciado. Ao contrario do old-coder (mesmo estagio), a evidencia aqui e' TRACING AO VIVO durante a execucao, nao um relatorio pos-hoc que substitui o diff.
+- **Depende de:** FastAPI + Next.js + PostgreSQL 16 + Redis 7 + Celery; self-host gratuito, cloud com tier gratuito; 'LLM-as-a-judge' (avaliacao automatizada via LiteLLM) e' feature OPCIONAL que exige chave de LLM
+- **Peso:** sem LLM no caminho · sem embedding
+- **Lido em:** 2026-08-25
+
 ### Atacar
 
 #### DeepTeam
@@ -234,6 +289,15 @@ não é OSI não vira open source por o projeto se chamar de aberto.
 - **Peso:** sem embedding · ⚠️ **custa dinheiro** (chave de API ou serviço pago)
 - **Sobre a contagem de colisão:** Voltaram Genez-io/genezio-deepteam e fengjian686/deepteam. NAO entram na contagem de colisao: nao foi verificado se sao forks, e fork nao e' projeto independente. Sub-contar de proposito.
 - **Lido em:** 2026-08-16
+
+#### SILENTCHAIN AI
+
+- **Repositório:** https://github.com/silentchainai/SILENTCHAIN
+- **Licença:** proprietaria, source-visible — ⛔ não é open source
+- **Faz:** Extensao de Burp Suite que roda analise passiva de trafego HTTP com IA procurando OWASP Top 10 e configuracao insegura, durante um pentest. Fonte visivel no GitHub, mas a licenca PROIBE redistribuicao sem permissao — exceto para a PortSwigger (BApp Store). Pelo menos dois outros repositorios redistribuem o mesmo codigo sob outro nome de organizacao, aparentemente violando essa mesma licenca.
+- **Depende de:** Burp Suite Community/Professional 2025.2+, Java 21, um provedor de IA (Burp AI padrao sem configuracao, ou Ollama local, OpenAI, Claude, Gemini, Azure)
+- **Colide com:** `IOCsec/silentchain` · `itsmadaraflow/silentchain`
+- **Lido em:** 2026-08-25
 
 ### Aprender com a falha
 
@@ -272,13 +336,14 @@ em silêncio produz resposta plausível e vazia.
 
 | | |
 |---|---:|
-| Nomes buscados | 15 |
-| Com repositório canônico identificado e lido | 12 |
-| **Sem** repositório canônico — e essa ausência **é** o achado | 2 |
+| Nomes buscados | 23 |
+| Com repositório canônico identificado e lido | 19 |
+| **Sem** repositório canônico — e essa ausência **é** o achado | 3 |
 | São paper, não repositório | 1 |
 | **Clonados, instalados ou executados** | **0** |
+| Têm repositório (ou cacho), mas nenhum dos dez estágios cobre o que fazem | 2 |
 
-⚠️ Nenhum repositorio foi clonado, instalado ou executado. Numero de desempenho no campo `alegacao_do_autor` NAO foi medido por este censo.
+⚠️ Nenhum repositorio foi clonado, instalado ou executado. Numero de desempenho no campo `alegacao_do_autor` NAO foi medido por este censo. `sem_estagio_classificado` conta projetos com `estagio: null` — existem, tem repositorio (ou cacho sem canonico), mas nenhum dos dez estagios do ciclo de vida cobre o que fazem; aparecem na tabela de licenca, nao na secao 'Quem ja ocupa cada estagio'.
 
 **O que este censo NÃO mede, declarado:**
 
