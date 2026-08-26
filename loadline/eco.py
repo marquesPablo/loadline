@@ -60,7 +60,11 @@ PROSE_DRIFT = "PROSE_DRIFT"
 #: Trechos que são endereço, não asserção — retirados ANTES de procurar número.
 RUIDO = (
     re.compile(r"\d{4}-\d{2}-\d{2}"),          # data
-    re.compile(r"\bv?\d+\.\d+(?:\.\d+)+\b"),   # versão
+    # versão — ⚠️ 2026-08-25: era `(?:\.\d+)+` (1 ou mais), exigindo 3+ segmentos
+    # e deixando um identificador de DUAS partes como `Apache-2.0`/`Python 3.14`
+    # atravessar como se fosse número de verdade. Medido contra os próprios
+    # exemplos do docstring da linha de baixo antes do conserto: nenhum batia.
+    re.compile(r"\bv?\d+\.\d+(?:\.\d+)*\b"),   # versão
     re.compile(r"\bv?\d+\.\d+\+"),             # faixa de versão: `3.9+`, `18.0+`
     re.compile(r"\w+:\S*\d\S*"),               # arXiv:2608.10218, README.md:12, http://…
     re.compile(r"\d+(?:[.,]\d+)?\s*%"),        # percentual — derivado, sem denominador aqui

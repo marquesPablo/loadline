@@ -1954,6 +1954,34 @@ def _cd():
     )
 
 
+@check("CE", "o confronto NÃO morde identificador de versão de DUAS partes (`Apache-2.0`, `Python 3.14`)")
+def _ce():
+    """Achado em 2026-08-25, escrevendo uma ficha do censo: a regra `RUIDO` de
+
+    versão em `loadline/eco.py` exigia 3+ segmentos (`\\d+\\.\\d+(?:\\.\\d+)+`),
+    então `v2.1.196` era descartado corretamente mas `Apache-2.0`/`Python 3.14`
+    — DUAS partes, o formato mais comum de licença SPDX — atravessavam como se
+    o `2`/`3` fossem número afirmado de verdade. Mesma família do `AM`: um
+    detector que confunde ruído com afirmação é tão caro quanto um que não
+    confronta nada, e este especificamente ficou invisível até um selo real
+    cair no mesmo bloco de uma licença.
+    """
+    registro.limpar()
+    sonda("licenca.padroes")(lambda: 70)
+    fonte = """O projeto usa Apache-2.0, testado em Python 3.14, e o script antigo era v1.2.
+<!-- measured: licenca.padroes=70 natureza=contagem em=2026-08-25 vence=nunca -->
+"""
+    with tempfile.TemporaryDirectory() as tmp:
+        (Path(tmp) / "leia.md").write_text(fonte, encoding="utf-8")
+        r = varrer(Path(tmp), hoje=HOJE)
+
+    mudos = [a for a in r.achados if a.veredito == PROSE_DRIFT]
+    assert not mudos, (
+        "`Apache-2.0`, `Python 3.14` e `v1.2` são identificador de versão, não "
+        f"afirmação de quantidade. Falsos positivos: {[str(a) for a in mudos]}"
+    )
+
+
 def main() -> int:
     print("autoteste do loadline — cada check reintroduz o defeito que ele pega\n")
     ordem = sorted(

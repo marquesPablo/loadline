@@ -67,6 +67,7 @@ README_AI.md strictly"* está num repositório com dezenas de milhares de estrel
 
 **Isto tem dono, e não é aqui.** O [`SkillSpector`](https://github.com/NVIDIA/skillspector) da
 NVIDIA (Apache-2.0) faz exatamente esse trabalho — 70 padrões de vulnerabilidade em 17 categorias,
+<!-- arbitrated: padroes_skillspector=70 categorias_skillspector=17 por="lido no README de NVIDIA/skillspector" em=2026-08-25 vence=90d -->
 incluindo prompt injection e MCP tool poisoning — e a flag `--no-llm` roda a análise estática sem
 chamar modelo nenhum, compatível com a doutrina desta casa. A `vitrine` continua sem examinar o
 corpo do `SKILL.md` por **escolha de escopo** (ela audita se a skill é *encontrável*, nunca se ela é
@@ -88,7 +89,8 @@ palavra, e **não acha** `pesquisador-web` × `investigador-de-fontes` quando as
 mesmo trabalho com sinônimos diferentes. Achar sinônimo exige modelo, e um verificador que depende
 de modelo não é verificador — é segunda opinião, e não roda offline.
 
-Os 30% de palavras em comum não foram medidos como o ponto em que duas skills passam a disputar o
+Os 30% de palavras em comum não foram medidos como o ponto em que skills passam a disputar o
+<!-- arbitrated: limiar_confusao=30 por="mesma escolha do V6 da forja, ver forja/vistoria.py LIMIAR_CONFUSAO" em=2026-08-25 vence=180d -->
 mesmo despacho — foram escolhidos olhando roster real, e o motivo está no código
 (`vitrine/regras.py`, `LIMIAR_CONFUSAO`) em vez de enterrado num `if`. **`S11` é piso, nunca teto:**
 silêncio dele não prova que a sua pasta de skills não se confunde. A pergunta que ele não faz, e que
