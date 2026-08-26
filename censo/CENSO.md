@@ -3,17 +3,17 @@
 > **Este arquivo é gerado.** Não o edite à mão — edite `censo/ecossistema.json` e rode
 > `python censo/gerar.py`. O verificador reprova se os dois saírem de sincronia.
 
-<!-- measured: censo.gerado_em_dia=1 natureza=relacao em=2026-08-25 vence=nunca fonte=censo/gerar.py -->
+<!-- measured: censo.gerado_em_dia=1 natureza=relacao em=2026-08-26 vence=nunca fonte=censo/gerar.py -->
 
 Uma lista `awesome-*` não reprova quando envelhece. Este censo reprova.
 
-**23 projetos.** Cada entrada foi lida **na página do repositório**, nunca no
+**25 projetos.** Cada entrada foi lida **na página do repositório**, nunca no
 post que o citou. O que não foi verificado está escrito como não verificado — nunca
 preenchido por plausibilidade, e nunca convertido em zero.
 
 ---
 
-## O achado: 8 nomes não identificam um projeto
+## O achado: 9 nomes não identificam um projeto
 
 Estes nomes identificam um **cacho de projetos independentes** — mesmo nome, mesmo
 problema, sem se citarem:
@@ -25,6 +25,7 @@ problema, sem se citarem:
 | `reverse-skill` | **6** | ⛔ **não** |
 | `PicoAgents` | **4** | sim |
 | `SILENTCHAIN AI` | **3** | sim |
+| `agent-audit` | **3** | sim |
 | `MateClaw` | **2** | sim |
 | `deja-vu` | **2** | sim |
 | `repowise` | **2** | sim |
@@ -49,8 +50,8 @@ Ordenado pelo ciclo de vida de um agente, não pelo alfabeto — porque o que in
 | **Ter memória** | o que sobrevive ao contexto apagado entre sessões | deja-vu · mem9 |
 | **Saber o que é o quê** | entidades, relações e de onde veio cada fato | Semantica · PANO |
 | **Rodar o laço** | quem executa o agente, com sandbox e subagente | DeerFlow · deepagents · PicoAgents · MateClaw |
-| **Bloquear em runtime** | o guarda que decide o que o agente não faz | AgentGuard · SkillSpector |
-| **Provar que passou** | a evidência que o humano lê no lugar do diff | old-coder · PandaProbe |
+| **Bloquear em runtime** | o guarda que decide o que o agente não faz | AgentGuard · SkillSpector · agent-audit |
+| **Provar que passou** | a evidência que o humano lê no lugar do diff | old-coder · PandaProbe · agent-pd |
 | **Atacar** | quem tenta quebrar o agente de propósito | DeepTeam · SILENTCHAIN AI |
 | **Aprender com a falha** | o que converte falha em conserto | Harness-R1 |
 | **A ameaça medida** | pesquisa, não ferramenta | Mind Viruses |
@@ -64,6 +65,8 @@ não é OSI não vira open source por o projeto se chamar de aberto.
 
 | Projeto | Onde | Licença | Veredito | Nomes no cacho |
 |---|---|---|---|---:|
+| **agent-audit** | [scadastrangelove/agent-audit](https://github.com/scadastrangelove/agent-audit) | nao verificado | ◻️ não verificado | **3** |
+| **agent-pd** | [varmabudharaju/agent-pd](https://github.com/varmabudharaju/agent-pd) | Apache-2.0 | ✅ OSI | 1 |
 | **AgentGuard** | — | varia por projeto | ◻️ não verificado | **6** |
 | **AgentSkillOS** | [ynulihao/AgentSkillOS](https://github.com/ynulihao/AgentSkillOS) | MIT | ✅ OSI | 1 |
 | **Awesome A2A** | — | varia por projeto | ◻️ não verificado | **6** |
@@ -240,6 +243,16 @@ não é OSI não vira open source por o projeto se chamar de aberto.
 
 ### Bloquear em runtime
 
+#### agent-audit
+
+- **Repositório:** https://github.com/scadastrangelove/agent-audit
+- **Licença:** nao verificado — ◻️ não verificado
+- **Faz:** Auditor forense estatico e read-only ('no active defense — read-only analysis with consent prompts a cada passo') para agent homes locais (Claude Code, Codex CLI, OpenClaw) e para repositorios com superficie de instrucao (SKILL.md, manifests MCP, plugins). Roda detectores importados (entre eles Cisco PromptGuard, Gitleaks, NOVA, regras YARA da Cisco para MCP) mais logica nativa — 296 regras ao todo, segundo a descricao do proprio repositorio. Produz achados deduplicados, severidade normalizada e patch sugerido; nunca aplica automaticamente. Foco e' seguranca (injecao, exfiltracao, credencial, escalada de privilegio) — nao declara deteccao de sobreposicao/conflito ENTRE dois agentes, que e' o territorio do V6 do loadline. Mesma familia do SkillSpector (mesmo estagio): decide o que e' seguro confiar, nao e' guarda de runtime.
+- **Depende de:** Python; `--verify` opcional chama LLM externo para re-checar achado; `yara-python` opcional para as 10 regras YARA da Cisco
+- **Sobre a contagem de colisão:** Tres projetos independentes publicaram sob o nome EXATO `agent-audit`, sem se citarem — mesmo padrao do AgentGuard/reverse-skill desta lista. `scadastrangelove/agent-audit` e' o mais documentado dos tres (README completo, 296 regras citadas por nome); os outros dois nao foram lidos em profundidade nesta rodada — so' confirmados como existentes.
+- **Colide com:** `piiiico/agent-audit` · `HeadyZhang/agent-audit`
+- **Lido em:** 2026-08-26
+
 #### AgentGuard
 
 - **Repositório canônico:** ⛔ **não existe** — ver a seção de colisão
@@ -258,6 +271,16 @@ não é OSI não vira open source por o projeto se chamar de aberto.
 - **Lido em:** 2026-08-25
 
 ### Provar que passou
+
+#### agent-pd
+
+- **Repositório:** https://github.com/varmabudharaju/agent-pd
+- **Licença:** Apache-2.0 — ✅ OSI
+- **Faz:** Log de auditoria tamper-evident (hash-chain) para Claude Code: hook que audita o agente principal E cada subagente, correlacionando eventos entre sessoes concorrentes e workflows dinamicos. Seis detectores deterministicos (bypass de permissao, acesso a credencial fora de escopo, self-permissioning, ferramenta nao permitida, redundante, trabalho fora de tarefa) com evidencia citada. 'Catch-and-report — it never blocks': e' flight recorder, nunca firewall.
+- **Depende de:** Python 3.11+, PyYAML; feature opcional `pd judge` usa Claude Code CLI (assinatura ja paga) ou API Anthropic metered
+- **Peso:** sem embedding
+- **Sobre a contagem de colisão:** Cobre parte do territorio do V6 do loadline (redundante/self-permissioning tangenciam deteccao de confusao entre agentes) mas em RUNTIME, nao em arquivo parado — o loadline nao roda o agente (LACUNAS.md #12), o agent-pd so' audita agente rodando. Nao declara comparacao de DESCRICAO entre dois agentes (o que o V6 mede).
+- **Lido em:** 2026-08-26
 
 #### old-coder
 
@@ -336,8 +359,8 @@ em silêncio produz resposta plausível e vazia.
 
 | | |
 |---|---:|
-| Nomes buscados | 23 |
-| Com repositório canônico identificado e lido | 19 |
+| Nomes buscados | 25 |
+| Com repositório canônico identificado e lido | 21 |
 | **Sem** repositório canônico — e essa ausência **é** o achado | 3 |
 | São paper, não repositório | 1 |
 | **Clonados, instalados ou executados** | **0** |

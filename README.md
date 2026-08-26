@@ -213,7 +213,8 @@ Toda ferramenta publica o que passou e o que falhou; quase nenhuma publica **o q
 
 ## Quem já faz parecido
 
-Conferido em 2026-08-20, lendo a página pública de cada um. Nenhum foi clonado ou executado.
+Conferido em 2026-08-20 e reconferido em 2026-08-26, lendo a página pública de cada um. Nenhum foi
+clonado ou executado.
 
 | Projeto | O que faz | Onde ele para |
 |---|---|---|
@@ -221,9 +222,14 @@ Conferido em 2026-08-20, lendo a página pública de cada um. Nenhum foi clonado
 | `AgentLint` | 33 checks em cinco eixos, sobre um `AGENTS.md` | auditoria estrutural e estilística de um arquivo |
 | `AgentLinter` | clareza, estrutura, segurança, memória | qualidade do prompt, não fronteira executável |
 | [`drift`](https://www.driftdev.sh/) | ancora spec markdown no código e falha o CI | documento × código, e nunca agente × agente |
+| [`agent-pd`](https://github.com/varmabudharaju/agent-pd) | audita main agent + todo subagente **em execução**, tamper-evident, detecta redundância e auto-permissão | roda o agente para auditar — não lê arquivo parado, e não compara a DESCRIÇÃO de dois agentes |
+| [`agent-audit`](https://github.com/scadastrangelove/agent-audit) | 296 regras de segurança importadas sobre agent homes e repositórios com skill/MCP | forense de segurança por agente; não enxerga overlap entre agentes |
 
-**Todos lintam um arquivo. Nenhum lê o conjunto, e nenhum emite o gate.** É essa a diferença, e é a
-única que importa aqui.
+**Todos lintam um arquivo, ou auditam um agente por vez, estático ou em execução. Nenhum compara a
+descrição de um agente contra a de outro e emite um gate sobre o CONJUNTO.** É essa a diferença, e é
+a única que importa aqui — e ela é mais estreita do que parece: `agent-pd` já cobre parte do mesmo
+território (redundância, auto-permissão) em runtime, e essa lista tem menos de uma semana de vida
+antes de precisar ser reconferida de novo.
 
 ---
 
@@ -249,11 +255,11 @@ Conferido em 2026-08-20, lendo a página pública de cada um. Nenhum foi clonado
 
 ```console
 $ python autoteste.py
-81 checks declarados · 81 executados · 0 fora do denominador
+82 checks declarados · 82 executados · 0 fora do denominador
 PASSOU
 ```
 
-<!-- measured: nucleo.checks=81 nucleo.fora=0 natureza=contagem em=2026-08-24 vence=nunca fonte=autoteste.py -->
+<!-- measured: nucleo.checks=82 nucleo.fora=0 natureza=contagem em=2026-08-26 vence=nunca fonte=autoteste.py -->
 
 **Cada check reintroduz o defeito que ele existe para pegar.** Um check que só confirma o caminho
 feliz passa igual se o mecanismo for removido — ele não prova nada, e o custo dele é dar a alguém a

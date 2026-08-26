@@ -3,8 +3,8 @@
   "sobre": "Censo do ecossistema de agentes de IA. Cada entrada e' lida NA PAGINA do repositorio, nunca no post que o citou. `nao_verificado` e' um valor legitimo e nunca vira zero.",
   "metodo": "busca por nome + leitura da pagina canonica do repositorio",
   "denominador": {
-    "nomes_buscados": 23,
-    "com_repo_canonico": 19,
+    "nomes_buscados": 25,
+    "com_repo_canonico": 21,
     "sem_repo_canonico": 3,
     "sao_paper_nao_repo": 1,
     "clonados_ou_executados": 0,
@@ -349,6 +349,36 @@
         "forgewebO1/Awesome-A2A"
       ],
       "lido_em": "2026-08-25"
+    },
+    {
+      "nome": "agent-pd",
+      "repo": "https://github.com/varmabudharaju/agent-pd",
+      "licenca": "Apache-2.0",
+      "veredito_licenca": "osi",
+      "estagio": "prova",
+      "faz": "Log de auditoria tamper-evident (hash-chain) para Claude Code: hook que audita o agente principal E cada subagente, correlacionando eventos entre sessoes concorrentes e workflows dinamicos. Seis detectores deterministicos (bypass de permissao, acesso a credencial fora de escopo, self-permissioning, ferramenta nao permitida, redundante, trabalho fora de tarefa) com evidencia citada. 'Catch-and-report — it never blocks': e' flight recorder, nunca firewall.",
+      "sem_llm": false,
+      "sem_embedding": true,
+      "dependencias": "Python 3.11+, PyYAML; feature opcional `pd judge` usa Claude Code CLI (assinatura ja paga) ou API Anthropic metered",
+      "custa_dinheiro": false,
+      "nota_de_colisao": "Cobre parte do territorio do V6 do loadline (redundante/self-permissioning tangenciam deteccao de confusao entre agentes) mas em RUNTIME, nao em arquivo parado — o loadline nao roda o agente (LACUNAS.md #12), o agent-pd so' audita agente rodando. Nao declara comparacao de DESCRICAO entre dois agentes (o que o V6 mede).",
+      "colide_com": [],
+      "lido_em": "2026-08-26"
+    },
+    {
+      "nome": "agent-audit",
+      "repo": "https://github.com/scadastrangelove/agent-audit",
+      "licenca": "nao verificado",
+      "veredito_licenca": "nao_verificado",
+      "estagio": "controle",
+      "faz": "Auditor forense estatico e read-only ('no active defense — read-only analysis with consent prompts a cada passo') para agent homes locais (Claude Code, Codex CLI, OpenClaw) e para repositorios com superficie de instrucao (SKILL.md, manifests MCP, plugins). Roda detectores importados (entre eles Cisco PromptGuard, Gitleaks, NOVA, regras YARA da Cisco para MCP) mais logica nativa — 296 regras ao todo, segundo a descricao do proprio repositorio. Produz achados deduplicados, severidade normalizada e patch sugerido; nunca aplica automaticamente. Foco e' seguranca (injecao, exfiltracao, credencial, escalada de privilegio) — nao declara deteccao de sobreposicao/conflito ENTRE dois agentes, que e' o territorio do V6 do loadline. Mesma familia do SkillSpector (mesmo estagio): decide o que e' seguro confiar, nao e' guarda de runtime.",
+      "sem_llm": false,
+      "sem_embedding": null,
+      "dependencias": "Python; `--verify` opcional chama LLM externo para re-checar achado; `yara-python` opcional para as 10 regras YARA da Cisco",
+      "custa_dinheiro": false,
+      "colide_com": ["piiiico/agent-audit", "HeadyZhang/agent-audit"],
+      "nota_de_colisao": "Tres projetos independentes publicaram sob o nome EXATO `agent-audit`, sem se citarem — mesmo padrao do AgentGuard/reverse-skill desta lista. `scadastrangelove/agent-audit` e' o mais documentado dos tres (README completo, 296 regras citadas por nome); os outros dois nao foram lidos em profundidade nesta rodada — so' confirmados como existentes.",
+      "lido_em": "2026-08-26"
     },
     {
       "nome": "Mind Viruses",

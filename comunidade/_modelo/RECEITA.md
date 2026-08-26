@@ -1,5 +1,8 @@
 # Operação · `nome-da-sua-operacao`
 
+<!-- loadline-ignore-file: este arquivo ENSINA a sintaxe do selo para quem for escrever uma
+     operação nova — o `AAAA-MM-DD` abaixo é placeholder de propósito, não uma data quebrada. -->
+
 > TODO — uma frase que resume a dor, no mesmo tom de "O que está parado agora esperando uma decisão
 > sua?" (`sala-de-decisao`) ou "Você tem mais de um agente e ninguém olha o conjunto" (`forja`). Se
 > a frase não incomoda ninguém, a operação provavelmente não devia existir.
