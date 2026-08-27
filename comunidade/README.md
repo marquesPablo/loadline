@@ -19,10 +19,10 @@ prateleira busca. As duas são bem-vindas — a régua está em `operacoes/READM
 
 ## Por que isso não é "PR aceito automaticamente se passar o CI verde"
 
-`operacoes/README.md` já diz: **"a prateleira cresce por decisão, não por acúmulo."** Nove
-operações viraram três nas mãos do board (ver o histórico de decisões do hub) porque quatro delas
-respondiam à mesma pergunta com sotaques diferentes. Aceitar contribuição por volume repetiria
-exatamente esse erro, só que sem um board para cortar depois.
+`operacoes/README.md` já diz: **"a prateleira cresce por decisão, não por acúmulo."** A prateleira
+nasceu com dez candidatas e o board cortou para sete, porque as que saíram ou eram puro alarme ou
+já eram feitas por outra peça. Aceitar contribuição por volume repetiria exatamente esse erro, só
+que sem um board para cortar depois.
 
 **Por isso todo PR nesta pasta é revisado por decisão humana antes do merge — nunca por CI
 sozinho.** O CI (item 5 do checklist abaixo) é o piso, não o teto: ele reprova o que está
@@ -43,9 +43,9 @@ conferir primeiro — estão nomeados em `operacoes/README.md` §"Escrevendo a s
 3. **Estourar é melhor que devolver zero.** Se sua sonda não achou a pasta que devia medir, ela
    levanta erro — nunca devolve `0`. *"Não olhei"* e *"olhei e não há"* são coisas opostas, e
    confundir as duas é o defeito que este projeto inteiro existe para proibir.
-4. **Nenhum nome de função auxiliar pode colidir com os das outras nove operações.** Prefixe com
-   algo específico da sua (as existentes usam `_instr_`, `_repo_`, `_front_`, `_fab_`, `_cer_`,
-   `_dec_`, `_su_`, `_hand_`, `_vit_` — escolha um prefixo livre).
+4. **Nenhum nome de função auxiliar pode colidir com os das outras sete operações.** Prefixe com
+   algo específico da sua (as existentes usam `_instr_`, `_repo_`, `_cer_`, `_dec_`, `_su_`,
+   `_hand_`, `_vit_` — escolha um prefixo livre).
 5. **`agente.toml` precisa compilar na `forja`, sem recusa.** Rode `python -m forja
    comunidade/<sua-operacao>/agente.toml` antes de abrir o PR — as oito recusas da forja falham
    fechadas, e vêm com o conserto escrito.

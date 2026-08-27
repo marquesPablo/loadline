@@ -25,7 +25,7 @@ nunca_usar = [
   "reescrever o arquivo de instrução — ele acusa e nunca conserta; o conserto é decisão de quem é dono do repositório",
   "julgar se a instrução é BOA; ele responde se ela ainda é verdadeira, que é outra pergunta",
   "revisar código em busca de bug ou de vulnerabilidade — nada aqui olha para a lógica do programa",
-  "auditar a fronteira dos subagentes (quem escreve onde, quem fala com quem) — isso é a operação `fronteira-de-agente`",
+  "auditar a fronteira dos subagentes (quem escreve onde, quem fala com quem) — isso é a vistoria de roster da `forja` (`python -m forja`)",
   "decidir qual harness o time deve usar — ele lê os arquivos que existem, não recomenda ferramenta",
 ]
 

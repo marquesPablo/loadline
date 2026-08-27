@@ -26,7 +26,7 @@ nunca_usar = [
   "escrever, editar ou arquivar decisão — ele lê, cita e para",
   "julgar se a decisão foi boa: ele mede se ela está registrada, datada, com alternativa e com contra-ponteiro — nunca se ela estava certa",
   "estimar quanto tempo algo vai levar, ou priorizar o que decidir primeiro — a ordem é julgamento de quem decide, e ele não tem como saber o custo de cada uma",
-  "auditar a fronteira ou a procedência dos seus agentes — isso é `fronteira-de-agente` e `fabrica-de-agentes`",
+  "auditar a fronteira ou a procedência dos seus agentes — isso é a vistoria de roster da `forja` (`python -m forja`)",
 ]
 
 [fronteira]

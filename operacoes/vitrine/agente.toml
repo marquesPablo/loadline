@@ -27,7 +27,7 @@ nunca_usar = [
   "julgar se a skill FUNCIONA — ele responde se ela é ENCONTRÁVEL, que é outra pergunta; ver vitrine/LACUNAS.md item 1",
   "avaliar a qualidade do gatilho além da forma — uma cláusula 'when appropriate' passa por ter a conjunção, sem informar nada; ver LACUNAS item 2",
   "auditar o corpo do SKILL.md além da contagem de linhas — instrução contraditória ou ordem plantada não são vistas aqui",
-  "auditar a fronteira dos subagentes (quem escreve onde, quem fala com quem) — isso é a operação `fronteira-de-agente`",
+  "auditar a fronteira dos subagentes (quem escreve onde, quem fala com quem) — isso é a vistoria de roster da `forja` (`python -m forja`)",
 ]
 
 [fronteira]

@@ -1106,11 +1106,11 @@ def _ay():
         modulo = importlib.util.module_from_spec(origem)
         origem.loader.exec_module(modulo)
 
-        # `PASTA`/`ARQUIVO` em vez de `PASTA_DE_`: a `fabrica-de-agentes`
-        # declara `PASTAS_DE_SPEC` (plural, e uma tupla). O que a regra pergunta
-        # é se a operação DECLARA de onde lê — o número e o tipo não mudam isso,
-        # e um prefixo estreito demais deixaria a operação fora do denominador
-        # sem ninguém ver.
+        # `PASTA`/`ARQUIVO` como prefixo, não `PASTA_DE_`: uma operação pode
+        # declarar de onde lê como `str` ou como tupla de nomes (`PASTAS_DE_X`).
+        # O que a regra pergunta é se a operação DECLARA de onde lê — o número e
+        # o tipo não mudam isso, e um prefixo estreito demais deixaria a operação
+        # fora do denominador sem ninguém ver.
         declaradas = [
             nome
             for nome in vars(modulo)
@@ -1136,7 +1136,12 @@ def _ay():
                 "apontando para o vazio — «não olhei» saiu como «não há»"
             )
     registro.limpar()
-    assert examinadas >= 5, f"só {examinadas} operações declaram a fonte de onde leem"
+    # O piso é 2, não um número calibrado ao tamanho da prateleira de hoje: ele
+    # existe só para o check não ficar vacuamente verde se um dia nenhuma operação
+    # declarar uma PASTA obrigatória. Hoje são 3 (`sala-de-decisao`, `cerebro-local`,
+    # `suite-que-acusa`); operações que procuram arquivo OPCIONAL (`instrucao`,
+    # `handoff`) devolvem 0 de propósito e não entram aqui.
+    assert examinadas >= 2, f"só {examinadas} operações declaram uma fonte obrigatória — o check ficou vazio"
 
     # O defeito, reintroduzido: uma sonda que devolve 0 em vez de estourar tem de
     # ser vista pela mesma regra que acabou de dar verde.
@@ -1440,7 +1445,7 @@ def _juntar():
     return modulo
 
 
-@check("BJ", "juntar duas operações com `cat` QUEBRA, e o `juntar.py` conserta os 45 pares")
+@check("BJ", "juntar duas operações com `cat` QUEBRA, e o `juntar.py` conserta todos os pares")
 def _bj():
     import itertools
 

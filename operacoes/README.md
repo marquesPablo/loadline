@@ -13,52 +13,39 @@ Esta pasta é a carga.
 
 ---
 
-## As nove, por família
+## As sete, por família
 
-<!-- measured: operacoes.total=9 natureza=contagem em=2026-08-24 vence=nunca fonte=operacoes/ -->
+<!-- measured: operacoes.total=7 natureza=contagem em=2026-08-26 vence=nunca fonte=operacoes/ -->
 
-> ⚠️ **Cortadas pelo `ADR-117`** (2026-08-24), por serem puro alarme: `dependencia-com-veredito`
-> (não lia licença nenhuma) e `revisao-de-seguranca` (pressupunha um `.md` por achado onde scanner
-> real cospe SARIF). A numeração abaixo é a que sobrou, não renumerada desde a origem — os números
-> pulados marcam as duas cortadas, não um erro de contagem.
+As operações não são numeradas: a prateleira muda por decisão, e número que alguém decorou
+envelhece. Elas são referidas pelo nome.
 
 ### 🔧 Capacidade — o que você **passa a conseguir fazer**
 
 Estas instalam um trabalho que você não fazia. Comece por aqui.
 
-| # | Operação | O que você ganha ao clonar | Ajuste |
-|---|---|---|---:|
-| 5 | [`fabrica-de-agentes`](fabrica-de-agentes/) | seus agentes passam a ter **fonte**: uma spec declarativa que compila em 7 artefatos, incluindo o hook que nega | **0–2 campos** |
-| 6 | [`cerebro-local`](cerebro-local/) | um **servidor MCP somente-leitura sobre as suas notas**, num arquivo, sem chave de API, sem nuvem | **1 campo** |
-| 7 | [`sala-de-decisao`](sala-de-decisao/) | um registro de decisões que responde **o que está parado esperando você, e há quantos dias** | **1 campo** |
-| 9 | [`suite-que-acusa`](suite-que-acusa/) | a régua que responde **quais dos seus testes passariam se o mecanismo fosse removido** | **2 campos** |
-| 10 | [`handoff-que-mede-o-disco`](handoff-que-mede-o-disco/) | o arquivo de retomada passa a ser **escrito do disco** — commits desde, caminho morto, comando sem alvo, deriva de git | **1 campo** |
+| Operação | O que você ganha ao clonar | Ajuste |
+|---|---|---:|
+| [`cerebro-local`](cerebro-local/) | um **servidor MCP somente-leitura sobre as suas notas**, num arquivo, sem chave de API, sem nuvem | **1 campo** |
+| [`vitrine`](vitrine/) | um agente decide carregar sua skill lendo só `name` e `description` — **26 de 31 skills oficiais da Anthropic** não declaram quando não usar, e uma tem `name` divergente da própria pasta | **1 campo** |
 
 ### 🩺 Higiene — o que **para de mentir** no seu repositório
 
 Estas medem coisas que já existem e envelheceram caladas.
 
-| # | Operação | A dor | Ajuste |
-|---|---|---|---:|
-| 1 | [`instrucao-que-nao-mente`](instrucao-que-nao-mente/) | seu `AGENTS.md` manda rodar um comando que não existe mais, e editar uma pasta deletada | **0 campos** |
-| 2 | [`readme-que-nao-mente`](readme-que-nao-mente/) | o README afirma números que ninguém recomputa desde que foram escritos | **0 campos** |
-| 3 | [`fronteira-de-agente`](fronteira-de-agente/) | você tem subagentes escritos à mão e nenhum declara onde escreve nem para onde fala | **1 campo** |
-| 11 | [`vitrine`](vitrine/) | um agente decide carregar sua skill lendo só `name` e `description` — **26 de 31 skills oficiais da Anthropic** não declaram quando não usar, e uma delas tem `name` divergente da própria pasta | **1 campo** |
+| Operação | A dor | Ajuste |
+|---|---|---:|
+| [`instrucao-que-nao-mente`](instrucao-que-nao-mente/) | seu `AGENTS.md` manda rodar um comando que não existe mais, e editar uma pasta deletada | **0 campos** |
+| [`readme-que-nao-mente`](readme-que-nao-mente/) | o README afirma números que ninguém recomputa desde que foram escritos | **0 campos** |
+| [`handoff-que-mede-o-disco`](handoff-que-mede-o-disco/) | o arquivo de retomada passa a ser **escrito do disco** — commits desde, caminho morto, comando sem alvo, deriva de git | **1 campo** |
+| [`sala-de-decisao`](sala-de-decisao/) | um registro de decisões que responde **o que está parado esperando você, e há quantos dias** | **1 campo** |
+| [`suite-que-acusa`](suite-que-acusa/) | a régua que responde **quais dos seus testes passariam se o mecanismo fosse removido** | **2 campos** |
 
-> ⚠️ **`fabrica-de-agentes` (5) e `fronteira-de-agente` (3) têm destino nomeado, e não decidido, no
-> `ADR-117`:** a decisão as descreve como "já saídas por efeito do ADR-112" (a vistoria de roster já
-> produz o que as duas prometiam), mas nenhum ADR mandou removê-las fisicamente daqui, e o `ADR-117`
-> não lista essa remoção entre o que falta executar. Seguem na prateleira até o board decidir.
->
-> **`sala-de-decisao` (7) e `suite-que-acusa` (9) também têm destino em aberto:** a auditoria de
-> 2026-08-22 que o `ADR-117` aceitou não fechou a conta das duas — nem cortou, nem confirmou que
-> ficam. Seguem aqui até essa lacuna nomeada ser respondida.
->
-> **`vitrine` (11) nunca foi julgada pela régua do corte:** ela nasceu em 2026-08-23, um dia depois
-> da auditoria de 2026-08-22 que o `ADR-117` usou como base. Não é omissão do `ADR-117` — é uma
-> operação que ainda não existia quando aquele julgamento rodou.
-
-**A prateleira cresce por decisão, não por acúmulo.**
+> **A prateleira cresce por decisão, não por acúmulo.** Ela nasceu com dez candidatas; quatro
+> saíram. `dependencia-com-veredito` e `revisao-de-seguranca`, por serem puro alarme — a primeira
+> não lê licença nenhuma, a segunda pressupõe um `.md` por achado onde scanner real cospe SARIF.
+> `fronteira-de-agente` e `fabrica-de-agentes`, porque a vistoria de roster (`python -m forja`,
+> na raiz do repositório) já produz o que as duas prometiam.
 
 ---
 
@@ -84,7 +71,7 @@ ela não pode é trazer **menos**: a sonda da anatomia estoura quando falta um.
 ```console
 $ git clone <este repo> && cd loadline
 
-$ cp operacoes/fronteira-de-agente/sondas.py /caminho/do/seu/repo/sondas.py
+$ cp operacoes/instrucao-que-nao-mente/sondas.py /caminho/do/seu/repo/sondas.py
 $ cd /caminho/do/seu/repo
 
 $ PYTHONPATH=/caminho/para/loadline python -m loadline .
@@ -117,15 +104,14 @@ em vez de escolhido. A `RECEITA.md` de cada operação diz exatamente quais.
 
 ### Usando duas operações no mesmo repositório
 
-As sondas são escritas para poderem conviver. Nenhum nome de função auxiliar colide entre elas —
-oito das nove usam um prefixo próprio (`_instr_`, `_repo_`, `_front_`, `_fab_`, `_cer_`,
-`_dec_`, `_su_`, `_hand_`); a `vitrine` foge do padrão (`_skills()`, sem prefixo de operação) e não
-foi conferida por este parágrafo — e nenhum padrão de métrica colide entre as nove.
+As sondas são escritas para poderem conviver. Cada operação usa um prefixo próprio nas funções
+auxiliares, e **nenhum padrão de métrica colide** entre elas — isso é gateado por um check com
+controle negativo, porque uma colisão sombrearia a sonda mais velha sem erro nenhum.
 
 **Mas não junte com `cat`.** Todo `sondas.py` abre com `from __future__ import annotations`, e o
 Python exige que essa linha seja a primeira instrução do arquivo. Concatenado, o segundo arquivo
 põe a dele no meio, e o resultado morre com `SyntaxError` na importação — depois de já ter
-sobrescrito o `sondas.py` de quem tentou. Medido: **os 36 pares possíveis quebram, os 36.**
+sobrescrito o `sondas.py` de quem tentou. Medido: **todos os pares possíveis quebram.**
 
 ```console
 $ python operacoes/juntar.py instrucao-que-nao-mente readme-que-nao-mente \
@@ -137,9 +123,6 @@ Ele sobe os imports para o topo, deduplica, e **recusa** se duas operações reg
 padrão de métrica — em Python a segunda sombrearia a primeira sem erro nenhum, e a métrica
 sombreada sumiria do relatório sem nunca ter reprovado. Quando ele recusa, não escreve nada: um
 `sondas.py` pela metade importa, roda, e devolve verde sobre o que ficou de fora.
-
-Nenhum **padrão de métrica** colide entre as nove, e isso é gateado por um check com controle
-negativo — uma colisão sombrearia a sonda mais velha sem erro nenhum.
 
 ---
 
@@ -160,11 +143,10 @@ valem para todas, e ficam escritas aqui para ninguém descobri-las usando:
    rede, zero chave de API, zero telemetria. Se uma sonda precisar da internet, ela vira `UNPROVEN`
    com o erro escrito — nunca um palpite com cara de medida.
 
-**E uma quarta, que vale para as duas operações que trazem heurística** (`suite-que-acusa` e a
-detecção de anti-descrição da `fabrica-de-agentes`): **elas erram nos dois sentidos, e dizem isso.**
-O número que produzem é uma **lista de leitura**, não um veredito — e nenhuma das duas deve reprovar
-o CI sozinha. Uma régua heurística que reprova treina o time a escrever código para agradar a régua,
-e aí ela parou de medir o código.
+**E uma quarta, que vale para a operação que traz heurística** (`suite-que-acusa`): **ela erra nos
+dois sentidos, e diz isso.** O número que a sonda `suite.sem_controle_negativo` produz é uma **lista
+de leitura**, não um veredito — ela não deve reprovar o CI sozinha. Uma régua heurística que reprova
+treina o time a escrever código para agradar a régua, e aí ela parou de medir o código.
 
 ---
 
@@ -185,6 +167,9 @@ Uma operação é uma pasta com os cinco arquivos acima. O que faz uma boa:
 - **O `agente.toml` compila ou é recusado.** A forja tem oito recusas e todas falham fechadas. Se a
   sua spec pede rede sem declarar domínio, ou escrita sem declarar caminho, ela não sai — e a recusa
   vem com o conserto escrito.
+
+Uma sonda de domínio nova entra por PR em [`comunidade/`](../comunidade/), revisada por decisão
+humana — nunca só por CI verde.
 
 > *As operações desta prateleira nasceram em 2026-08-21, e até essa data nenhuma tinha sido
 > executada por outra pessoa. Isso é denominador declarado, não modéstia.*

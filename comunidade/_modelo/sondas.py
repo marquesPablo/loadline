@@ -5,9 +5,9 @@ por extenso. Ela nunca devolve um palpite.
 
 COPIE ESTE ARQUIVO para a raiz do seu repositório, como `sondas.py`.
 Para combinar com outra operação, use `operacoes/juntar.py` ou concatene à mão —
-mas primeiro escolha um prefixo de função auxiliar que não colida com as nove
-operações existentes (elas usam `_instr_`, `_repo_`, `_front_`, `_fab_`, `_cer_`,
-`_dec_`, `_su_`, `_hand_`, `_vit_`).
+mas primeiro escolha um prefixo de função auxiliar que não colida com as sete
+operações existentes (elas usam `_instr_`, `_repo_`, `_cer_`, `_dec_`, `_su_`,
+`_hand_`, `_vit_`).
 
 ⚠️ TODO — a regra anti-espelho, para a SUA operação. O número ESCRITO mora em
 algum lugar (um índice, um README, um dashboard). O número MEDIDO tem de sair

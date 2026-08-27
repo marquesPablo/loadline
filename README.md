@@ -238,8 +238,8 @@ antes de precisar ser reconferida de novo.
 - [`loadline/`](loadline/) — a mesma régua aplicada ao **texto**: uma afirmação escrita ganha prazo de
   validade e uma sonda que a recomputa, e a sonda **não pode ler a fonte que produziu o número**.
   `python -m loadline .`
-- [`operacoes/`](operacoes/) — nove trabalhos prontos que rodam no seu repositório sem configuração.
-  <!-- measured: operacoes.total=9 natureza=contagem em=2026-08-24 vence=nunca fonte=operacoes/ -->
+- [`operacoes/`](operacoes/) — sete trabalhos prontos que rodam no seu repositório sem configuração.
+  <!-- measured: operacoes.total=7 natureza=contagem em=2026-08-26 vence=nunca fonte=operacoes/ -->
 - [`censo/`](censo/) — um registro do ecossistema de agentes de IA onde cada entrada **vence**.
 - [`blind/`](blind/) — a fronteira que uma varredura ingênua atravessa em silêncio: junction,
   symlink de diretório, e a regra de `.gitignore` que esconde mesmo de quem atravessa a fronteira
