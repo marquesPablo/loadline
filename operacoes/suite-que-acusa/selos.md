@@ -1,82 +1,82 @@
-# Os selos desta operação
+# The seals of this operation
 
-## O selo que vale por si
+## The seal that stands on its own
 
-Cole **no README do seu repositório**, na seção que fala dos testes — é lá que a promessa é feita.
-
-```markdown
-A suíte tem N checks, e nenhum deles é uma função que não pode falhar.
-<!-- measured: suite.checks=N nature=count on=AAAA-MM-DD expires=never source=tests/ -->
-<!-- measured: suite.sem_assercao=0 nature=relation on=AAAA-MM-DD expires=never source=tests/ -->
-```
-
-**`suite.sem_assercao=0` é o único selo desta operação que é veredito**, e por isso é o único que
-merece reprovar o CI sozinho. Uma função de teste sem asserção não pode falhar — é propriedade do
-código, não opinião.
-
-`vence=nunca` nos dois, de propósito: eles não envelhecem com o tempo, só andam quando alguém mexe
-na suíte. Pôr prazo faria a mesma métrica reprovar por duas razões diferentes, e o vermelho
-deixaria de dizer qual.
-
-## A terceira lista
+Paste **into your repository's README**, in the section about the tests — that is where the promise
+is made.
 
 ```markdown
-Esta suíte declara N coisas que ela NÃO mede.
-<!-- measured: suite.lacunas_declaradas=N nature=count on=AAAA-MM-DD expires=90d source=LACUNAS.md -->
+The suite has N checks, and none of them is a function that cannot fail.
+<!-- measured: suite.checks=N nature=count on=YYYY-MM-DD expires=never source=tests/ -->
+<!-- measured: suite.sem_assercao=0 nature=relation on=YYYY-MM-DD expires=never source=tests/ -->
 ```
 
-**`vence=90d` aqui, e o prazo é o mecanismo.** Uma lista de lacunas envelhece de um jeito
-particular: as lacunas **fecham** sem ninguém apagar a linha. O check que faltava foi escrito há dois
-meses e a lista continua declarando o buraco. Um limite declarado que já não existe é tão enganoso
-quanto um que não foi declarado — e o prazo é o que obriga alguém a reler.
+**`suite.sem_assercao=0` is the only seal of this operation that is a verdict**, and so it is the
+only one that deserves to fail CI on its own. A test function with no assertion cannot fail — it is
+a property of the code, not opinion.
 
-## ⚠️ O selo heurístico, e como escrevê-lo sem mentir
+`expires=never` on both, on purpose: they do not age with time, they only move when someone touches
+the suite. Putting a deadline would make the same metric fail for two different reasons, and the red
+would stop saying which.
+
+## The third list
 
 ```markdown
-A régua aponta N testes sem controle negativo aparente. É uma lista de leitura, não um veredito:
-a detecção erra nos dois sentidos e está declarada como heurística.
-<!-- arbitrated: suite.sem_controle_negativo=N by="quem cuida da suíte" on=AAAA-MM-DD expires=60d
-     breaks="qualquer teste desta lista que, ao ser aberto, revele controle negativo que a régua não reconheceu" -->
+This suite declares N things it does NOT measure.
+<!-- measured: suite.lacunas_declaradas=N nature=count on=YYYY-MM-DD expires=90d source=LACUNAS.md -->
 ```
 
-**`arbitrated:`, e não `measured:`.** A marca importa: `measured:` diz *isto foi medido*, e esta
-métrica é uma aproximação declarada. `arbitrated:` diz *alguém escolheu tratar isto assim, e aqui
-está quem*.
+**`expires=90d` here, and the deadline is the mechanism.** A gap list ages in a particular way: the
+gaps **close** without anyone deleting the line. The check that was missing was written two months
+ago and the list still declares the hole. A declared limit that no longer exists is as misleading
+as one that was not declared — and the deadline is what forces someone to re-read.
 
-E `derruba=` é a parte mais valiosa — ela escreve, antes de acontecer, o que faria o número deixar
-de valer. **Não ponha esta métrica no CI como reprovação.** Uma régua heurística que reprova treina
-o time a escrever teste para agradar a régua, e aí ela para de medir o código.
-
-## Os dois de higiene
+## ⚠️ The heuristic seal, and how to write it without lying
 
 ```markdown
-<!-- measured: suite.arquivos=N nature=count on=AAAA-MM-DD expires=never source=tests/ -->
-<!-- measured: suite.pulados=0 nature=relation on=AAAA-MM-DD expires=30d source=tests/ -->
+The rule points at N tests with no apparent negative control. It is a reading list, not a verdict:
+the detection gets it wrong both ways and is declared a heuristic.
+<!-- arbitrated: suite.sem_controle_negativo=N by="whoever looks after the suite" on=YYYY-MM-DD expires=60d
+     breaks="any test on this list that, when opened, reveals a negative control the rule did not recognize" -->
 ```
 
-**`suite.pulados` com prazo curto.** Um teste pulado é um teste que não existe, com aparência de
-existir: ele conta na lista, aparece no relatório, e a única coisa que ele mede é há quanto tempo
-alguém desistiu dele. Trinta dias é o que impede um `skip` temporário de virar permanente sem
-ninguém decidir isso.
+**`arbitrated:`, and not `measured:`.** The mark matters: `measured:` says *this was measured*, and
+this metric is a declared approximation. `arbitrated:` says *someone chose to treat it this way, and
+here is who*.
 
-## O prazo é escolha, e ela tem dono
+And `breaks=` is the most valuable part — it writes, before it happens, what would make the number
+stop holding. **Do not put this metric in CI as a failure.** A heuristic rule that fails trains the
+team to write a test to please the rule, and then it stops measuring the code.
+
+## The two hygiene ones
 
 ```markdown
-A régua da suíte é reconferida a cada 60 dias.
-<!-- arbitrated: suite.prazo=60 by="quem cuida da suíte" on=AAAA-MM-DD expires=180d
-     breaks="um projeto que reescreve a suíte a cada release, ou um cuja suíte não muda há um ano" -->
+<!-- measured: suite.arquivos=N nature=count on=YYYY-MM-DD expires=never source=tests/ -->
+<!-- measured: suite.pulados=0 nature=relation on=YYYY-MM-DD expires=30d source=tests/ -->
 ```
 
-## O que NÃO selar aqui
+**`suite.pulados` with a short deadline.** A skipped test is a test that does not exist, with the
+look of existing: it counts in the list, shows up in the report, and the only thing it measures is
+how long ago someone gave up on it. Thirty days is what stops a temporary `skip` from becoming
+permanent with nobody deciding it.
 
-**Nada que afirme que a suíte é COMPLETA.** *"Cobrimos todos os casos"* é a afirmação que a terceira
-lista existe para tornar impossível. O que não virou teste é invisível para todas as seis sondas.
+## The deadline is a choice, and it has an owner
 
-**Nada sobre cobertura de linha.** Outra pergunta, outra ferramenta — e **cobertura alta com
-controle negativo zero é o estado exato que esta operação existe para achar**. Selar cobertura ao
-lado destas métricas convida a ler uma como confirmação da outra, quando elas frequentemente se
-contradizem.
+```markdown
+The suite's rule is re-checked every 60 days.
+<!-- arbitrated: suite.prazo=60 by="whoever looks after the suite" on=YYYY-MM-DD expires=180d
+     breaks="a project that rewrites the suite every release, or one whose suite has not changed in a year" -->
+```
 
-**Nada que afirme que os testes PEGARIAM um bug real.** `sem_controle_negativo=0` diz que a régua
-reconheceu uma construção de expectativa de falha em cada teste. Não diz que o defeito reintroduzido
-era o certo, nem que ele é o que vai acontecer na produção.
+## What NOT to seal here
+
+**Nothing claiming the suite is COMPLETE.** *"We cover every case"* is the claim the third list
+exists to make impossible. What did not become a test is invisible to all six probes.
+
+**Nothing about line coverage.** Another question, another tool — and **high coverage with zero
+negative control is the exact state this operation exists to find**. Sealing coverage next to these
+metrics invites reading one as confirmation of the other, when they frequently contradict each other.
+
+**Nothing claiming the tests WOULD CATCH a real bug.** `sem_controle_negativo=0` says the rule
+recognized a failure-expectation construct in every test. It does not say the reintroduced defect
+was the right one, nor that it is what will happen in production.

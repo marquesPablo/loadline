@@ -1,102 +1,102 @@
-# Operação 10 · `handoff-que-mede-o-disco`
+# Operation 10 · `handoff-que-mede-o-disco`
 
-> Você fecha a sessão e escreve — ou pede ao modelo que escreva — um arquivo de retomada:
-> *"onde paramos, o que falta, o que roda"*.
-> Duas semanas depois alguém abre esse arquivo e segue o que está nele.
-> **Quantas das afirmações dele ainda são verdade?**
-> Ninguém sabe, porque nada as reconfere. E o documento não parece velho: parece específico.
+> You close the session and write — or ask the model to write — a handoff file:
+> *"where we stopped, what is left, what runs"*.
+> Two weeks later someone opens that file and follows what is in it.
+> **How many of its claims are still true?**
+> Nobody knows, because nothing re-checks them. And the document does not look old: it looks specific.
 
-## A dor
+## The pain
 
-Um arquivo de retomada é uma **afirmação escrita sobre o disco** — e é a espécie mais frágil que
-existe, porque o disco muda todo dia e o documento não.
+A handoff file is a **written claim about the disk** — and it is the most fragile kind there is,
+because the disk changes every day and the document does not.
 
-Ele diz que o repositório está limpo, e há doze arquivos sujos. Ele manda rodar um script que foi
-renomeado. Ele cita uma pasta que virou outra. Nenhuma dessas linhas fica *visivelmente* errada: elas
-ficam **específicas e falsas**, que é pior. Quem lê vai até lá, não encontra, e conclui *"devo estar
-no lugar errado"* em vez de *"o documento está velho"*.
+It says the repository is clean, and there are twelve dirty files. It tells you to run a script that
+was renamed. It cites a folder that became another. None of those lines is *visibly* wrong: they are
+**specific and false**, which is worse. Whoever reads it goes there, does not find it, and concludes
+*"I must be in the wrong place"* instead of *"the document is old"*.
 
-E a saída usual piora o problema: pedir ao assistente que **se lembre** da sessão passada. Memória é
-exatamente o lado que decai. O disco é o lado que não.
+And the usual way out makes the problem worse: asking the assistant to **remember** the last
+session. Memory is exactly the side that decays. The disk is the side that does not.
 
-## O que esta operação instala
+## What this operation installs
 
-Oito sondas sobre o seu arquivo de retomada, todas lendo o **git** e o **sistema de arquivos** —
-nunca o documento que faz a afirmação:
+Eight probes over your handoff file, all reading **git** and the **file system** — never the
+document that makes the claim:
 <!-- measured: operacao.handoff.sondas=8 nature=count on=2026-08-21 expires=never source=operacoes/handoff-que-mede-o-disco/sondas.py -->
 
-| Métrica | O que recomputa | Natureza |
+| Metric | What it recomputes | Nature |
 |---|---|---|
-| **`handoff.commits_desde`** | **commits que entraram depois do último toque no documento** | contagem |
-| `handoff.caminhos_citados` · `handoff.comandos_citados` | o tamanho do que ele afirma | contagem |
-| **`handoff.caminhos_mortos`** | **caminhos citados que não existem** | **relação** |
-| **`handoff.comandos_sem_alvo`** | **comandos cujo script, alvo de `make` ou script de pacote sumiu** | **relação** |
-| **`handoff.deriva_de_git`** | **ele diz «está limpo» e o `git status` discorda** | **relação** |
-| `handoff.linhas` | o inchaço — a segunda forma de um handoff morrer | contagem |
-| `handoff.sessoes_desde` | sessões que rodaram sem ninguém atualizar o documento | contagem |
+| **`handoff.commits_desde`** | **commits that landed after the document was last touched** | count |
+| `handoff.caminhos_citados` · `handoff.comandos_citados` | the size of what it claims | count |
+| **`handoff.caminhos_mortos`** | **cited paths that do not exist** | **relation** |
+| **`handoff.comandos_sem_alvo`** | **commands whose script, `make` target or package script disappeared** | **relation** |
+| **`handoff.deriva_de_git`** | **it says «it is clean» and `git status` disagrees** | **relation** |
+| `handoff.linhas` | the bloat — the second way a handoff dies | count |
+| `handoff.sessoes_desde` | sessions that ran without anyone updating the document | count |
 
-**`handoff.commits_desde` é o número que abre a conversa.** Um documento com quarenta commits em
-cima não está errado — está **desatualizado**, que é diferente e é pior, porque continua parecendo o
-estado atual.
+**`handoff.commits_desde` is the number that opens the conversation.** A document with forty commits
+on top of it is not wrong — it is **out of date**, which is different and worse, because it still
+looks like the current state.
 
-## ⚠️ Esta operação NUNCA executa o que o documento manda
+## ⚠️ This operation NEVER executes what the document tells you to
 
-O arquivo de retomada é **texto**. Ele pode ter sido escrito por qualquer pessoa, colado de qualquer
-lugar, ou editado por um agente. Uma sonda que rodasse os comandos citados nele seria **execução
-arbitrária a partir de documento** — injeção com convite escrito.
+The handoff file is **text**. It could have been written by anyone, pasted from anywhere, or edited
+by an agent. A probe that ran the commands cited in it would be **arbitrary execution from a
+document** — injection with a written invitation.
 
-O que ela faz é conferir se o **alvo existe**: o arquivo do script, a regra no `Makefile`, a chave em
-`scripts` do `package.json`. Um comando cujo alvo sumiu é o defeito que interessa, e descobri-lo não
-exige rodá-lo.
+What it does is check whether the **target exists**: the script file, the rule in the `Makefile`,
+the key in `package.json`'s `scripts`. A command whose target disappeared is the defect that
+matters, and finding it does not require running it.
 
-**A consequência honesta:** `handoff.comandos_sem_alvo=0` significa *"os alvos estão lá"*, **nunca**
-*"as verificações passam"*. São coisas diferentes, e a segunda esta operação não mede.
+**The honest consequence:** `handoff.comandos_sem_alvo=0` means *"the targets are there"*, **never**
+*"the checks pass"*. They are different things, and the second this operation does not measure.
 
-## O ajuste
+## The adjustment
 
-**Um campo**, no topo do `sondas.py` — o nome do seu arquivo de retomada:
+**One field**, at the top of `sondas.py` — the name of your handoff file:
 
 ```python
 NOMES_DE_HANDOFF = ("CONTINUAR.md", "HANDOFF.md", "RETOMAR.md", "CONTEXT.md", "STATE.md")
 ```
 
-O primeiro que existir ganha. Se o seu tem outro nome, ponha-o na frente. Se nenhum existir, a sonda
-**estoura** com o erro escrito — porque *"não achei o seu handoff"* e *"o seu handoff está
-impecável"* são leituras opostas.
+The first one that exists wins. If yours has another name, put it in front. If none exists, the
+probe **blows up** with the error written out — because *"I did not find your handoff"* and *"your
+handoff is flawless"* are opposite readings.
 
-## Como rodar
-
-```console
-$ cp operacoes/handoff-que-mede-o-disco/sondas.py  /caminho/do/seu/repo/sondas.py
-$ cd /caminho/do/seu/repo
-$ PYTHONPATH=/caminho/para/loadline python -m loadline .
-```
-
-Rodado contra um arquivo de retomada real de 667 linhas, num repositório vivo:
+## How to run
 
 ```console
-REPROVA   CONTINUAR.md:228  handoff.caminhos_mortos: escrito=0 medido=11
-          → natureza=relacao — PARE e investigue.
-REPROVA   CONTINUAR.md:228  handoff.deriva_de_git: escrito=0 medido=1
-          → o documento diz que está commitado; o git discorda.
+$ cp operacoes/handoff-que-mede-o-disco/sondas.py  /path/to/your/repo/sondas.py
+$ cd /path/to/your/repo
+$ PYTHONPATH=/path/to/loadline python -m loadline .
 ```
 
-<!-- frozen: exemplo.caminhos=44 exemplo.mortos=11 exemplo.comandos=3 exemplo.sem_alvo=0 exemplo.deriva=1 reason="medição de 2026-08-21 num arquivo de retomada de OUTRO repositório; é o exemplo impresso acima, não o estado deste projeto, e recomputá-lo aqui mediria a coisa errada" -->
+Run against a real 667-line handoff file, in a live repository:
 
-## Os caminhos "mortos" que não foram deletados
+```console
+FAIL   CONTINUAR.md:228  handoff.caminhos_mortos: written=0 measured=11
+       → nature=relation — STOP and investigate.
+FAIL   CONTINUAR.md:228  handoff.deriva_de_git: written=0 measured=1
+       → the document says it is committed; git disagrees.
+```
 
-**Tudo é resolvido a partir da raiz do repositório, e isso é decisão.** Um caminho citado como
-`notas/x.md`, que só existe sob `outra-pasta/notas/x.md`, conta como morto aqui — porque conta
-como morto para quem copiar a linha e colar no terminal.
+<!-- frozen: exemplo.caminhos=44 exemplo.mortos=11 exemplo.comandos=3 exemplo.sem_alvo=0 exemplo.deriva=1 reason="a 2026-08-21 measurement over a handoff file from ANOTHER repository; it is the example printed above, not the state of this project, and recomputing it here would measure the wrong thing" -->
 
-Dos 11 achados na medição acima, **nenhum era arquivo deletado**: todos eram caminhos escritos a
-partir de uma raiz implícita que o documento não declarava. O conserto é escrever o caminho inteiro,
-e é o mesmo conserto que serve ao leitor.
+## The "dead" paths that were not deleted
 
-## Do alarme ao trabalho
+**Everything is resolved from the repository root, and that is a decision.** A path cited as
+`notas/x.md`, that only exists under `outra-pasta/notas/x.md`, counts as dead here — because it
+counts as dead for whoever copies the line and pastes it into the terminal.
 
-`handoff.commits_desde=40` diz que o documento ficou para trás. **Reescrevê-lo a partir do disco** é
-o trabalho, e é o que o agente desta operação faz:
+Of the 11 found in the measurement above, **none was a deleted file**: all of them were paths
+written from an implicit root the document did not declare. The fix is to write the whole path, and
+it is the same fix that serves the reader.
+
+## From the alarm to the work
+
+`handoff.commits_desde=40` says the document fell behind. **Rewriting it from the disk** is the
+work, and it is what this operation's agent does:
 
 ```console
 $ python -m forja operacoes/handoff-que-mede-o-disco/agente.toml
@@ -105,26 +105,26 @@ $ python -m forja operacoes/handoff-que-mede-o-disco/agente.toml
   …
 ```
 
-A regra dele é uma só e é dura: **ou a afirmação sai recomputada, ou sai marcada como não
-verificada.** Ele não copia do documento anterior — é assim que um número velho sobrevive a dez
-reescritas, ficando mais confiável a cada cópia justamente por ter sido copiado.
+Its rule is a single one and it is hard: **either the claim comes out recomputed, or it comes out
+marked as not verified.** It does not copy from the previous document — that is how an old number
+survives ten rewrites, getting more trusted with each copy precisely because it was copied.
 
-## O que esta operação NÃO faz
+## What this operation does NOT do
 
-1. **Não executa nada.** Ver a seção acima. `comandos_sem_alvo=0` diz que os alvos existem, nunca
-   que as verificações passam.
+1. **It does not execute anything.** See the section above. `comandos_sem_alvo=0` says the targets
+   exist, never that the checks pass.
 
-2. **Não lê a conversa.** Ela lê o disco. O que foi decidido e não virou arquivo é invisível — e
-   essa é a maior lacuna daqui, porque é a mesma lacuna que o arquivo de retomada tem.
+2. **It does not read the conversation.** It reads the disk. What was decided and did not become a
+   file is invisible — and that is the biggest gap here, because it is the same gap the handoff file
+   has.
 
-3. **`commits_desde` e `sessoes_desde` só valem na sua árvore de trabalho.** O `git` não preserva
-   `mtime`: num clone limpo todo arquivo nasce com o mesmo instante e as duas estouram para o total.
-   **Um número grande delas logo depois de um clone não é achado**, e o agente diz isso em vez de
-   escrevê-lo.
+3. **`commits_desde` and `sessoes_desde` only hold in your working tree.** `git` does not preserve
+   `mtime`: in a clean clone every file is born with the same instant and the two blow up to the
+   total. **A large number for them right after a clone is not a finding**, and the agent says so
+   instead of writing it.
 
-4. **Não julga o que está em voo.** Uma pendência de três semanas e uma de ontem saem lado a lado.
-   Priorizar continua sendo de quem lê.
+4. **It does not judge what is in flight.** A three-week-old to-do and a yesterday one come out side
+   by side. Prioritizing stays with whoever reads.
 
-5. **Não sabe a intenção de um commit.** Uma passada de formatação conta igual a uma mudança de
-   arquitetura. O número é um **piso**: ele diz no mínimo quanta coisa aconteceu, nunca o quanto
-   importou.
+5. **It does not know a commit's intent.** A formatting pass counts the same as an architecture
+   change. The number is a **floor**: it says at least how much happened, never how much it mattered.

@@ -1,22 +1,23 @@
-"""Sondas da operação `sala-de-decisao`.
+"""Probes for the `sala-de-decisao` operation.
 
-nature: fix — sonda que estoura vira `UNPROVEN` no relatório, com o erro
-por extenso. Ela nunca devolve um palpite.
+nature: fix — a probe that blows up becomes `UNPROVEN` in the report, with
+the error written out. It never returns a guess.
 
-COPIE ESTE ARQUIVO para a raiz do seu repositório, como `sondas.py`.
-Para combinar com outra operação, concatene os arquivos — nenhum nome auxiliar
-daqui colide com o das outras (todos começam com `_dec_`).
+COPY THIS FILE to the root of your repository, as `sondas.py`.
+To combine with another operation, concatenate the files — no helper name here
+collides with the others' (they all start with `_dec_`).
 
-⚠️ **A regra anti-espelho, aqui.** O número escrito mora no índice de decisões
-(«temos 44 decisões, 3 revogadas»). O número medido sai dos **arquivos** e do
-**nome deles** — nunca do índice. Índice é artefato derivado: selar o número
-dele contra ele mesmo seria check espelho, e o par passaria verde travando a
-divergência em vez de achá-la.
+⚠️ **The anti-mirror rule, here.** The written number lives in the decisions
+index («we have 44 decisions, 3 revoked»). The measured number comes from the
+**files** and their **names** — never from the index. The index is a derived
+artifact: sealing its number against itself would be a mirror check, and the
+pair would pass green locking the divergence in instead of finding it.
 
-⚠️ **E a sonda mais cara desta operação é `decisao.revogacao_de_um_lado_so`.**
-Quando a decisão nova revoga a antiga e a antiga não ganha o aviso, quem abre a
-antiga lê uma regra revogada como se ela valesse. Nenhuma revisão pega isso: os
-dois arquivos estão certos, cada um por si. O defeito mora entre eles.
+⚠️ **And the most expensive probe of this operation is
+`decisao.revogacao_de_um_lado_so`.** When the new decision revokes the old one
+and the old one does not get the warning, whoever opens the old one reads a
+revoked rule as if it held. No review catches this: both files are right, each
+on its own. The defect lives between them.
 """
 
 from __future__ import annotations
@@ -30,37 +31,39 @@ from loadline import sonda
 
 RAIZ = Path(__file__).resolve().parent
 
-#: AJUSTE ÚNICO desta operação: onde moram as suas decisões e os seus gates.
-#: Um "gate" é um arquivo que espera decisão de uma pessoa. A convenção é a
-#: palavra `gate` no NOME do arquivo — ver a RECEITA para o porquê.
+#: THE ONE ADJUSTMENT of this operation: where your decisions and gates live.
+#: A "gate" is a file that waits on one person's decision. The convention is the
+#: word `gate` in the file NAME — see the RECEITA for why.
 PASTA_DE_DECISOES = "decisoes"
 
 _DEC_ACEITA = re.compile(r"^\s*status\s*:\s*[\"']?(aceito|aceita|accepted)", re.I | re.M)
 _DEC_REVOGADA = re.compile(r"^\s*status\s*:\s*[\"']?(revogad|superseded|substitu)", re.I | re.M)
-_DEC_REVOGA = re.compile(r"^\s*(?:revoga|supersedes|emenda)\s*:\s*(.+)$", re.I | re.M)
-#: Duas convenções de identificador coexistem no mundo, e ler só uma devolve
-#: ZERO calado no repositório que usa a outra. `ADR-031-assunto.md` é a forma
-#: com prefixo; `0031-usar-postgres.md` é a do `adr-tools` original, e nela o id
-#: não tem letra nenhuma. Qual delas vale sai do disco, em `_dec_convencao()`.
+_DEC_REVOGA = re.compile(r"^\s*(?:revoga|supersedes|emenda|amends)\s*:\s*(.+)$", re.I | re.M)
+#: Two identifier conventions coexist in the world, and reading only one returns
+#: a silent ZERO in the repository that uses the other. `ADR-031-assunto.md` is
+#: the prefixed form; `0031-usar-postgres.md` is the original `adr-tools` one,
+#: and in it the id has no letter. Which one holds comes from disk, in
+#: `_dec_convencao()`.
 _DEC_REFERENCIA = re.compile(r"\b([A-Z]{2,5}-\d{1,4})\b")
 _DEC_REFERENCIA_NUA = re.compile(r"\b(\d{3,4})\b")
 _DEC_NOME_NU = re.compile(r"^(\d{3,4})(?=-)")
 _DEC_DATA_NO_NOME = re.compile(r"(\d{4})-(\d{2})-(\d{2})")
-#: Um gate é `AAAA-MM-DD-gate-assunto.md`: a data E o token, os dois no NOME.
-#: Exigir os dois não é rigor de estilo — procurar só a palavra `gate` casa com
-#: toda decisão que tenha «gate» no título, e a fila passa a contar arquivos que
-#: não esperam ninguém. Medido contra um acervo real: 7 falsos positivos.
+#: A gate is `YYYY-MM-DD-gate-assunto.md`: the date AND the token, both in the
+#: NAME. Requiring both is not style rigor — looking for just the word `gate`
+#: matches every decision that has «gate» in its title, and the queue starts
+#: counting files that wait on nobody. Measured against a real archive: 7 false
+#: positives.
 _DEC_NOME_DE_GATE = re.compile(r"\d{4}-\d{2}-\d{2}.*(?<![a-z])gate(?![a-z])", re.I)
-_DEC_DECIDIDO = re.compile(r"^#{1,6}\s+.*\bDECIDIDO\b", re.M)
+_DEC_DECIDIDO = re.compile(r"^#{1,6}\s+.*\b(?:DECIDIDO|DECIDED)\b", re.M)
 
 
 def _dec_base() -> Path:
     base = (RAIZ / PASTA_DE_DECISOES).resolve()
     if not base.is_dir():
         raise LookupError(
-            f"`{PASTA_DE_DECISOES}` não existe. Esta operação mede um registro de decisões em "
-            "arquivos; sem a pasta não há o que medir, e devolver zero seria dizer que você "
-            "não decide nada — que é diferente de você não registrar"
+            f"`{PASTA_DE_DECISOES}` does not exist. This operation measures a decision record in "
+            "files; with no folder there is nothing to measure, and returning zero would be saying "
+            "you decide nothing — which is different from you not recording"
         )
     return base
 
@@ -72,28 +75,30 @@ def _dec_arquivos() -> list[Path]:
         subpastas[:] = sorted(s for s in subpastas if not s.startswith("."))
         achados += [Path(pasta) / a for a in sorted(arquivos) if a.lower().endswith(".md")]
     if not achados:
-        raise LookupError(f"`{PASTA_DE_DECISOES}` existe e está vazia — nenhuma decisão registrada")
+        raise LookupError(f"`{PASTA_DE_DECISOES}` exists and is empty — no decision recorded")
     return achados
 
 
 def _dec_decisoes() -> list[Path]:
-    """Decisão é todo arquivo que NÃO é gate. O gate é o que ainda espera alguém."""
+    """A decision is every file that is NOT a gate. The gate is what still waits on someone."""
     return [a for a in _dec_arquivos() if not _DEC_NOME_DE_GATE.search(a.name)]
 
 
 def _dec_gates() -> list[Path]:
-    """A data E o token `gate`, os dois no NOME do arquivo. É convenção, e é
-    de propósito.
+    """The date AND the `gate` token, both in the file NAME. It is a convention,
+    and it is on purpose.
 
-    O nome é a única parte do arquivo que aparece em `ls`, no explorador, no
-    diff e na busca — sem abrir nada. Um campo `tipo: gate` dentro do
-    frontmatter é invisível em todos esses lugares, e um item que espera
-    decisão que ninguém vê não está esperando: está esquecido.
+    The name is the only part of the file that shows up in `ls`, in the
+    explorer, in the diff and in a search — without opening anything. A `tipo:
+    gate` field inside the frontmatter is invisible in all those places, and an
+    item that waits on a decision that nobody sees is not waiting: it is
+    forgotten.
 
-    ⚠️ Exigir os DOIS não é rigor de estilo. Procurar só a palavra casa com
-    toda decisão que tenha «gate» no título — medido contra um acervo real de
-    100 arquivos, isso inflou a fila com 7 itens que não esperavam ninguém. Uma
-    fila com falso positivo é pior que nenhuma: ela treina quem a lê a ignorá-la.
+    ⚠️ Requiring BOTH is not style rigor. Looking for just the word matches
+    every decision that has «gate» in its title — measured against a real
+    100-file archive, that inflated the queue with 7 items that waited on
+    nobody. A queue with a false positive is worse than none: it trains whoever
+    reads it to ignore it.
     """
     return [a for a in _dec_arquivos() if _DEC_NOME_DE_GATE.search(a.name)]
 
@@ -103,12 +108,13 @@ def _dec_texto(arquivo: Path) -> str:
 
 
 def _dec_convencao() -> str:
-    """Qual das duas convenções de identificador este registro usa, lida do disco.
+    """Which of the two identifier conventions this record uses, read from disk.
 
-    Nunca cravada: um registro que nomeia `0001-record-....md` é tão canônico
-    quanto um que nomeia `ADR-001-....md` — ele é o do `adr-tools` original.
-    Assumir a primeira e devolver zero na segunda é *não medido* virando *zero*,
-    que é exatamente o defeito que esta operação existe para acusar.
+    Never nailed down: a record that names `0001-record-....md` is as canonical
+    as one that names `ADR-001-....md` — it is the original `adr-tools` one.
+    Assuming the first and returning zero on the second is *not measured*
+    turning into *zero*, which is exactly the defect this operation exists to
+    accuse.
     """
     arquivos = _dec_decisoes()
     com_prefixo = sum(1 for a in arquivos if _DEC_REFERENCIA.search(a.name.upper()))
@@ -119,20 +125,20 @@ def _dec_convencao() -> str:
 
 
 def _dec_identificadores() -> dict[str, Path]:
-    """`ADR-042` (ou `0042`) -> arquivo, lido do NOME do arquivo. Um id por arquivo."""
+    """`ADR-042` (or `0042`) -> file, read from the file NAME. One id per file."""
     arquivos = _dec_decisoes()
     convencao = _dec_convencao()
 
-    # ⚠️ RECUSA, e nunca zero. Sem nenhum identificador legível, esta sonda não
-    # sabe dizer que está tudo bem — ela sabe que não conseguiu olhar. As duas
-    # coisas são opostas, e devolver `0` para as duas é a mentira que a operação
-    # inteira existe para acusar.
+    # ⚠️ A REFUSAL, and never zero. With no readable identifier at all, this
+    # probe cannot say everything is fine — it knows it could not look. The two
+    # are opposite, and returning `0` for both is the lie the whole operation
+    # exists to accuse.
     if arquivos and convencao == "nenhuma":
         raise LookupError(
-            f"achei {len(arquivos)} arquivo(s) de decisão e nenhum identificador no nome de "
-            "nenhum deles. Esta sonda lê o id do NOME do arquivo, em uma de duas convenções: "
-            "`ADR-031-assunto.md` ou `0031-assunto.md`. Renomeie, ou tire esta sonda — o que "
-            "ela não vai fazer é devolver zero e deixar você achar que está tudo certo."
+            f"found {len(arquivos)} decision file(s) and no identifier in any of their names. "
+            "This probe reads the id from the file NAME, in one of two conventions: "
+            "`ADR-031-assunto.md` or `0031-assunto.md`. Rename them, or remove this probe — what "
+            "it will not do is return zero and let you think everything is fine."
         )
 
     achados: dict[str, Path] = {}
@@ -147,11 +153,12 @@ def _dec_identificadores() -> dict[str, Path]:
 
 
 def _dec_citados(linha: str) -> list[str]:
-    """Os ids citados numa linha de `revoga:`/`emenda:`, na convenção do registro.
+    """The ids cited in a `revoga:`/`emenda:` line, in the record's convention.
 
-    Na convenção nua a busca é restrita a essas linhas de propósito: procurar
-    três ou quatro dígitos soltos no corpo inteiro casaria com ano, porta e
-    número de versão, e a sonda passaria a acusar o que ninguém escreveu.
+    In the bare convention the search is restricted to those lines on purpose:
+    looking for three or four loose digits in the whole body would match a year,
+    a port and a version number, and the probe would start accusing what nobody
+    wrote.
     """
     if _dec_convencao() == "prefixo":
         return _DEC_REFERENCIA.findall(linha.upper())
@@ -159,11 +166,11 @@ def _dec_citados(linha: str) -> list[str]:
 
 
 def _dec_aberto(gate: Path) -> bool:
-    """Um gate está aberto enquanto não tiver um TÍTULO markdown com «DECIDIDO».
+    """A gate is open as long as it has no markdown HEADING with «DECIDIDO».
 
-    Título, e não negrito. `**DECIDIDO**` no meio de um parágrafo é a forma mais
-    fácil de fechar um gate sem ninguém conseguir achar a decisão depois — e uma
-    busca por títulos é como se lê o histórico de um registro destes.
+    A heading, not bold. `**DECIDIDO**` in the middle of a paragraph is the
+    easiest way to close a gate with nobody able to find the decision later —
+    and a search by heading is how you read the history of a record like this.
     """
     return not _DEC_DECIDIDO.search(_dec_texto(gate))
 
@@ -179,34 +186,34 @@ def _dec_data(arquivo: Path) -> date | None:
 
 
 # ---------------------------------------------------------------------------
-# As sondas
+# The probes
 # ---------------------------------------------------------------------------
 
 
-@sonda("decisao.total", origem="arquivos .md na pasta de decisões que não são gate")
+@sonda("decisao.total", origem=".md files in the decisions folder that are not a gate")
 def dec_total() -> int:
     return len(_dec_decisoes())
 
 
-@sonda("decisao.aceitas", origem="frontmatter `status:` casando com aceito/accepted")
+@sonda("decisao.aceitas", origem="frontmatter `status:` matching aceito/accepted")
 def dec_aceitas() -> int:
     return sum(1 for a in _dec_decisoes() if _DEC_ACEITA.search(_dec_texto(a)))
 
 
-@sonda("decisao.revogadas", origem="frontmatter `status:` casando com revogada/superseded")
+@sonda("decisao.revogadas", origem="frontmatter `status:` matching revogada/superseded")
 def dec_revogadas() -> int:
     return sum(1 for a in _dec_decisoes() if _DEC_REVOGADA.search(_dec_texto(a)))
 
 
 @sonda(
     "decisao.sem_status",
-    origem="decisões sem nenhum `status:` legível no frontmatter",
+    origem="decisions with no readable `status:` in the frontmatter",
 )
 def dec_sem_status() -> int:
-    """De RELAÇÃO. Uma decisão sem status não é lida errado — ela é lida sem saber.
+    """A RELATION. A decision with no status is not read wrong — it is read without knowing.
 
-    Quem abre não tem como distinguir uma proposta de uma regra em vigor, e
-    a leitura mais cara é a otimista: tratar proposta como regra.
+    Whoever opens it has no way to tell a proposal from a rule in force, and the
+    most expensive reading is the optimistic one: treating a proposal as a rule.
     """
     return sum(
         1
@@ -217,17 +224,17 @@ def dec_sem_status() -> int:
 
 @sonda(
     "decisao.revogacao_de_um_lado_so",
-    origem="decisões citadas em `revoga:`/`emenda:` que não mencionam quem as revogou",
+    origem="decisions cited in `revoga:`/`emenda:` that do not mention who revoked them",
 )
 def dec_revogacao_de_um_lado_so() -> int:
-    """De RELAÇÃO, e é a sonda cara desta operação.
+    """A RELATION, and it is this operation's expensive probe.
 
-    A decisão nova declara `revoga: ADR-031`. A `ADR-031` não diz nada. Quem
-    abre a antiga — que é o caminho normal, porque ela é a que está citada nos
-    lugares antigos — lê uma regra revogada com cara de regra viva.
+    The new decision declares `revoga: ADR-031`. `ADR-031` says nothing.
+    Whoever opens the old one — which is the normal path, because it is the one
+    cited in the old places — reads a revoked rule with the look of a live one.
 
-    Os dois arquivos estão certos, cada um por si. **O defeito mora entre
-    eles**, e é por isso que nenhuma revisão de código o pega.
+    Both files are right, each on its own. **The defect lives between them**,
+    and that is why no code review catches it.
     """
     porid = _dec_identificadores()
     por_arquivo = {caminho: ident for ident, caminho in porid.items()}
@@ -239,7 +246,7 @@ def dec_revogacao_de_um_lado_so() -> int:
             for alvo in _dec_citados(linha):
                 if alvo not in porid or (atual and alvo == atual):
                     continue
-                # O contra-ponteiro: a revogada tem de NOMEAR quem a revogou.
+                # The back-pointer: the revoked one has to NAME who revoked it.
                 if not (atual and atual in _dec_texto(porid[alvo]).upper()):
                     orfas.add(alvo)
     return len(orfas)
@@ -247,14 +254,15 @@ def dec_revogacao_de_um_lado_so() -> int:
 
 @sonda(
     "decisao.sem_alternativa",
-    origem="decisões cujo texto não traz nenhuma seção de alternativa/descartad",
+    origem="decisions whose text carries no alternative/rejected section",
 )
 def dec_sem_alternativa() -> int:
-    """De RELAÇÃO. Sem alternativa escrita, não houve decisão — houve um registro.
+    """A RELATION. With no alternative written, there was no decision — there was a record.
 
-    O valor de um acervo destes não é lembrar o que foi escolhido: é lembrar
-    **o que foi recusado e por quê**. Sem isso, daqui a um ano alguém repropõe
-    a alternativa descartada e ninguém tem como saber que ela já caiu.
+    The value of an archive like this is not remembering what was chosen: it is
+    remembering **what was rejected and why**. Without that, a year from now
+    someone re-proposes the rejected alternative and nobody can tell it already
+    fell.
     """
     marcas = ("alternativa", "descartad", "considerad", "alternative", "rejected")
     return sum(
@@ -264,26 +272,26 @@ def dec_sem_alternativa() -> int:
     )
 
 
-@sonda("decisao.gates_abertos", origem="arquivos com `gate` no nome e sem título DECIDIDO")
+@sonda("decisao.gates_abertos", origem="files with `gate` in the name and no DECIDIDO heading")
 def dec_gates_abertos() -> int:
     return sum(1 for g in _dec_gates() if _dec_aberto(g))
 
 
 @sonda(
     "decisao.gate_mais_velho_dias",
-    origem="dias entre a data no NOME do gate aberto mais antigo e hoje",
+    origem="days between the date in the oldest open gate's NAME and today",
 )
 def dec_gate_mais_velho_dias() -> int:
-    """De CONTAGEM — ela anda todo dia, por construção, e é essa a graça.
+    """A COUNT — it moves every day, by construction, and that is the point.
 
-    Um item parado esperando decisão não fica pior de repente: ele fica pior um
-    dia por vez, e é por isso que ninguém repara. Este número sobe sozinho até
-    alguém decidir, e é a única métrica daqui que **piora quando você não faz
-    nada**.
+    A stuck item waiting on a decision does not get worse suddenly: it gets
+    worse one day at a time, and that is why nobody notices. This number goes up
+    on its own until someone decides, and it is the only metric here that **gets
+    worse when you do nothing**.
 
-    ⚠️ A data sai do NOME do arquivo, nunca de `criada_em:` no frontmatter e
-    nunca do `mtime`: o primeiro ninguém preenche com disciplina, e o segundo
-    é zerado por um clone.
+    ⚠️ The date comes from the file NAME, never from `criada_em:` in the
+    frontmatter and never from `mtime`: the first nobody fills in with
+    discipline, and the second is zeroed by a clone.
     """
     abertos = [g for g in _dec_gates() if _dec_aberto(g)]
     if not abertos:
@@ -291,8 +299,8 @@ def dec_gate_mais_velho_dias() -> int:
     datas = [d for d in (_dec_data(g) for g in abertos) if d]
     if not datas:
         raise LookupError(
-            f"há {len(abertos)} gate(s) aberto(s) e nenhum tem data no nome do arquivo. "
-            "A convenção desta operação é `AAAA-MM-DD-gate-assunto.md` — sem a data no nome "
-            "não existe idade, e um item sem idade nunca fica velho aos olhos de ninguém"
+            f"there are {len(abertos)} open gate(s) and none has a date in the file name. "
+            "This operation's convention is `YYYY-MM-DD-gate-assunto.md` — with no date in the name "
+            "there is no age, and an item with no age never looks old to anyone"
         )
     return (datetime.now().date() - min(datas)).days

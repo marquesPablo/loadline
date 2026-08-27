@@ -1,73 +1,74 @@
-# Os selos desta operação
+# The seals of this operation
 
-## Os três que mandam parar
+## The three that tell you to stop
 
-Cole **no índice do seu registro de decisões** — `decisoes/README.md` ou o arquivo que lista o
-acervo. O selo tem de morar no arquivo que ele julga.
-
-```markdown
-Toda decisão deste acervo declara se está em vigor, diz o que foi recusado, e nenhuma revogação
-foi declarada de um lado só.
-<!-- measured: decisao.sem_status=0 nature=relation on=AAAA-MM-DD expires=90d source=decisoes/ -->
-<!-- measured: decisao.revogacao_de_um_lado_so=0 nature=relation on=AAAA-MM-DD expires=90d source=decisoes/ -->
-<!-- measured: decisao.sem_alternativa=0 nature=relation on=AAAA-MM-DD expires=90d source=decisoes/ -->
-```
-
-**Os três de `relacao`, e nenhum deles deve andar quando você escreve uma decisão nova.** Se um saiu
-de zero, alguma coisa ficou pela metade — e a resposta certa é abrir o arquivo, não resselar.
-
-## A fila, e o único número que piora sozinho
+Paste **into your decision record's index** — `decisoes/README.md` or the file that lists the
+archive. The seal has to live in the file it judges.
 
 ```markdown
-Há N itens esperando uma decisão, e o mais antigo espera há D dias.
-<!-- measured: decisao.gates_abertos=N nature=count on=AAAA-MM-DD expires=7d source=decisoes/ -->
-<!-- measured: decisao.gate_mais_velho_dias=D nature=count on=AAAA-MM-DD expires=7d source=decisoes/ -->
+Every decision in this archive declares whether it is in force, says what was rejected, and no
+revocation was declared on one side only.
+<!-- measured: decisao.sem_status=0 nature=relation on=YYYY-MM-DD expires=90d source=decisoes/ -->
+<!-- measured: decisao.revogacao_de_um_lado_so=0 nature=relation on=YYYY-MM-DD expires=90d source=decisoes/ -->
+<!-- measured: decisao.sem_alternativa=0 nature=relation on=YYYY-MM-DD expires=90d source=decisoes/ -->
 ```
 
-⚠️ **`vence=7d` nos dois, e é o prazo mais curto de toda a prateleira.** Não é rigor: é que o valor
-deles caduca em dias, não em meses. Um selo que diz *"o mais antigo espera há 3 dias"* escrito há
-dois meses não está errado — está **obsoleto**, que é pior, porque ele parece informação.
+**The three of `relation`, and none of them should move when you write a new decision.** If one
+left zero, something was left half done — and the right answer is to open the file, not re-seal.
 
-**`decisao.gate_mais_velho_dias` é a única métrica desta prateleira que sobe quando você não faz
-nada.** Ela é de contagem — divergiu, resele —, mas leia o número antes de resselar. Se ele foi de
-12 para 47, o resselo não é a tarefa: a tarefa é o item que está lá há 47 dias.
-
-## As três contagens do acervo
+## The queue, and the only number that gets worse on its own
 
 ```markdown
-<!-- measured: decisao.total=N nature=count on=AAAA-MM-DD expires=90d source=decisoes/ -->
-<!-- measured: decisao.aceitas=N nature=count on=AAAA-MM-DD expires=90d source=decisoes/ -->
-<!-- measured: decisao.revogadas=N nature=count on=AAAA-MM-DD expires=90d source=decisoes/ -->
+There are N items waiting on a decision, and the oldest has waited D days.
+<!-- measured: decisao.gates_abertos=N nature=count on=YYYY-MM-DD expires=7d source=decisoes/ -->
+<!-- measured: decisao.gate_mais_velho_dias=D nature=count on=YYYY-MM-DD expires=7d source=decisoes/ -->
 ```
 
-⚠️ **Não escreva as três numa frase que também afirme a soma.** *"São 44 decisões: 41 aceitas e 3
-revogadas"* afirma quatro coisas, e o selo cobre três — a quarta (que 41+3 esgota as 44) é uma
-afirmação de relação que nenhuma métrica ali nomeia. É para isso que existe o veredito `PROSE_DRIFT`.
+⚠️ **`expires=7d` on both, and it is the shortest deadline on the whole shelf.** It is not rigor:
+it is that their value goes stale in days, not months. A seal that says *"the oldest has waited 3
+days"* written two months ago is not wrong — it is **obsolete**, which is worse, because it looks
+like information.
 
-Se você quiser mesmo afirmar que esgota, **selar `decisao.sem_status=0` é o que diz isso** — e aí a
-frase e o selo passam a falar da mesma coisa.
+**`decisao.gate_mais_velho_dias` is the only metric on this shelf that goes up when you do nothing.**
+It is a count — it diverged, re-seal — but read the number before re-sealing. If it went from 12 to
+47, the re-seal is not the task: the task is the item that has been there for 47 days.
 
-## O prazo é escolha, e ela tem dono
+## The three archive counts
 
 ```markdown
-Um item esperando decisão é revisto toda semana.
-<!-- arbitrated: decisao.prazo_de_fila=7 by="quem toca a sala de decisão" on=AAAA-MM-DD expires=180d
-     breaks="uma equipe que decide em rodadas mensais, ou um item cujo custo de espera é zero" -->
+<!-- measured: decisao.total=N nature=count on=YYYY-MM-DD expires=90d source=decisoes/ -->
+<!-- measured: decisao.aceitas=N nature=count on=YYYY-MM-DD expires=90d source=decisoes/ -->
+<!-- measured: decisao.revogadas=N nature=count on=YYYY-MM-DD expires=90d source=decisoes/ -->
 ```
 
-Sete dias é o padrão desta operação, não uma medida. Um número escolhido sem dono é um palpite com
-cara de fato.
+⚠️ **Do not write the three in a sentence that also claims the sum.** *"There are 44 decisions: 41
+accepted and 3 revoked"* claims four things, and the seal covers three — the fourth (that 41+3
+exhausts the 44) is a relation claim that no metric there names. That is what the `PROSE_DRIFT`
+verdict exists for.
 
-## O que NÃO selar aqui
+If you really do want to claim it exhausts, **sealing `decisao.sem_status=0` is what says that** —
+and then the sentence and the seal are talking about the same thing.
 
-**Nada que afirme que as decisões estão sendo CUMPRIDAS.** *"Seguimos todas as nossas decisões"* é
-sobre comportamento, e as sondas leem arquivo. Uma decisão pode estar aceita, datada, íntegra — e
-ninguém a seguir. Selar isso seria dar marca de medida a uma esperança.
+## The deadline is a choice, and it has an owner
 
-**Nada sobre a qualidade da decisão.** Registrada, datada e com alternativa é o que se mede.
-*Certa* não é recomputável por função nenhuma.
+```markdown
+An item waiting on a decision is reviewed every week.
+<!-- arbitrated: decisao.prazo_de_fila=7 by="whoever runs the decision room" on=YYYY-MM-DD expires=180d
+     breaks="a team that decides in monthly rounds, or an item whose cost of waiting is zero" -->
+```
 
-**Nada sobre o que não virou arquivo.** *"Todas as nossas decisões estão registradas"* é
-exatamente o que nenhuma sonda daqui pode confirmar: ela conta o que existe na pasta, e o que foi
-combinado numa reunião e nunca escrito é invisível para ela. Um selo verde ali seria a ferramenta
-atestando o próprio ponto cego.
+Seven days is this operation's default, not a measurement. A number chosen with no owner is a guess
+with the face of a fact.
+
+## What NOT to seal here
+
+**Nothing claiming the decisions are being FOLLOWED.** *"We follow all our decisions"* is about
+behavior, and the probes read files. A decision can be accepted, dated, intact — and nobody
+following it. Sealing that would be giving a measurement's mark to a hope.
+
+**Nothing about the decision's quality.** Recorded, dated and with an alternative is what is
+measured. *Right* is recomputable by no function.
+
+**Nothing about what did not become a file.** *"All our decisions are recorded"* is exactly what no
+probe here can confirm: it counts what exists in the folder, and what was agreed in a meeting and
+never written is invisible to it. A green seal there would be the tool attesting its own blind spot.

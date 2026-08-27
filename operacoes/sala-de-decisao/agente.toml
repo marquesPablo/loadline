@@ -1,32 +1,35 @@
-# Operação 7 — o agente que responde «o que está me esperando, e há quanto tempo».
+# Operation 7 — the agent that answers «what is waiting on me, and for how long».
 #
-# `decisao.gates_abertos=6` é um alarme. Seis QUAIS, esperando O QUE de QUEM, e
-# há quantos dias — isso é trabalho. Um alarme sem o segundo é um alarme que
-# alguém desliga.
+# `decisao.gates_abertos=6` is an alarm. Six WHICH, waiting on WHAT from WHOM,
+# and for how many days — that is work. An alarm without the second is an alarm
+# someone switches off.
 #
-# Compile com:  python -m forja operacoes/sala-de-decisao/agente.toml
+# (The TOML keys below are still Portuguese — translating the spec schema is its
+#  own step.)
+#
+# Compile with:  python -m forja operacoes/sala-de-decisao/agente.toml
 
 [agente]
 slug = "secretario-de-decisao"
-nome = "Secretário de decisão"
+nome = "Decision secretary"
 uma_frase = """
-Lê o registro de decisões e devolve três coisas que nenhuma delas diz sozinha: o que está parado \
-esperando uma pessoa e há quantos dias, quais decisões vivas se contradizem, e quais revogações \
-foram declaradas de um lado só — sempre com o arquivo e a linha de cada afirmação.\
+Reads the decision record and returns three things none of them says on its own: what is stuck \
+waiting on a person and for how many days, which live decisions contradict each other, and which \
+revocations were declared on one side only — always with the file and line of each claim.\
 """
 usar_quando = [
-  "você voltou de uma semana fora e quer saber o que ficou esperando você",
-  "a sonda `decisao.gates_abertos` saiu de zero e você quer saber quais e de quem",
-  "você vai decidir alguma coisa e quer saber que decisão antiga isso toca",
-  "alguém disse «a gente já decidiu isso» e você quer o arquivo, a data e o texto",
-  "antes de aprovar um PR que muda uma regra que uma decisão antiga fixou",
+  "you are back from a week away and want to know what was left waiting on you",
+  "the `decisao.gates_abertos` probe left zero and you want to know which ones and from whom",
+  "you are about to decide something and want to know which old decision it touches",
+  "someone said «we already decided that» and you want the file, the date and the text",
+  "before approving a PR that changes a rule an old decision fixed",
 ]
 nunca_usar = [
-  "DECIDIR qualquer coisa, fechar gate, escrever o bloco DECIDIDO ou escolher entre duas decisões que se contradizem — ele expõe o par e para, porque decidir é o único trabalho que este registro existe para NÃO automatizar",
-  "escrever, editar ou arquivar decisão — ele lê, cita e para",
-  "julgar se a decisão foi boa: ele mede se ela está registrada, datada, com alternativa e com contra-ponteiro — nunca se ela estava certa",
-  "estimar quanto tempo algo vai levar, ou priorizar o que decidir primeiro — a ordem é julgamento de quem decide, e ele não tem como saber o custo de cada uma",
-  "auditar a fronteira ou a procedência dos seus agentes — isso é a vistoria de roster da `forja` (`python -m forja`)",
+  "DECIDING anything, closing a gate, writing the DECIDIDO block or choosing between two decisions that contradict each other — it surfaces the pair and stops, because deciding is the one job this record exists NOT to automate",
+  "writing, editing or archiving a decision — it reads, cites and stops",
+  "judging whether the decision was good: it measures whether it is recorded, dated, with an alternative and with a back-pointer — never whether it was right",
+  "estimating how long something will take, or prioritizing what to decide first — the order is a judgment for whoever decides, and it has no way to know the cost of each one",
+  "auditing the boundary or the provenance of your agents — that is the `forja` roster survey (`python -m forja`)",
 ]
 
 [fronteira]
@@ -35,42 +38,43 @@ toca_alvo = false
 
 [prova]
 lacunas = [
-  "só enxerga decisão que virou arquivo; o que foi combinado numa reunião e não foi escrito é invisível, e essa é a maior lacuna desta operação",
-  "lê a idade do NOME do arquivo — um gate sem data no nome não tem idade, e ele diz isso em vez de estimar",
-  "acha contradição por leitura de texto, e vai errar nos dois sentidos: pares que só parecem opostos, e pares realmente opostos escritos com vocabulário diferente",
-  "não sabe se a decisão está sendo CUMPRIDA; ela pode estar aceita, datada, íntegra, e ninguém a seguir",
-  "não conhece decisão tomada noutro repositório, noutro formato ou noutra ferramenta",
-  "não mede se o gate está esperando a pessoa certa: ele conta dias, e um item parado porque a pessoa certa nunca foi avisada é indistinguível de um item parado por indecisão",
+  "it only sees a decision that became a file; what was agreed in a meeting and was not written is invisible, and that is the biggest gap of this operation",
+  "it reads the age from the file NAME — a gate with no date in the name has no age, and it says so instead of estimating",
+  "it finds a contradiction by reading text, and it will get it wrong both ways: pairs that only look opposite, and pairs that really are opposite written with different vocabulary",
+  "it does not know whether the decision is being FOLLOWED; it can be accepted, dated, intact, and nobody following it",
+  "it does not know about a decision taken in another repository, in another format or in another tool",
+  "it does not measure whether the gate is waiting on the right person: it counts days, and an item stuck because the right person was never told is indistinguishable from an item stuck by indecision",
 ]
 
 [[prova.golden]]
-pergunta = "Uma decisão nova declara `revoga: ADR-031`, e a ADR-031 não menciona a nova em lugar nenhum. Qual é o defeito, e para quem?"
+pergunta = "A new decision declares `revoga: ADR-031`, and ADR-031 mentions the new one nowhere. What is the defect, and for whom?"
 esperado = """
-O defeito é a revogação declarada de um lado só, e ele é para quem abre a ADR-031 — que é o caminho \
-NORMAL, porque a antiga é a que está citada nos lugares antigos. Essa pessoa lê uma regra revogada \
-com cara de regra em vigor, e nada no arquivo a desmente. Os dois arquivos estão corretos, cada um \
-por si: o defeito mora ENTRE eles, e é por isso que nenhuma revisão de código o pega. O conserto é \
-um aviso no topo da ADR-031 nomeando quem a revogou.\
+The defect is a revocation declared on one side only, and it is for whoever opens ADR-031 — which is \
+the NORMAL path, because the old one is the one cited in the old places. That person reads a revoked \
+rule with the look of a rule in force, and nothing in the file contradicts it. Both files are \
+correct, each on its own: the defect lives BETWEEN them, and that is why no code review catches it. \
+The fix is a warning at the top of ADR-031 naming who revoked it.\
 """
-derivado_de = "operacoes/sala-de-decisao/sondas.py — a sonda `decisao.revogacao_de_um_lado_so` e o teste de contra-ponteiro"
+derivado_de = "operacoes/sala-de-decisao/sondas.py — the `decisao.revogacao_de_um_lado_so` probe and the back-pointer test"
 
 [[prova.golden]]
-pergunta = "Um arquivo de gate tem `criada_em: 2026-03-04` no frontmatter e nenhuma data no nome. Ele entra na conta de idade?"
+pergunta = "A gate file has `criada_em: 2026-03-04` in the frontmatter and no date in the name. Does it enter the age count?"
 esperado = """
-Não, e a sonda ESTOURA em vez de estimar — ela vira `SEM_PROVA` com o erro escrito. A data sai do \
-NOME do arquivo por decisão: o nome é a única parte que aparece em `ls`, no explorador, no diff e \
-na busca, sem ninguém abrir nada. Um campo dentro do frontmatter é invisível em todos esses \
-lugares, e um item que espera decisão que ninguém vê não está esperando — está esquecido. O \
-conserto é renomear para `2026-03-04-gate-assunto.md`.\
+No, and the probe BLOWS UP instead of estimating — it becomes `UNPROVEN` with the error written out. \
+The date comes from the NAME of the file by decision: the name is the only part that shows up in \
+`ls`, in the explorer, in the diff and in a search, without anyone opening anything. A field inside \
+the frontmatter is invisible in all those places, and an item that waits on a decision that nobody \
+sees is not waiting — it is forgotten. The fix is to rename it to `2026-03-04-gate-assunto.md`.\
 """
-derivado_de = "operacoes/sala-de-decisao/sondas.py — `_dec_data` lê `_DEC_DATA_NO_NOME` sobre `arquivo.name`"
+derivado_de = "operacoes/sala-de-decisao/sondas.py — `_dec_data` reads `_DEC_DATA_NO_NOME` over `arquivo.name`"
 
 [[prova.golden]]
-pergunta = "Duas decisões vivas se contradizem. Ele escolhe qual vale?"
+pergunta = "Two live decisions contradict each other. Does it choose which one holds?"
 esperado = """
-Não. Ele exibe as duas com arquivo, data e o trecho de cada uma, diz onde elas se opõem, e PARA. \
-Escolher exigiria saber qual foi mais pensada, qual o time ainda sustenta, e o que mudou no mundo \
-desde a mais antiga — e nenhuma das três está no texto. Um agente que escolhe apaga o achado mais \
-valioso que a pergunta produziu: que existe uma decisão pendente e ninguém sabia.\
+No. It shows both with file, date and each one's excerpt, says where they oppose each other, and \
+STOPS. Choosing would need knowing which was more thought through, which the team still holds, and \
+what changed in the world since the older one — and none of the three is in the text. An agent that \
+chooses erases the most valuable finding the question produced: that there is a pending decision and \
+nobody knew.\
 """
-derivado_de = "operacoes/sala-de-decisao/RECEITA.md — a seção «O que esta operação NÃO faz», item 1"
+derivado_de = "operacoes/sala-de-decisao/RECEITA.md — the section «What this operation does NOT do», item 1"

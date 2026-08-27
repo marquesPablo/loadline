@@ -1,17 +1,17 @@
-# Copie para `.github/workflows/suite-que-acusa.yml`.
+# Copy to `.github/workflows/suite-que-acusa.yml`.
 #
-# ⚠️ ESTE JOB TEM DUAS METADES DE PROPÓSITO, E MISTURÁ-LAS ARRUINA AS DUAS.
+# ⚠️ THIS JOB HAS TWO HALVES ON PURPOSE, AND MIXING THEM RUINS BOTH.
 #
-#   1. O que REPROVA: `suite.sem_assercao`. É veredito — uma função de teste sem
-#      asserção não pode falhar, e isso é propriedade do código, não opinião.
+#   1. What FAILS: `suite.sem_assercao`. It is a verdict — a test function with
+#      no assertion cannot fail, and that is a property of the code, not opinion.
 #
-#   2. O que AVISA e nunca reprova: `suite.sem_controle_negativo`. É heurística
-#      declarada, e erra nos dois sentidos. Uma régua heurística que reprova
-#      treina o time a escrever teste para agradar a régua — e aí ela para de
-#      medir o código e passa a medir a si mesma.
+#   2. What WARNS and never fails: `suite.sem_controle_negativo`. It is a
+#      declared heuristic, and it gets it wrong both ways. A heuristic rule that
+#      fails trains the team to write a test to please the rule — and then it
+#      stops measuring the code and starts measuring itself.
 #
-# Se você ligar a segunda como reprovação, terá construído exatamente o defeito
-# que esta operação existe para achar: uma suíte verde que não prova nada.
+# If you turn the second one on as a failure, you have built exactly the defect
+# this operation exists to find: a green suite that proves nothing.
 
 name: suite-que-acusa
 
@@ -21,9 +21,9 @@ on:
       - "tests/**"
       - "LACUNAS.md"
   schedule:
-    # A lista de lacunas envelhece de um jeito particular: as lacunas FECHAM sem
-    # ninguém apagar a linha. O check que faltava foi escrito e a lista continua
-    # declarando o buraco. Nenhum commit dispara isso — é o `vence=` que pega.
+    # A gap list ages in a particular way: the gaps CLOSE without anyone
+    # deleting the line. The check that was missing was written and the list
+    # still declares the hole. No commit fires this — it is `expires=` that catches it.
     - cron: "0 6 1 * *"
 
 jobs:
@@ -36,34 +36,34 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: instalar o loadline
+      - name: install loadline
         run: |
           git clone --depth 1 https://github.com/marquesPablo/loadline.git /tmp/loadline
           echo "PYTHONPATH=/tmp/loadline" >> "$GITHUB_ENV"
 
-      - name: o que reprova — teste que não pode falhar, e a terceira lista
+      - name: what fails — a test that cannot fail, and the third list
         run: |
           set +e
           python -m loadline . | tee relatorio.txt
           codigo=${PIPESTATUS[0]}
           set -e
           case "$codigo" in
-            0) echo "nenhuma função de teste sem asserção, e a terceira lista está no prazo" ;;
+            0) echo "no test function with no assertion, and the third list is within the deadline" ;;
             1)
-              echo "::error::há função de teste que não pode falhar, ou a terceira lista venceu"
-              echo "::notice::uma função de teste sem assert roda, devolve verde e não verifica nada"
+              echo "::error::there is a test function that cannot fail, or the third list expired"
+              echo "::notice::a test function with no assert runs, returns green and verifies nothing"
               exit 1
               ;;
             2)
-              echo "::error::nenhum selo cobre a suíte. Leia operacoes/suite-que-acusa/selos.md"
+              echo "::error::no seal covers the suite. Read operacoes/suite-que-acusa/selos.md"
               exit 1
               ;;
-            *) echo "::error::o loadline não pôde rodar"; exit 1 ;;
+            *) echo "::error::loadline could not run"; exit 1 ;;
           esac
 
-      # A metade que AVISA. Ela nunca sai diferente de zero — é `warning`, por
-      # decisão, e a decisão está explicada no cabeçalho deste arquivo.
-      - name: o que avisa — testes sem controle negativo aparente
+      # The half that WARNS. It never comes out non-zero — it is a `warning`, by
+      # decision, and the decision is explained in the header of this file.
+      - name: what warns — tests with no apparent negative control
         if: always()
         run: |
           set -e
@@ -78,16 +78,16 @@ jobs:
               total = registro.medir("suite.checks", None)
               pulados = registro.medir("suite.pulados", None)
           except LookupError as exc:
-              print(f"::warning::não consegui ler a suíte: {exc}")
+              print(f"::warning::could not read the suite: {exc}")
               raise SystemExit(0)
           if sem:
-              print(f"::warning::{sem} de {total} testes sem controle negativo APARENTE.")
-              print("::warning::Heurística: erra nos dois sentidos. É lista de leitura, não veredito.")
+              print(f"::warning::{sem} of {total} tests with no APPARENT negative control.")
+              print("::warning::Heuristic: gets it wrong both ways. It is a reading list, not a verdict.")
           if pulados:
-              print(f"::warning::{pulados} teste(s) pulado(s) — contam na lista e não medem nada.")
+              print(f"::warning::{pulados} skipped test(s) — they count in the list and measure nothing.")
           PY
 
-# ⚠️ Um verde aqui NÃO diz que a sua suíte pegaria um bug real. Diz que nenhum
-#    teste é uma função que não pode falhar, e que os limites da suíte estão
-#    escritos e dentro do prazo. É bem menos do que parece — e é bem mais do que
-#    uma suíte verde comum diz.
+# ⚠️ A green here does NOT say your suite would catch a real bug. It says no
+#    test is a function that cannot fail, and that the suite's limits are
+#    written and within the deadline. It is far less than it seems — and it is
+#    far more than a common green suite says.

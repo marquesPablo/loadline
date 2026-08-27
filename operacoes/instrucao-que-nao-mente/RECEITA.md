@@ -1,114 +1,116 @@
-# Operação 1 · `instrucao-que-nao-mente`
+# Operation 1 · `instrucao-que-nao-mente`
 
-> O seu `AGENTS.md` manda rodar `npm run test:unit`. Esse script foi renomeado em março.
-> O agente lê a instrução, roda o comando, falha, e tenta adivinhar o que você quis dizer.
-> **Ninguém foi avisado, porque nada olha para isso.**
+> Your `AGENTS.md` tells you to run `npm run test:unit`. That script was renamed in March.
+> The agent reads the instruction, runs the command, fails, and tries to guess what you meant.
+> **Nobody was warned, because nothing looks at this.**
 
-## A dor
+## The pain
 
-Mais de 60 mil repositórios adotaram `AGENTS.md`, lido hoje por Claude Code, Codex CLI, Cursor,
-Aider, Copilot, Gemini CLI, Zed, Continue e outros. Quem tem dois arquivos — `CLAUDE.md` **e**
-`AGENTS.md` — tem o problema em dobro: um é atualizado, o outro fica, e os dois divergem em silêncio.
+More than 60,000 repositories adopted `AGENTS.md`, read today by Claude Code, Codex CLI, Cursor,
+Aider, Copilot, Gemini CLI, Zed, Continue and others. Whoever has two files — `CLAUDE.md` **and**
+`AGENTS.md` — has the problem twice over: one is kept up, the other is left, and the two diverge
+silently.
 
-Um arquivo de instrução é um documento cheio de **afirmações sobre o repositório**: rode este
-comando, edite esta pasta, os testes ficam ali. Toda afirmação envelhece. Nenhuma reprova quando
-envelhece.
+An instruction file is a document full of **claims about the repository**: run this command, edit
+this folder, the tests are over there. Every claim ages. None fails when it ages.
 
-## O que esta operação instala
+## What this operation installs
 
-Sete sondas que conferem as promessas do arquivo de instrução contra o disco — não contra ele mesmo:
+Seven probes that check the instruction file's promises against the disk — not against itself:
 <!-- measured: operacao.instrucao.sondas=7 nature=count on=2026-08-21 expires=never source=operacoes/instrucao-que-nao-mente/sondas.py -->
 
-| Métrica | O que recomputa | Natureza |
+| Metric | What it recomputes | Nature |
 |---|---|---|
-| `instrucao.arquivos` | quantos arquivos de instrução existem | contagem |
-| `instrucao.linhas` | o tamanho somado deles | contagem |
-| `instrucao.comandos` | comandos distintos citados dentro de cerca de código | contagem |
-| **`instrucao.comandos_quebrados`** | **comandos cujo script/alvo não existe** em `package.json`, `Makefile` ou no disco | **relação** |
-| `instrucao.caminhos` | caminhos relativos citados entre crases | contagem |
-| **`instrucao.caminhos_quebrados`** | **caminhos citados que não existem** | **relação** |
-| `instrucao.divergencia` | títulos presentes num arquivo e ausentes no outro | contagem |
+| `instrucao.arquivos` | how many instruction files exist | count |
+| `instrucao.linhas` | their combined size | count |
+| `instrucao.comandos` | distinct commands cited inside a code fence | count |
+| **`instrucao.comandos_quebrados`** | **commands whose script/target does not exist** in `package.json`, `Makefile` or on disk | **relation** |
+| `instrucao.caminhos` | relative paths cited between backticks | count |
+| **`instrucao.caminhos_quebrados`** | **cited paths that do not exist** | **relation** |
+| `instrucao.divergencia` | headings present in one file and absent from the other | count |
 
-As duas em **relação** são o coração. Elas deveriam ser sempre `0`, e quando saem de zero isso não é
-"o número mudou" — é **defeito**. A ferramenta diz isso na tela, com essas palavras.
+The two in **relation** are the heart. They should always be `0`, and when they leave zero that is
+not "the number changed" — it is a **defect**. The tool says so on screen, in those words.
 
-## O ajuste
+## The adjustment
 
-**Nenhum.** As sondas descobrem os arquivos de instrução sozinhas, pela lista fechada de nomes que
-os harnesses de hoje leem. Se o seu tem outro nome, acrescente-o em `NOMES_DE_INSTRUCAO`, no topo do
-`sondas.py` — é a única linha desta operação que alguém precisa tocar, e só nesse caso.
+**None.** The probes discover the instruction files on their own, from the closed list of names
+today's harnesses read. If yours has another name, add it to `NOMES_DE_INSTRUCAO`, at the top of
+`sondas.py` — it is the only line of this operation anyone needs to touch, and only in that case.
 
-## Como rodar
+## How to run
 
 ```console
-$ cp operacoes/instrucao-que-nao-mente/sondas.py  /caminho/do/seu/repo/sondas.py
-$ cd /caminho/do/seu/repo
-$ PYTHONPATH=/caminho/para/loadline python -m loadline .
+$ cp operacoes/instrucao-que-nao-mente/sondas.py  /path/to/your/repo/sondas.py
+$ cd /path/to/your/repo
+$ PYTHONPATH=/path/to/loadline python -m loadline .
 ```
 
-> Instalou com `pip install -e /caminho/para/loadline`? Então é só `loadline .`. As duas
-> formas estão em [`operacoes/README.md`](../README.md), e nenhuma baixa nada.
+> Installed with `pip install -e /path/to/loadline`? Then it is just `loadline .`. Both ways are in
+> [`operacoes/README.md`](../README.md), and neither downloads anything.
 
-A primeira execução não pede nada. Ela devolve o que ninguém consegue conferir no seu repositório.
-Depois, cole no fim do seu `AGENTS.md`:
+The first run asks nothing. It returns what nobody can verify in your repository. Then, paste at the
+end of your `AGENTS.md`:
 
 ```markdown
-## O que este arquivo promete
+## What this file promises
 
-Todo comando citado aqui existe, e todo caminho citado aqui existe.
-<!-- measured: instrucao.comandos_quebrados=0 nature=relation on=AAAA-MM-DD expires=30d source=package.json -->
-<!-- measured: instrucao.caminhos_quebrados=0 nature=relation on=AAAA-MM-DD expires=30d source=disco -->
+Every command cited here exists, and every path cited here exists.
+<!-- measured: instrucao.comandos_quebrados=0 nature=relation on=YYYY-MM-DD expires=30d source=package.json -->
+<!-- measured: instrucao.caminhos_quebrados=0 nature=relation on=YYYY-MM-DD expires=30d source=disk -->
 ```
 
-Troque `AAAA-MM-DD` por hoje. Pronto — a operação está no ar.
+Swap `YYYY-MM-DD` for today. Done — the operation is live.
 
-## O que você vê quando alguma coisa quebra
+## What you see when something breaks
 
 ```console
-$ PYTHONPATH=/caminho/para/loadline python -m loadline .
-loadline · . · em 2026-08-21
+$ PYTHONPATH=/path/to/loadline python -m loadline .
+loadline · . · on 2026-08-21
 ========================================================================
-DRIFTED   AGENTS.md:19  instrucao.comandos_quebrados: escrito=0 medido=2  → PARE. Relação divergindo é defeito — investigue antes de resselar
-DRIFTED   AGENTS.md:20  instrucao.caminhos_quebrados: escrito=0 medido=2  → PARE. Relação divergindo é defeito — investigue antes de resselar
+DRIFTED   AGENTS.md:19  instrucao.comandos_quebrados: written=0 measured=2  → STOP. A relation diverging is a defect — investigate before re-sealing
+DRIFTED   AGENTS.md:20  instrucao.caminhos_quebrados: written=0 measured=2  → STOP. A relation diverging is a defect — investigate before re-sealing
 
-⚠️  NINGUÉM CONSEGUE CONFERIR ISTO — são suspeitas, não defeitos.
-      SEM PROVA  AGENTS.md:3  "Este repo tem 3 servicos e 12 endpoints." → ninguém confere 3
-      SEM PROVA  AGENTS.md:3  "Este repo tem 3 servicos e 12 endpoints." → ninguém confere 12
+⚠️  NOBODY CAN VERIFY THIS — these are suspects, not defects.
+      UNVERIFIED  AGENTS.md:3  "This repo has 3 services and 12 endpoints." → nobody verifies 3
+      UNVERIFIED  AGENTS.md:3  "This repo has 3 services and 12 endpoints." → nobody verifies 12
 ------------------------------------------------------------------------
-2 métricas em 3 arquivos · 2 arquivos sem selo nenhum · 2 afirmações que ninguém confere
+2 metrics in 3 files · 2 files with no seal at all · 2 claims nobody verifies
   DRIFTED    2
-  ⚠️  2 de RELAÇÃO — isso é defeito, não resselo
+  ⚠️  2 of RELATION — that is a defect, not a re-seal
 
-REPROVA
+FAIL
 ```
 
-> *Saída literal desta operação sobre um repositório sintético, executada em 2026-08-21. É um
-> exemplo daquela execução, não o estado do seu repositório.*
+> *Literal output of this operation over a synthetic repository, run on 2026-08-21. It is an example
+> of that run, not the state of your repository.*
 
-## O agente
+## The agent
 
-`agente.toml` compila o `guardiao-de-instrucao`, que faz o que a sonda não faz: **abre cada quebra e
-diz qual é**. A sonda conta 2; o agente diz *"o `npm run test:unit` não existe mais em
-`package.json`, e o `src/legacy/velho.ts` foi deletado"*.
+`agente.toml` compiles the `guardiao-de-instrucao`, which does what the probe does not: **it opens
+each break and says which one it is**. The probe counts 2; the agent says *"`npm run test:unit` no
+longer exists in `package.json`, and `src/legacy/velho.ts` was deleted"*.
 
 ```console
 $ python -m forja operacoes/instrucao-que-nao-mente/agente.toml
 ```
 
-Sete artefatos saem, entre eles um `LACUNAS.md` que declara o que este agente **não** mede — leia-o
-antes de confiar num verde.
+Seven artifacts come out, among them a `LACUNAS.md` that declares what this agent does **not**
+measure — read it before trusting a green.
 
-## O CI
+## The CI
 
-`ci.yml` faz a operação reprovar o build. Copie para `.github/workflows/`. Ele distingue os três
-códigos de saída: `0` verde, `1` alguma coisa conferida não bate, `2` você ainda não anotou nada.
+`ci.yml` makes the operation fail the build. Copy it to `.github/workflows/`. It tells the three
+exit codes apart: `0` green, `1` something checked does not match, `2` you have not annotated
+anything yet.
 
-## As três coisas que esta operação não faz
+## The three things this operation does not do
 
-1. **Se ninguém CITA um comando, nada aqui descobre que ele existia e sumiu.** A cobertura é do que
-   está escrito, e o denominador é o arquivo de instrução — nunca o repositório inteiro.
-2. **Comando fora de cerca de código não conta.** `npm test` no meio de uma frase pode ser exemplo,
-   contraexemplo ou o que *não* fazer. Dentro da cerca é instrução; fora, é prosa.
-3. **A checagem de quebra é conservadora, e erra para o lado de calar.** Sem `package.json` não há
-   como decidir sobre `npm run X`, e ela não decide. Uma sonda que grita lobo é uma sonda que alguém
-   apaga na segunda semana.
+1. **If nobody CITES a command, nothing here finds that it existed and disappeared.** The coverage
+   is of what is written, and the denominator is the instruction file — never the whole repository.
+2. **A command outside a code fence does not count.** `npm test` in the middle of a sentence can be
+   an example, a counter-example or what *not* to do. Inside the fence it is an instruction;
+   outside, it is prose.
+3. **The break check is conservative, and errs on the side of going quiet.** With no `package.json`
+   there is no way to decide about `npm run X`, and it does not decide. A probe that cries wolf is a
+   probe someone deletes in the second week.

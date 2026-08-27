@@ -1,20 +1,21 @@
-"""Sondas da operação `vitrine`.
+"""Probes for the `vitrine` operation.
 
-nature: fix — sonda que estoura vira `UNPROVEN` no relatório, com o erro
-por extenso. Ela nunca devolve um palpite.
+nature: fix — a probe that blows up becomes `UNPROVEN` in the report, with the
+error written out. It never returns a guess.
 
-COPIE ESTE ARQUIVO **E** A PASTA `vitrine/` (a que fica na raiz deste repositório,
-ao lado de `loadline/` e `forja/`) para a raiz do seu repositório. É a única
-operação da prateleira que traz um pacote inteiro além do `sondas.py` — como a
-`cerebro-local` traz `servidor.py`.
+COPY THIS FILE **AND** THE `vitrine/` FOLDER (the one at the root of this
+repository, next to `loadline/` and `forja/`) to the root of your repository. It
+is the only operation on the shelf that ships a whole package beyond `sondas.py`
+— the same way `cerebro-local` ships `servidor.py`.
 
-⚠️ **A regra anti-espelho, e como ela é respeitada aqui.** O `SKILL.md` de cada
-skill é a fonte de tudo — não há dois lugares independentes onde «este nome está
-certo» poderia estar escrito duas vezes. A independência aqui não é de FONTE, é
-de MOMENTO: o selo que você cola no README congela «hoje há N skills e 0
-reprovam»; a sonda RECOMPUTA isso do zero, a cada rodada, lendo o disco de novo.
-Divergir significa que o disco mudou desde que o selo foi escrito — exatamente
-o que a natureza `contagem`/`relacao` de cada métrica abaixo distingue.
+⚠️ **The anti-mirror rule, and how it is respected here.** Each skill's
+`SKILL.md` is the source of everything — there are not two independent places
+where «this name is right» could be written twice. The independence here is not
+of SOURCE, it is of MOMENT: the seal you paste in the README freezes «today
+there are N skills and 0 fail»; the probe RECOMPUTES that from scratch, on every
+run, reading the disk again. Diverging means the disk changed since the seal was
+written — exactly what the `count`/`relation` nature of each metric below
+distinguishes.
 """
 
 from __future__ import annotations
@@ -26,8 +27,8 @@ from vitrine import ler_pasta, vistoriar
 
 RAIZ = Path(__file__).resolve().parent
 
-#: Onde ficam as skills deste repositório. O único campo que esta operação pede
-#: para ser ajustado — troque pelo caminho real, relativo à raiz do repositório.
+#: Where this repository's skills live. The one field this operation asks you to
+#: adjust — change it to the real path, relative to the repository root.
 CAMINHO_DE_SKILLS = RAIZ / ".claude" / "skills"
 
 
@@ -35,20 +36,20 @@ def _skills():
     return ler_pasta(CAMINHO_DE_SKILLS, com_git=True)
 
 
-@sonda("vitrine.skills", origem="vitrine.ler_pasta sobre CAMINHO_DE_SKILLS")
+@sonda("vitrine.skills", origem="vitrine.ler_pasta over CAMINHO_DE_SKILLS")
 def vitrine_skills() -> int:
-    """De CONTAGEM. Sobe quando alguém escreve uma skill nova — normal, resele."""
+    """A COUNT. Goes up when someone writes a new skill — normal, re-seal."""
     return len(_skills())
 
 
 @sonda(
     "vitrine.reprovas",
-    origem="vitrine.vistoriar — achados graves (⛔), skills distintas, não linhas",
+    origem="vitrine.vistoriar — grave findings (⛔), distinct skills, not lines",
 )
 def vitrine_reprovas() -> int:
-    """De RELAÇÃO. Só sai de zero se uma skill ficou com o nome errado, sem
-    gatilho, ou fora da gramática — e aí a resposta é consertar a skill, nunca
-    resselar o número para cima.
+    """A RELATION. It only leaves zero if a skill ended up with the wrong name,
+    no trigger, or outside the grammar — and then the answer is to fix the
+    skill, never to re-seal the number upward.
     """
     achados = vistoriar(_skills())
     graves = {slug for a in achados if a.grave for slug in a.skills}

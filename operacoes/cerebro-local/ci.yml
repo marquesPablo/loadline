@@ -1,11 +1,11 @@
-# Copie para `.github/workflows/cerebro-local.yml`.
+# Copy to `.github/workflows/cerebro-local.yml`.
 #
-# Este job tem duas metades, e a segunda é a que interessa. A primeira confere
-# os selos do vault. A segunda RODA O SERVIDOR e prova que ele ainda faz o que
-# a documentação diz — inclusive que ele RECUSA um caminho fora da raiz.
+# This job has two halves, and the second is the one that matters. The first
+# checks the vault's seals. The second RUNS THE SERVER and proves it still does
+# what the documentation says — including that it REFUSES a path outside the root.
 #
-# Um servidor de arquivos cuja recusa nunca é exercitada é um servidor cuja
-# recusa você descobre quebrada no dia em que alguém a testa por você.
+# A file server whose refusal is never exercised is a server whose refusal you
+# find broken the day someone tests it for you.
 
 name: cerebro-local
 
@@ -14,9 +14,9 @@ on:
   push:
     branches: [main]
   schedule:
-    # Um link quebrado nasce de um rename e não avisa; uma órfã nasce da nota
-    # nova que ninguém citou ainda. Nenhum dos dois dispara evento de commit
-    # sozinho — é o `vence=` que pega, e ele só morde se alguém rodar.
+    # A broken link comes from a rename and does not warn; an orphan comes from
+    # a new note nobody has cited yet. Neither fires a commit event on its own —
+    # it is the `expires=` that catches it, and it only bites if someone runs.
     - cron: "0 6 * * 1"
 
 jobs:
@@ -29,57 +29,57 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: instalar o loadline
+      - name: install loadline
         run: |
           git clone --depth 1 https://github.com/marquesPablo/loadline.git /tmp/loadline
           echo "PYTHONPATH=/tmp/loadline" >> "$GITHUB_ENV"
 
-      - name: conferir os selos do vault
+      - name: check the vault's seals
         run: |
           set +e
           python -m loadline . | tee relatorio.txt
           codigo=${PIPESTATUS[0]}
           set -e
           case "$codigo" in
-            0) echo "corpus íntegro: nenhuma aresta para o vazio, e o servidor é o que está escrito" ;;
+            0) echo "corpus intact: no edge to the void, and the server is what is written" ;;
             1)
-              echo "::error::alguma coisa conferida não bate — leia a natureza de cada linha antes de resselar"
-              echo "::notice::contagem divergindo = você escreveu. relacao divergindo = PARE e investigue."
+              echo "::error::something checked does not match — read the nature of each line before re-sealing"
+              echo "::notice::a count diverging = you wrote. a relation diverging = STOP and investigate."
               exit 1
               ;;
             2)
-              echo "::error::nenhum selo cobre o vault. Leia cerebro/selos.md"
+              echo "::error::no seal covers the vault. Read cerebro/selos.md"
               exit 1
               ;;
-            *) echo "::error::o loadline não pôde rodar"; exit 1 ;;
+            *) echo "::error::loadline could not run"; exit 1 ;;
           esac
 
-      # A metade que importa: o servidor tem de RODAR, e tem de RECUSAR.
-      - name: o servidor sobe, responde e recusa
+      # The half that matters: the server has to RUN, and it has to REFUSE.
+      - name: the server starts, answers and refuses
         run: |
           set -e
-          saida=$(python cerebro/servidor.py --raiz . --teste)
+          saida=$(python cerebro/servidor.py --root . --test)
           echo "$saida"
 
-          echo "$saida" | grep -q "RECUSADO, como tem de ser" || {
-            echo "::error::o servidor NÃO recusou um caminho fora da raiz."
-            echo "::error::Isto não é um detalhe: é um leitor de notas que lê o disco inteiro."
+          echo "$saida" | grep -q "REFUSED, as it must" || {
+            echo "::error::the server did NOT refuse a path outside the root."
+            echo "::error::This is not a detail: it is a notes reader that reads the whole disk."
             exit 1
           }
 
-          # O handshake do protocolo, com o servidor como subprocesso de verdade.
-          # Lógica em processo passa e protocolo trava — já custou caro a mais
-          # de um projeto, e o sintoma aparece longe da causa.
+          # The protocol handshake, with the server as a real subprocess.
+          # In-process logic passes and the protocol hangs — it has cost more
+          # than one project dearly, and the symptom shows up far from the cause.
           resposta=$(printf '%s\n' \
             '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' \
             '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
-            | python cerebro/servidor.py --raiz . )
+            | python cerebro/servidor.py --root . )
           echo "$resposta" | grep -q '"tools"' || {
-            echo "::error::o servidor não respondeu tools/list pelo protocolo"
+            echo "::error::the server did not answer tools/list over the protocol"
             exit 1
           }
-          echo "servidor: sobe, responde o handshake, lista as ferramentas e recusa fora da raiz"
+          echo "server: starts, answers the handshake, lists the tools and refuses outside the root"
 
-# ⚠️ Este job NÃO diz que as suas notas estão certas. Ele diz que o corpus está
-#    bem ligado, que o servidor é o que a documentação promete, e que a recusa
-#    de caminho continua fechada. Conteúdo é julgamento de quem escreveu.
+# ⚠️ This job does NOT say your notes are right. It says the corpus is well
+#    linked, that the server is what the documentation promises, and that the
+#    path refusal is still closed. Content is a judgment for whoever wrote it.

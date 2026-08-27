@@ -1,47 +1,50 @@
-# Os selos desta operação
+# The seals of this operation
 
-Cole no fim do seu `README.md` (ou `CLAUDE.md`/`AGENTS.md`). Troque `AAAA-MM-DD` pela data de hoje.
+Paste at the end of your `README.md` (or `CLAUDE.md`/`AGENTS.md`). Replace `YYYY-MM-DD` with
+today's date.
 
-## O mínimo (o que vale por si)
-
-```markdown
-## O que as skills deste repositório prometem
-
-Toda skill sob `.claude/skills/` passa na vitrine — nome batendo com a pasta,
-gatilho de uso e gatilho negativo declarados.
-<!-- measured: vitrine.reprovas=0 nature=relation on=AAAA-MM-DD expires=30d source=vitrine -->
-```
-
-**Por que `relacao` e não `contagem`.** Uma grandeza de contagem anda quando alguém escreve — subiu,
-resele e siga. Esta só anda se uma skill ficou invisível: nome divergente, gramática quebrada, ou
-sem cláusula de gatilho. Divergir aqui manda **parar e consertar a skill**, nunca resselar o número
-para cima — marcar isto como `contagem` treinaria o time a resselar o defeito em vez de corrigi-lo.
-
-**Por que `vence=30d`.** Skill nasce e morre com o repositório — trinta dias é a escolha padrão desta
-operação, não uma medida, e por isso é um `arbitrated:`, com dono:
+## The minimum (what stands on its own)
 
 ```markdown
-O prazo de reconferência das skills é 30 dias.
-<!-- arbitrated: vitrine.prazo=30 by="quem adotou a operação" on=AAAA-MM-DD expires=180d
-     breaks="um repositório em que skills novas apareçam toda semana, ou nenhuma em meses" -->
+## What the skills in this repository promise
+
+Every skill under `.claude/skills/` passes the vitrine — name matching the folder,
+usage trigger and negative trigger declared.
+<!-- measured: vitrine.reprovas=0 nature=relation on=YYYY-MM-DD expires=30d source=vitrine -->
 ```
 
-## O completo (as duas)
+**Why `relation` and not `count`.** A count metric moves when someone writes — it went up, re-seal
+and move on. This one only moves if a skill went invisible: diverging name, broken grammar, or no
+trigger clause. Diverging here means **stop and fix the skill**, never re-seal the number upward —
+marking this as `count` would train the team to re-seal the defect instead of correcting it.
+
+**Why `expires=30d`.** A skill is born and dies with the repository — thirty days is this
+operation's default choice, not a measurement, and that is why it is an `arbitrated:`, with an owner:
 
 ```markdown
-<!-- measured: vitrine.skills=N nature=count on=AAAA-MM-DD expires=90d source=.claude/skills -->
-<!-- measured: vitrine.reprovas=0 nature=relation on=AAAA-MM-DD expires=30d source=vitrine -->
+The skill re-check deadline is 30 days.
+<!-- arbitrated: vitrine.prazo=30 by="whoever adopted the operation" on=YYYY-MM-DD expires=180d
+     breaks="a repository where new skills show up every week, or none in months" -->
 ```
 
-Não sabe qual `N` escrever? Não escreva. Rode `python -m loadline . --selar` e a ferramenta escreve
-os dois, como `arbitrated:`, com o valor de hoje. Troque `arbitrated:` por `measured:` — a troca é o que
-transforma um número escolhido num número recomputado.
+## The complete one (both)
 
-## O que NÃO selar aqui
+```markdown
+<!-- measured: vitrine.skills=N nature=count on=YYYY-MM-DD expires=90d source=.claude/skills -->
+<!-- measured: vitrine.reprovas=0 nature=relation on=YYYY-MM-DD expires=30d source=vitrine -->
+```
 
-**Nada sobre se a skill FUNCIONA.** A `vitrine` julga se a skill é **encontrável** — vitrine correta,
-gatilho declarado. Se ela resolve o problema depois de encontrada é outro trabalho, que exige rodar
-a skill contra tarefa real, e não tem sonda aqui. Ver `vitrine/LACUNAS.md`.
+Don't know which `N` to write? Don't write it. Run `python -m loadline . --selar` and the tool
+writes both, as `arbitrated:`, with today's value. Swap `arbitrated:` for `measured:` — that swap is
+what turns a chosen number into a recomputed one.
 
-**E nada sobre o CORPO do `SKILL.md`** além da contagem de linhas. Instrução contraditória, comando
-que não existe mais, ordem plantada por outro agente — nada disso é examinado por esta operação.
+## What NOT to seal here
+
+**Nothing about whether the skill WORKS.** The `vitrine` judges whether the skill is **findable** —
+correct window, declared trigger. Whether it solves the problem once found is another job, one that
+requires running the skill against a real task, and there is no probe for it here. See
+`vitrine/LACUNAS.md`.
+
+**And nothing about the BODY of the `SKILL.md`** beyond the line count. A contradictory instruction,
+a command that no longer exists, an order planted by another agent — none of that is examined by
+this operation.

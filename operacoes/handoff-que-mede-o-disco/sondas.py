@@ -1,26 +1,26 @@
-"""Sondas da operação `handoff-que-mede-o-disco`.
+"""Probes for the `handoff-que-mede-o-disco` operation.
 
-nature: fix — sonda que estoura vira `UNPROVEN` no relatório, com o erro
-por extenso. Ela nunca devolve um palpite.
+nature: fix — a probe that blows up becomes `UNPROVEN` in the report, with
+the error written out. It never returns a guess.
 
-COPIE ESTE ARQUIVO para a raiz do seu repositório, como `sondas.py`.
-Para combinar com outra operação, concatene os arquivos — nenhum nome auxiliar
-daqui colide com o das outras (todos começam com `_hand_`).
+COPY THIS FILE to the root of your repository, as `sondas.py`.
+To combine with another operation, concatenate the files — no helper name here
+collides with the others' (they all start with `_hand_`).
 
-⚠️ **ESTA SONDA NUNCA EXECUTA O QUE O DOCUMENTO MANDA.** O arquivo de retomada é
-um documento; ele pode ter sido escrito por qualquer pessoa, colado de qualquer
-lugar, ou editado por um agente. Uma sonda que rodasse os comandos citados nele
-seria execução arbitrária a partir de texto — injeção com convite escrito.
+⚠️ **THIS PROBE NEVER EXECUTES WHAT THE DOCUMENT TELLS YOU TO.** The handoff file
+is a document; it could have been written by anyone, pasted from anywhere, or
+edited by an agent. A probe that ran the commands cited in it would be arbitrary
+execution from text — injection with a written invitation.
 
-O que ela faz é **checar se o ALVO existe**: o arquivo de script, o alvo do
-`make`, a chave em `scripts` do `package.json`. Um comando cujo alvo sumiu é o
-defeito que interessa, e descobri-lo não exige rodá-lo.
+What it does is **check whether the TARGET exists**: the script file, the `make`
+target, the key in `package.json`'s `scripts`. A command whose target
+disappeared is the defect that matters, and finding it does not require running it.
 
-⚠️ **A regra anti-espelho, aqui.** O número escrito mora no arquivo de retomada
-("três verificações passam", "o repositório está limpo"). O número medido sai do
-**git** e do **sistema de arquivos** — nunca do documento que o afirma. É a
-separação inteira: um handoff é uma afirmação sobre o disco, e só o disco a
-confirma.
+⚠️ **The anti-mirror rule, here.** The written number lives in the handoff file
+("three checks pass", "the repository is clean"). The measured number comes from
+**git** and the **file system** — never from the document that claims it. It is
+the whole separation: a handoff is a claim about the disk, and only the disk
+confirms it.
 """
 
 from __future__ import annotations
@@ -36,13 +36,13 @@ from loadline import sonda
 
 RAIZ = Path(__file__).resolve().parent
 
-#: AJUSTE ÚNICO desta operação: como se chama o seu arquivo de retomada.
-#: O primeiro que existir ganha. Se o seu tem outro nome, ponha-o na frente.
+#: THE ONE ADJUSTMENT of this operation: what your handoff file is called.
+#: The first one that exists wins. If yours has another name, put it in front.
 NOMES_DE_HANDOFF = ("CONTINUAR.md", "HANDOFF.md", "RETOMAR.md", "CONTEXT.md", "STATE.md")
 
-#: Extensões que contam como script citável. Fechada de propósito: uma citação a
-#: `dados.csv` é um caminho, não um comando, e confundir os dois inflaria a
-#: contagem de comandos com arquivos que ninguém executa.
+#: Extensions that count as a citable script. Closed on purpose: a citation to
+#: `dados.csv` is a path, not a command, and confusing the two would inflate the
+#: command count with files nobody runs.
 _HAND_SCRIPT = (".py", ".sh", ".ps1", ".js", ".ts", ".rb", ".go", ".bat", ".cmd")
 
 #: `python scripts/verificar.py`, `bash scripts/deploy.sh`, `./run.sh`
@@ -55,28 +55,28 @@ _HAND_INTERPRETADOR = re.compile(
 _HAND_NPM = re.compile(r"^(?:npm|pnpm|yarn|bun)\s+run\s+([\w:.-]+)", re.I)
 _HAND_MAKE = re.compile(r"^make\s+([\w:.-]+)", re.I)
 
-#: Um caminho citado: tem barra E ou termina em `/`, ou o último segmento tem
-#: extensão. Exigir os dois não é rigor — é o que separa caminho de tudo o mais
-#: que leva barra num documento técnico.
+#: A cited path: it has a slash AND either ends in `/`, or the last segment has
+#: an extension. Requiring both is not rigor — it is what separates a path from
+#: everything else that carries a slash in a technical document.
 #:
-#: ⚠️ Medido contra um arquivo de retomada real de 667 linhas: a versão frouxa
-#: (só «tem barra») acusou 20 caminhos mortos, e a MAIORIA era falso positivo —
-#: `Q10/Q11/Q12` (nomes de check enumerados), `origin/feat/algo` e
-#: `feat/algo` (referências de git), `grupo/subpasta` (nome de pasta de
-#: vault, relativo a outra raiz). Uma sonda que grita vinte vezes é uma sonda
-#: que a pessoa desliga na segunda semana — e aí ela deixa de pegar as três
-#: reais junto com as dezessete falsas.
+#: ⚠️ Measured against a real 667-line handoff file: the loose version (just
+#: «has a slash») flagged 20 dead paths, and MOST were false positives —
+#: `Q10/Q11/Q12` (enumerated check names), `origin/feat/algo` and `feat/algo`
+#: (git references), `grupo/subpasta` (a vault folder name, relative to another
+#: root). A probe that shouts twenty times is a probe the person switches off in
+#: the second week — and then it stops catching the three real ones along with
+#: the seventeen false.
 _HAND_CAMINHO = re.compile(r"`([\w.@-]+(?:[/\\][\w.@-]+)*[/\\][\w.@-]+\.\w{1,6}|[\w.@-]+(?:[/\\][\w.@-]+)*[/\\])`")
 
-#: Referência de git nunca é caminho de arquivo, e as duas se parecem.
+#: A git reference is never a file path, and the two look alike.
 _HAND_REF_DE_GIT = re.compile(
     r"^(?:origin|upstream|refs|HEAD)[/@]|^(?:feat|fix|chore|docs|hotfix|release)/", re.I
 )
 
-#: O que o documento AFIRMA sobre o estado do git.
+#: What the document CLAIMS about the git state.
 _HAND_DIZ_LIMPO = re.compile(
     r"\b(?:tudo\s+)?(?:commitado|comitado|limpo|sem\s+pend[êe]ncia|nothing\s+to\s+commit|"
-    r"working\s+tree\s+clean|sem\s+altera[çc][õo]es)\b",
+    r"working\s+tree\s+clean|sem\s+altera[çc][õo]es|committed|all\s+committed|no\s+changes)\b",
     re.I,
 )
 
@@ -87,10 +87,10 @@ def _hand_arquivo() -> Path:
         if alvo.is_file():
             return alvo
     raise LookupError(
-        f"não achei arquivo de retomada. Procurei por {', '.join(NOMES_DE_HANDOFF)} na raiz. "
-        "Se o seu tem outro nome, ponha-o em NOMES_DE_HANDOFF no topo de sondas.py — devolver "
-        "zero aqui seria dizer que o seu handoff está impecável, quando o que houve foi eu não "
-        "ter encontrado nenhum"
+        f"did not find a handoff file. Looked for {', '.join(NOMES_DE_HANDOFF)} at the root. "
+        "If yours has another name, put it in NOMES_DE_HANDOFF at the top of sondas.py — returning "
+        "zero here would be saying your handoff is flawless, when what happened is I did not find "
+        "any"
     )
 
 
@@ -99,11 +99,11 @@ def _hand_texto() -> str:
 
 
 def _hand_git(*argumentos: str) -> str:
-    """`git` na raiz, com stdin fechado.
+    """`git` at the root, with stdin closed.
 
-    ⚠️ `stdin=DEVNULL` não é preciosismo: um `git` que resolva pedir credencial
-    ou abrir editor trava o processo para sempre, e o sintoma — a suíte pendurada
-    sem mensagem — aparece longe da causa.
+    ⚠️ `stdin=DEVNULL` is not fussiness: a `git` that decides to ask for a
+    credential or open an editor hangs the process forever, and the symptom —
+    the suite hanging with no message — shows up far from the cause.
     """
     try:
         saida = subprocess.run(
@@ -114,17 +114,17 @@ def _hand_git(*argumentos: str) -> str:
             timeout=60,
         )
     except (OSError, subprocess.SubprocessError) as exc:
-        raise LookupError(f"não consegui rodar o git: {exc}") from exc
+        raise LookupError(f"could not run git: {exc}") from exc
     if saida.returncode != 0:
         raise LookupError(
-            f"`git {' '.join(argumentos)}` falhou: {(saida.stderr or '').strip()[:200]}. "
-            "Esta operação mede um documento contra o histórico; sem git não há segundo lado"
+            f"`git {' '.join(argumentos)}` failed: {(saida.stderr or '').strip()[:200]}. "
+            "This operation measures a document against the history; with no git there is no second side"
         )
     return saida.stdout
 
 
 def _hand_comandos() -> list[str]:
-    """Comandos citados no documento, em crase ou depois de `$`."""
+    """Commands cited in the document, in backticks or after a `$`."""
     achados: list[str] = []
     for cheio, cifrao in _HAND_COMANDO.findall(_hand_texto()):
         bruto = (cheio or cifrao or "").strip()
@@ -141,7 +141,7 @@ def _hand_comandos() -> list[str]:
 
 
 def _hand_alvo_existe(comando: str) -> bool:
-    """O alvo do comando existe? **Sem executar nada** — ver o aviso do topo."""
+    """Does the command's target exist? **Without executing anything** — see the top warning."""
     npm = _HAND_NPM.match(comando)
     if npm:
         pacote = RAIZ / "package.json"
@@ -165,8 +165,9 @@ def _hand_alvo_existe(comando: str) -> bool:
     caminho = interpretado.group(1) if interpretado else comando.split()[0]
     caminho = caminho.strip("\"'").lstrip("./")
     if not caminho.endswith(_HAND_SCRIPT):
-        # `python -m pacote` e afins: não há arquivo para conferir, e inventar um
-        # veredito seria pior que declarar que esta sonda não alcança o caso.
+        # `python -m package` and the like: there is no file to check, and
+        # inventing a verdict would be worse than declaring that this probe does
+        # not reach the case.
         return True
     return (RAIZ / caminho).is_file()
 
@@ -176,7 +177,7 @@ def _hand_caminhos() -> list[str]:
     for bruto in _HAND_CAMINHO.findall(_hand_texto()):
         limpo = bruto.strip().replace("\\", "/")
         if limpo.startswith(("http", "//")) or "..." in limpo:
-            continue  # URL, e caminho abreviado em prosa (`.../ADR-008-...md`)
+            continue  # a URL, and a path abbreviated in prose (`.../ADR-008-...md`)
         if _HAND_REF_DE_GIT.match(limpo):
             continue
         if limpo not in vistos:
@@ -185,38 +186,38 @@ def _hand_caminhos() -> list[str]:
 
 
 # ---------------------------------------------------------------------------
-# As sondas
+# The probes
 # ---------------------------------------------------------------------------
 
 
 @sonda(
     "handoff.commits_desde",
-    origem="commits do repositório posteriores ao último toque no arquivo de retomada",
+    origem="repository commits later than the last touch on the handoff file",
 )
 def hand_commits_desde() -> int:
-    """De CONTAGEM, e é o número que abre a conversa.
+    """A COUNT, and it is the number that opens the conversation.
 
-    Ele responde a única pergunta que importa sobre um documento de retomada:
-    **quanta coisa aconteceu desde que alguém o escreveu?** Um handoff com 40
-    commits em cima não está errado — está desatualizado, que é diferente e é
-    pior, porque ele continua parecendo o estado atual.
+    It answers the only question that matters about a handoff document: **how
+    much happened since someone wrote it?** A handoff with 40 commits on top of
+    it is not wrong — it is out of date, which is different and worse, because it
+    still looks like the current state.
 
-    ⚠️ Ele lê o `mtime` do arquivo, e o `git` não preserva `mtime`: num clone
-    limpo tudo nasce com o mesmo instante e este número estoura para o total de
-    commits do repositório. **É medida da árvore de trabalho de quem edita**, e
-    a `RECEITA.md` diz isso em voz alta.
+    ⚠️ It reads the file's `mtime`, and `git` does not preserve `mtime`: in a
+    clean clone everything is born with the same instant and this number blows up
+    to the repository's total commits. **It is a measure of the working tree of
+    whoever edits**, and `RECEITA.md` says so out loud.
     """
     arquivo = _hand_arquivo()
     quando = arquivo.stat().st_mtime
     linhas = _hand_git("log", "--format=%ct", "-n", "500").splitlines()
     if not linhas:
-        raise LookupError("o repositório não tem commit nenhum — não há contra o que medir")
+        raise LookupError("the repository has no commit at all — there is nothing to measure against")
     return sum(1 for l in linhas if l.strip().isdigit() and int(l) > quando)
 
 
 @sonda(
     "handoff.caminhos_citados",
-    origem="caminhos entre crases no arquivo de retomada, distintos",
+    origem="distinct paths between backticks in the handoff file",
 )
 def hand_caminhos_citados() -> int:
     return len(_hand_caminhos())
@@ -224,57 +225,58 @@ def hand_caminhos_citados() -> int:
 
 @sonda(
     "handoff.caminhos_mortos",
-    origem="caminhos citados no documento que NÃO existem no disco",
+    origem="paths cited in the document that do NOT exist on disk",
 )
 def hand_caminhos_mortos() -> int:
-    """De RELAÇÃO. Um caminho morto é a forma mais barata de um documento mentir.
+    """A RELATION. A dead path is the cheapest way a document lies.
 
-    Ele não parece errado: parece específico. Quem lê vai até lá, não encontra,
-    e a conclusão natural é «devo estar no lugar errado» — não «o documento
-    está velho».
+    It does not look wrong: it looks specific. Whoever reads it goes there, does
+    not find it, and the natural conclusion is «I must be in the wrong place» —
+    not «the document is old».
 
-    ⚠️ **Resolve tudo a partir da RAIZ do repositório, e isso é decisão, não
-    limitação.** Um caminho citado como `notas/x.md`, que só existe sob
-    `outra-pasta/`, conta como morto aqui — porque conta como morto para quem
-    copiar a linha e colar no terminal. O conserto é escrever o caminho inteiro,
-    e é o mesmo conserto que serve ao leitor. Medido num arquivo real: 11 dos 44
-    caminhos citados eram desta classe.
+    ⚠️ **It resolves everything from the repository ROOT, and that is a decision,
+    not a limitation.** A path cited as `notas/x.md`, that only exists under
+    `outra-pasta/`, counts as dead here — because it counts as dead for whoever
+    copies the line and pastes it into the terminal. The fix is to write the
+    whole path, and it is the same fix that serves the reader. Measured in a real
+    file: 11 of the 44 cited paths were of this class.
     """
     return sum(1 for c in _hand_caminhos() if not (RAIZ / c).exists())
 
 
-@sonda("handoff.comandos_citados", origem="comandos executáveis citados no documento")
+@sonda("handoff.comandos_citados", origem="executable commands cited in the document")
 def hand_comandos_citados() -> int:
     return len(_hand_comandos())
 
 
 @sonda(
     "handoff.comandos_sem_alvo",
-    origem="comandos cujo script, alvo de make ou script de pacote NÃO existe — sem executar nada",
+    origem="commands whose script, make target or package script does NOT exist — without executing anything",
 )
 def hand_comandos_sem_alvo() -> int:
-    """De RELAÇÃO. O documento manda rodar uma coisa que não está mais lá.
+    """A RELATION. The document tells you to run something that is no longer there.
 
-    ⚠️ **Nada é executado para descobrir isso.** Ver o aviso no topo do arquivo:
-    rodar comando lido de um documento é execução arbitrária a partir de texto.
-    Conferir a EXISTÊNCIA do alvo pega o defeito sem abrir essa porta.
+    ⚠️ **Nothing is executed to find this out.** See the warning at the top of
+    the file: running a command read from a document is arbitrary execution from
+    text. Checking the EXISTENCE of the target catches the defect without opening
+    that door.
     """
     return sum(1 for c in _hand_comandos() if not _hand_alvo_existe(c))
 
 
 @sonda(
     "handoff.deriva_de_git",
-    origem="o que o documento AFIRMA sobre o estado do repositório × `git status` de agora",
+    origem="what the document CLAIMS about the state of the repository × today's `git status`",
 )
 def hand_deriva_de_git() -> int:
-    """De RELAÇÃO, e é 0 ou 1 — não é uma contagem disfarçada.
+    """A RELATION, and it is 0 or 1 — not a disguised count.
 
-    O documento diz «está tudo commitado» e há doze arquivos sujos. Ou o
-    contrário. É a asserção mais fácil de escrever num handoff e a que envelhece
-    mais rápido: ela pode ficar falsa antes de você fechar o editor.
+    The document says «everything is committed» and there are twelve dirty files.
+    Or the opposite. It is the easiest claim to write in a handoff and the one
+    that ages fastest: it can go false before you close the editor.
 
-    Se o documento **não afirma nada** sobre o estado, o resultado é 0 — silêncio
-    não é asserção, e acusá-lo transformaria a sonda numa cobrança de estilo.
+    If the document **claims nothing** about the state, the result is 0 — silence
+    is not an assertion, and accusing it would turn the probe into a style demand.
     """
     sujo = bool(_hand_git("status", "--porcelain").strip())
     diz_limpo = bool(_HAND_DIZ_LIMPO.search(_hand_texto()))
@@ -283,33 +285,34 @@ def hand_deriva_de_git() -> int:
 
 @sonda(
     "handoff.linhas",
-    origem="linhas não vazias do arquivo de retomada",
+    origem="non-empty lines of the handoff file",
 )
 def hand_linhas() -> int:
-    """De CONTAGEM, e ela existe por um motivo específico.
+    """A COUNT, and it exists for a specific reason.
 
-    Um documento de retomada morre de duas formas: envelhecendo, e **inchando**.
-    O segundo é mais silencioso — ninguém o rejeita, ninguém o lê, e ele passa a
-    ocupar o começo de toda sessão sem devolver nada. Medido nesta casa: um
-    arquivo de retomada chegou a ocupar a maior parte do caminho de boot.
+    A handoff document dies in two ways: by aging, and by **bloating**. The
+    second is quieter — nobody rejects it, nobody reads it, and it starts taking
+    up the beginning of every session without giving anything back. Measured
+    here: a handoff file grew to take up most of the boot path.
 
-    Não há limiar aqui, de propósito: o número certo depende do projeto. Sele-o
-    como `arbitrated:` com um teto seu, e o `vence=` obriga a reolhar.
+    There is no threshold here, on purpose: the right number depends on the
+    project. Seal it as `arbitrated:` with a ceiling of yours, and `expires=`
+    forces a re-look.
     """
     return sum(1 for l in _hand_texto().splitlines() if l.strip())
 
 
 @sonda(
     "handoff.sessoes_desde",
-    origem="arquivos de transcrito do harness modificados depois do arquivo de retomada",
+    origem="harness transcript files modified after the handoff file",
 )
 def hand_sessoes_desde() -> int:
-    """De CONTAGEM. Quantas sessões rodaram sem ninguém atualizar a retomada.
+    """A COUNT. How many sessions ran without anyone updating the handoff.
 
-    ⚠️ **Ela estoura quando não acha a pasta de transcritos**, em vez de devolver
-    zero — e a diferença importa: *nenhuma sessão desde então* e *não sei onde
-    ficam as suas sessões* são leituras opostas, e a segunda disfarçada de
-    primeira é um verde inventado.
+    ⚠️ **It blows up when it does not find the transcripts folder**, instead of
+    returning zero — and the difference matters: *no session since then* and *I
+    do not know where your sessions are* are opposite readings, and the second
+    disguised as the first is an invented green.
     """
     candidatas = [
         Path.home() / ".claude" / "projects",
@@ -318,9 +321,9 @@ def hand_sessoes_desde() -> int:
     base = next((c for c in candidatas if c.is_dir()), None)
     if base is None:
         raise LookupError(
-            "não achei a pasta de transcritos do harness. Esta sonda é a única daqui que olha "
-            "para fora do repositório; se o seu harness guarda sessão noutro lugar, ajuste a "
-            "lista `candidatas` — zero aqui seria «nenhuma sessão», que é outra coisa"
+            "did not find the harness transcripts folder. This probe is the only one here that "
+            "looks outside the repository; if your harness keeps sessions somewhere else, adjust "
+            "the `candidatas` list — zero here would be «no session», which is another thing"
         )
     quando = _hand_arquivo().stat().st_mtime
     return sum(

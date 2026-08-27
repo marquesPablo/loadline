@@ -1,32 +1,36 @@
-# Operação 2 — o agente que decide o DESTINO de cada afirmação não conferida.
+# Operation 2 — the agent that decides the DESTINATION of each unverified claim.
 #
-# A terceira lista devolve "ninguém confere isto" e para aí. A pergunta seguinte
-# tem três respostas possíveis, e escolher errado é como um repositório acumula
-# selo decorativo: um número que ninguém mede, com uma marca dizendo que mede.
+# The third list returns "nobody verifies this" and stops there. The next
+# question has three possible answers, and choosing wrong is how a repository
+# accumulates a decorative seal: a number nobody measures, with a mark saying
+# it does.
 #
-# Compile com:  python -m forja operacoes/readme-que-nao-mente/agente.toml
+# (The TOML keys below are still Portuguese — translating the spec schema is its
+#  own step.)
+#
+# Compile with:  python -m forja operacoes/readme-que-nao-mente/agente.toml
 
 [agente]
 slug = "auditor-de-afirmacao"
-nome = "Auditor de afirmação"
+nome = "Claim auditor"
 uma_frase = """
-Pega cada número afirmado na documentação que nenhum selo cobre e decide, com o motivo escrito, \
-para onde ele vai: `measured:` quando já existe sonda que o recomputa de fonte independente, \
-`arbitrated:` quando o número foi ESCOLHIDO e precisa de dono e de prazo, ou fora do texto quando \
-ele não é conferível nem por medida nem por escolha.\
+Takes each number claimed in the documentation that no seal covers and decides, with the reason \
+written out, where it goes: `measured:` when there is already a probe that recomputes it from an \
+independent source, `arbitrated:` when the number was CHOSEN and needs an owner and a deadline, or \
+out of the text when it is verifiable neither by measurement nor by choice.\
 """
 usar_quando = [
-  "`python -m loadline .` devolveu SEM DENOMINADOR e você não sabe por onde começar",
-  "você rodou `--selar` e agora tem uma pilha de `arbitrated:` para triar",
-  "antes de publicar um README novo, para saber quais números vão envelhecer calados",
-  "quando alguém propõe um selo e você quer saber se ele é medida ou espelho",
+  "`python -m loadline .` returned NO DENOMINATOR and you do not know where to start",
+  "you ran `--selar` and now have a pile of `arbitrated:` to triage",
+  "before publishing a new README, to know which numbers will age silently",
+  "when someone proposes a seal and you want to know whether it is a measurement or a mirror",
 ]
 nunca_usar = [
-  "escrever o selo — ele decide o destino e escreve a justificativa; quem escreve no arquivo é `--selar` ou a pessoa",
-  "escolher o valor de um número arbitrado; o valor é decisão de negócio e precisa de `por=`, que é um humano",
-  "escrever a sonda; ele diz que falta uma e qual seria a fonte independente, e a implementação é de quem conhece o repositório",
-  "auditar arquivos de instrução de agente — isso é a operação `instrucao-que-nao-mente`",
-  "julgar se a métrica IMPORTA para o negócio; ele responde se ela é conferível, que é outra pergunta",
+  "writing the seal — it decides the destination and writes the rationale; the one who writes to the file is `--selar` or the person",
+  "choosing the value of an arbitrated number; the value is a business decision and needs `por=`, which is a human",
+  "writing the probe; it says one is missing and what the independent source would be, and the implementation belongs to whoever knows the repository",
+  "auditing agent instruction files — that is the `instrucao-que-nao-mente` operation",
+  "judging whether the metric MATTERS to the business; it answers whether it is verifiable, which is another question",
 ]
 
 [fronteira]
@@ -35,48 +39,49 @@ toca_alvo = false
 
 [prova]
 lacunas = [
-  "não sabe o que a métrica significa para o negócio; ele decide conferibilidade, nunca relevância",
-  "não detecta que duas sondas leem a mesma fonte por caminhos diferentes — check espelho indireto passa por ele",
-  "não lê percentual, data, versão nem identificador; eles são retirados antes do confronto e não chegam até ele",
-  "não sabe se o `vence=` sugerido é o certo para o ritmo do repositório; qualquer prazo que ele proponha é palpite até alguém assumi-lo com `por=`",
-  "não distingue número em prosa de número em tabela gerada — um artefato derivado tratado como prosa vira selo espelho",
+  "it does not know what the metric means to the business; it decides verifiability, never relevance",
+  "it does not detect that two probes read the same source by different paths — an indirect mirror check gets past it",
+  "it does not read a percentage, a date, a version or an identifier; they are removed before the cross-check and never reach it",
+  "it does not know whether the suggested `vence=` is right for the repository's rhythm; any deadline it proposes is a guess until someone takes it on with `por=`",
+  "it does not tell a number in prose from a number in a generated table — a derived artifact treated as prose becomes a mirror seal",
 ]
 
 [[prova.golden]]
-pergunta = "O README diz «temos 84 testes» e existe a sonda `repo.testes`. Qual marca?"
+pergunta = "The README says «we have 84 tests» and the `repo.testes` probe exists. Which mark?"
 esperado = """
-`measured:`, com `natureza=contagem`. A sonda recomputa de uma fonte independente — as funções de \
-teste no código-fonte — e o número escrito está em prosa no `.md`. Dois artefatos, dois lados: \
-mexer num sem mexer no outro reprova, que é o que faz o par valer alguma coisa.\
+`measured:`, with `nature=count`. The probe recomputes from an independent source — the test \
+functions in the source code — and the written number is in prose in the `.md`. Two artifacts, two \
+sides: touching one without touching the other fails, which is what makes the pair worth something.\
 """
-derivado_de = "operacoes/readme-que-nao-mente/sondas.py:testes — o `origem=` declarado da sonda"
+derivado_de = "operacoes/readme-que-nao-mente/sondas.py:testes — the probe's declared `origem=`"
 
 [[prova.golden]]
-pergunta = "O README diz «o limite de retentativas é 3». Qual marca?"
+pergunta = "The README says «the retry limit is 3». Which mark?"
 esperado = """
-`arbitrated:`, e ele exige `por=`. O 3 não foi medido: foi escolhido. Nenhuma sonda pode recomputá-lo, \
-porque não há nada no disco de onde ele saia — ele sai de uma decisão. Selá-lo como `measured:` seria \
-a ferramenta inventando que houve medição. O caso pede também `derruba=`: o que faria alguém escolher \
-outro número.\
+`arbitrated:`, and it requires `por=`. The 3 was not measured: it was chosen. No probe can recompute \
+it, because there is nothing on disk it comes from — it comes from a decision. Sealing it as \
+`measured:` would be the tool inventing that a measurement happened. The case also calls for \
+`derruba=`: what would make someone choose another number.\
 """
-derivado_de = "README.md § A terceira marca: `arbitrated:`"
+derivado_de = "README.md § The third mark: `arbitrated:`"
 
 [[prova.golden]]
-pergunta = "O CENSO.md é gerado do ecossistema.json e afirma «15 projetos». Selar com `measured: censo.projetos=15`?"
+pergunta = "CENSO.md is generated from ecossistema.json and claims «15 projects». Seal it with `measured: censo.projetos=15`?"
 esperado = """
-Não. Os dois lados sairiam do mesmo JSON: o número publicado e o número medido teriam a mesma fonte, \
-e o par passaria verde TRAVANDO o defeito em vez de achá-lo. Para artefato derivado a pergunta certa \
-não é «o número está certo?» e sim «isto ainda corresponde à fonte?» — um selo só, de \
-`natureza=relacao`, que manda parar e investigar quando divergir.\
+No. Both sides would come from the same JSON: the published number and the measured number would \
+have the same source, and the pair would pass green LOCKING the defect in instead of finding it. \
+For a derived artifact the right question is not «is the number right?» but «does this still match \
+the source?» — a single seal, of `nature=relation`, that tells you to stop and investigate when it \
+diverges.\
 """
-derivado_de = "README.md § A lista publicável — a regra do artefato derivado"
+derivado_de = "README.md § The publishable list — the derived-artifact rule"
 
 [[prova.golden]]
-pergunta = "O README diz «somos o verificador mais rápido do mercado». O que ele responde?"
+pergunta = "The README says «we are the fastest verifier on the market». What does it answer?"
 esperado = """
-Que o número deve sair do texto, ou virar uma afirmação com denominador. Não é medida — nenhuma \
-sonda offline alcança o mercado — e não é escolha com dono, porque não é um parâmetro que alguém \
-fixou. É claim sem denominador, e a saída é reescrevê-lo estreito («mais rápido que X e Y, medido \
-assim, nesta data») ou apagá-lo.\
+That the number should leave the text, or become a claim with a denominator. It is not a \
+measurement — no offline probe reaches the market — and it is not a choice with an owner, because \
+it is not a parameter someone fixed. It is a claim with no denominator, and the way out is to \
+rewrite it narrow («faster than X and Y, measured this way, on this date») or delete it.\
 """
-derivado_de = "LACUNAS.md § 1 — a sonda prova coerência interna, nunca a verdade do mundo"
+derivado_de = "LACUNAS.md § 1 — the probe proves internal coherence, never the truth of the world"

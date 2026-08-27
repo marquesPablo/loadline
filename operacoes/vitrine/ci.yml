@@ -1,10 +1,11 @@
-# Copie para `.github/workflows/vitrine.yml`.
+# Copy to `.github/workflows/vitrine.yml`.
 #
-# Dois passos, nesta ordem, e a ordem é o ponto: primeiro os CONTROLES NEGATIVOS
-# da própria `vitrine` (cada regra vista acusando e calando), só DEPOIS o
-# veredito sobre as suas skills. Um linter que não foi visto acusando o próprio
-# defeito não é confiável — foi rodando `vitrine.controles` que os dois bugs
-# reais desta ferramenta foram achados antes de qualquer skill ser julgada.
+# Two steps, in this order, and the order is the point: first the NEGATIVE
+# CONTROLS of the `vitrine` itself (each rule seen accusing and staying quiet),
+# and only THEN the verdict on your skills. A linter that has not been seen
+# accusing its own defect is not trustworthy — it was by running
+# `vitrine.controles` that the two real bugs in this tool were found before any
+# skill was judged.
 
 name: vitrine
 
@@ -25,26 +26,26 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: instalar o loadline e a vitrine
+      - name: install loadline and vitrine
         run: |
           git clone --depth 1 https://github.com/marquesPablo/loadline.git /tmp/loadline
           echo "PYTHONPATH=/tmp/loadline" >> "$GITHUB_ENV"
 
-      - name: confiar no linter primeiro — controles negativos
+      - name: trust the linter first — negative controls
         run: python -m vitrine.controles
 
-      - name: só então, julgar as skills deste repositório
+      - name: only then, judge this repository's skills
         id: aferir
         continue-on-error: true
         run: python -m vitrine .claude/skills
 
-      - name: decidir
+      - name: decide
         run: |
           case "${{ steps.aferir.outcome }}" in
-            success) echo "toda skill passa na vitrine" ;;
-            *) echo "::error::alguma skill fica invisível para o roteador — veja o relatório acima"; exit 1 ;;
+            success) echo "every skill passes the vitrine" ;;
+            *) echo "::error::some skill goes invisible to the router — see the report above"; exit 1 ;;
           esac
 
-# ⚠️ Não inverta os dois passos. Rodar `python -m vitrine` sem antes rodar
-#    `python -m vitrine.controles` julga suas skills contra uma régua que
-#    ninguém provou estar reta.
+# ⚠️ Do not swap the two steps. Running `python -m vitrine` without first running
+#    `python -m vitrine.controles` judges your skills against a ruler nobody
+#    proved is straight.

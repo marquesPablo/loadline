@@ -283,7 +283,7 @@ def ler_pasta(raiz: Path, com_git: bool = True) -> list[Skill]:
     return [s for s in achadas if s is not None]
 
 
-# --------------------------------------------------------------- the ten --------
+# ------------------------------------------------------------ the eleven --------
 
 
 def _tem(texto: str, marcas: tuple[str, ...]) -> bool:
@@ -315,7 +315,7 @@ def _profundidade(arquivo: Path, pasta_ref: Path) -> int:
 
 
 def vistoriar(skills: list[Skill]) -> list[Achado]:
-    """The ten rules. Each one cites the public source it comes from."""
+    """The eleven rules. Each one cites the public source it comes from."""
     FONTE_SPEC = "the Agent Skills format spec"
     FONTE_BP = "the official skill-authoring best practices"
 

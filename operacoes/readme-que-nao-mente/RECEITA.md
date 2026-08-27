@@ -1,99 +1,99 @@
-# Operação 2 · `readme-que-nao-mente`
+# Operation 2 · `readme-que-nao-mente`
 
-> *"Mais de 200 testes."* Quem contou? Quando? A frase está no `README.md` desde a v0.3.
-> Hoje são 84, porque a suíte foi dividida em dois pacotes e metade foi para o outro repositório.
-> **O número não errou de repente. Ele nunca mais foi conferido.**
+> *"More than 200 tests."* Who counted? When? The sentence has been in the `README.md` since v0.3.
+> Today it is 84, because the suite was split into two packages and half went to the other repository.
+> **The number did not suddenly go wrong. It was never checked again.**
 
-## A dor
+## The pain
 
-Todo README afirma quantidade. Endpoints, testes, dependências, linguagens, contribuidores, tamanho.
-Nenhuma dessas frases tem prazo de validade, nenhuma reprova quando envelhece, e a que envelheceu
-continua com a mesma cara de certa — que é o que a torna pior que uma frase ausente.
+Every README claims a quantity. Endpoints, tests, dependencies, languages, contributors, size. None
+of those sentences has an expiry date, none fails when it ages, and the one that aged still has the
+same look of being right — which is what makes it worse than a missing sentence.
 
-## O que esta operação instala
+## What this operation installs
 
-Treze sondas genéricas. Elas funcionam em qualquer repositório, sem uma linha de configuração, e
-nenhuma delas lê `.md` nenhum — todas leem código, manifesto ou `git`.
+Thirteen generic probes. They work in any repository, with not one line of configuration, and none
+of them reads any `.md` — they all read code, a manifest or `git`.
 
-| Métrica | O que recomputa |
+| Metric | What it recomputes |
 |---|---|
-| `repo.arquivos` · `repo.fontes` · `repo.linhas` | tamanho real, fora de `node_modules`, `venv`, `dist`, `build`… |
-| `repo.linguagens` | extensões de linguagem distintas |
-| `repo.testes` · `repo.arquivos_de_teste` | funções de teste pela convenção de Python, Go, JS/TS, Rust, Java |
-| `repo.dependencias` · `repo.dependencias_dev` | de `pyproject.toml`, `package.json`, `requirements.txt`, `go.mod` |
-| `repo.workflows` | arquivos em `.github/workflows/` |
+| `repo.arquivos` · `repo.fontes` · `repo.linhas` | the real size, outside `node_modules`, `venv`, `dist`, `build`… |
+| `repo.linguagens` | distinct language extensions |
+| `repo.testes` · `repo.arquivos_de_teste` | test functions by the convention of Python, Go, JS/TS, Rust, Java |
+| `repo.dependencias` · `repo.dependencias_dev` | from `pyproject.toml`, `package.json`, `requirements.txt`, `go.mod` |
+| `repo.workflows` | files in `.github/workflows/` |
 | `repo.pendencias` | `TODO` / `FIXME` / `XXX` / `HACK` |
-| `repo.maior_arquivo` | linhas do maior arquivo — o número que ninguém quer ver |
-| `repo.contribuidores` · `repo.commits` | de `git`, não de arquivo |
+| `repo.maior_arquivo` | lines of the largest file — the number nobody wants to see |
+| `repo.contribuidores` · `repo.commits` | from `git`, not from a file |
 
 <!-- measured: operacao.readme.sondas=13 nature=count on=2026-08-21 expires=never source=operacoes/readme-que-nao-mente/sondas.py -->
 
-## O ajuste
+## The adjustment
 
-**Nenhum.** Se o seu projeto tem uma pasta de build com nome incomum, acrescente-a a `_REPO_IGNORAR`
-no topo do `sondas.py`. É a única linha que alguém precisa tocar, e só nesse caso.
+**None.** If your project has a build folder with an unusual name, add it to `_REPO_IGNORAR` at the
+top of `sondas.py`. It is the only line anyone needs to touch, and only in that case.
 
-## Como rodar — os 60 segundos
+## How to run — the 60 seconds
 
 ```console
-$ cp operacoes/readme-que-nao-mente/sondas.py  /caminho/do/seu/repo/sondas.py
-$ cd /caminho/do/seu/repo
+$ cp operacoes/readme-que-nao-mente/sondas.py  /path/to/your/repo/sondas.py
+$ cd /path/to/your/repo
 
-$ PYTHONPATH=/caminho/para/loadline python -m loadline .            # o que ninguém consegue conferir aqui
-$ PYTHONPATH=/caminho/para/loadline python -m loadline . --selar    # escreve o selo de cada um, para você colar
+$ PYTHONPATH=/path/to/loadline python -m loadline .            # what nobody can verify here
+$ PYTHONPATH=/path/to/loadline python -m loadline . --selar    # writes each one's seal, for you to paste
 ```
 
-O `--selar` escreve tudo como `arbitrated:` — *este número foi escolhido, não medido* — porque
-ninguém mediu nada ainda. **Onde houver sonda com o mesmo nome, troque `arbitrated:` por `measured:`.**
-Essa troca é a operação inteira: o número deixa de ser um palpite anotado e passa a ser recomputado
-a cada execução.
+`--selar` writes everything as `arbitrated:` — *this number was chosen, not measured* — because
+nobody has measured anything yet. **Where there is a probe with the same name, swap `arbitrated:`
+for `measured:`.** That swap is the whole operation: the number stops being a noted guess and
+becomes recomputed on every run.
 
-Não sabe quais têm sonda? A ferramenta diz:
+Do not know which have a probe? The tool says so:
 
 ```console
-$ PYTHONPATH=/caminho/para/loadline python -m loadline . --sondas
-sondas carregadas de: sondas.py
-  repo.arquivos                ← arquivos fora das pastas de dependência e de build
+$ PYTHONPATH=/path/to/loadline python -m loadline . --sondas
+probes loaded from: sondas.py
+  repo.arquivos                ← files outside the dependency and build folders
   repo.commits                 ← `git rev-list --count HEAD`
-  repo.contribuidores          ← autores distintos em `git shortlog -sne --all`
+  repo.contribuidores          ← distinct authors in `git shortlog -sne --all`
   ...
 ```
 
-## O que você vê
+## What you see
 
 ```console
-$ PYTHONPATH=/caminho/para/loadline python -m loadline .
-DRIFTED   README.md:8   repo.testes: escrito=200 medido=84   → resele: contagem anda quando alguém escreve
-EXPIRED   README.md:11  repo.dependencias: escrito=7 medido=7
-          → reconfira e resele — ninguém olha isto há 214 dias (prazo: 90d)
+$ PYTHONPATH=/path/to/loadline python -m loadline .
+DRIFTED   README.md:8   repo.testes: written=200 measured=84   → re-seal: a count moves when someone writes
+EXPIRED   README.md:11  repo.dependencias: written=7 measured=7
+          → re-check and re-seal — nobody has looked at this for 214 days (deadline: 90d)
 ```
 
-> *Exemplo escrito à mão para ilustrar os dois vereditos. Não é saída de um repositório real —
-> e a diferença entre ilustrar e medir é a razão de este aviso existir.*
+> *An example written by hand to illustrate the two verdicts. It is not the output of a real
+> repository — and the difference between illustrating and measuring is the reason this warning exists.*
 
-Repare no segundo: **o número está certo e mesmo assim reprova.** Um número que ninguém reconfere há
-sete meses é um número que ainda não errou — não um número verificado. É esse o ponto do projeto
-inteiro, e este é o exemplo mais barato dele.
+Look at the second one: **the number is right and it still fails.** A number nobody has re-checked
+in seven months is a number that has not been wrong yet — not a verified number. That is the point
+of the whole project, and this is its cheapest example.
 
-## O agente
+## The agent
 
-`agente.toml` compila o `auditor-de-afirmacao`, que responde a pergunta que vem depois da terceira
-lista: **para cada afirmação que ninguém confere, existe sonda pronta, ou ela precisa virar
-`arbitrated:`, ou o número deveria sair do texto?** São três destinos diferentes, e escolher errado é
-como um repositório acumula selo decorativo.
+`agente.toml` compiles the `auditor-de-afirmacao`, which answers the question that comes after the
+third list: **for each claim nobody verifies, is there a ready probe, or does it need to become
+`arbitrated:`, or should the number leave the text?** Those are three different destinations, and
+choosing wrong is how a repository accumulates a decorative seal.
 
 ```console
 $ python -m forja operacoes/readme-que-nao-mente/agente.toml
 ```
 
-## As três coisas que esta operação não faz
+## The three things this operation does not do
 
-1. **Contagem não é qualidade.** `repo.testes` conta o que *parece* teste pela convenção da
-   linguagem. Ela não sabe se o teste testa alguma coisa — e um repositório pode dobrar esse número
-   sem ficar mais seguro.
-2. **`0` em `repo.dependencias` diz "não declara dependência em manifesto que eu leia"**, não "não
-   tem dependência". Quatro ecossistemas são lidos; um quinto passaria como zero. Se o seu for o
-   quinto, escreva a sonda — são seis linhas, e o `sondas.py` mostra o formato.
-3. **Nenhuma sonda daqui alcança a verdade do mundo.** Elas provam coerência interna. *"Somos o
-   verificador mais rápido do mercado"* não é conferível por nada aqui, e a ferramenta diz que não
-   é, em vez de deixar passar.
+1. **A count is not quality.** `repo.testes` counts what *looks like* a test by the language's
+   convention. It does not know whether the test tests anything — and a repository can double that
+   number without getting safer.
+2. **`0` in `repo.dependencias` means "declares no dependency in a manifest I read"**, not "has no
+   dependency". Four ecosystems are read; a fifth would pass as zero. If yours is the fifth, write
+   the probe — it is six lines, and `sondas.py` shows the format.
+3. **No probe here reaches the truth of the world.** They prove internal coherence. *"We are the
+   fastest verifier on the market"* is verifiable by nothing here, and the tool says it is not,
+   instead of letting it through.

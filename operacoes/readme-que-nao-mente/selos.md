@@ -1,73 +1,73 @@
-# Os selos desta operação
+# The seals of this operation
 
-Não copie esta lista à mão. **Rode `python -m loadline . --selar`** — ele escreve o selo de cada
-afirmação do seu texto, no lugar certo, com o valor de hoje, e nunca sobrescreve selo existente.
+Do not copy this list by hand. **Run `python -m loadline . --selar`** — it writes the seal for each
+claim in your text, in the right place, with today's value, and never overwrites an existing seal.
 
-Este arquivo existe para a decisão que vem DEPOIS: qual marca cada selo deveria ter.
+This file exists for the decision that comes AFTER: which mark each seal should have.
 
-## O fluxo, em três passos
+## The flow, in three steps
 
 ```console
-$ python -m loadline .          # 1. o que ninguém confere aqui
-$ python -m loadline . --selar  # 2. escreve tudo como `arbitrated:`
-$ python -m loadline . --sondas # 3. quais métricas têm sonda pronta
+$ python -m loadline .          # 1. what nobody verifies here
+$ python -m loadline . --selar  # 2. writes everything as `arbitrated:`
+$ python -m loadline . --sondas # 3. which metrics have a ready probe
 ```
 
-Depois do passo 3, para cada selo cujo nome de métrica apareça na lista de sondas: troque
-`arbitrated:` por `measured:`, acrescente `natureza=` e `fonte=`, e apague o `por=`.
+After step 3, for each seal whose metric name appears in the probe list: swap `arbitrated:` for
+`measured:`, add `nature=` and `source=`, and delete the `by=`.
 
 ```diff
 - <!-- arbitrated: testes=84 by=? on=2026-08-21 expires=90d -->
-+ <!-- measured: repo.testes=84 nature=count on=2026-08-21 expires=90d source=codigo -->
++ <!-- measured: repo.testes=84 nature=count on=2026-08-21 expires=90d source=code -->
 ```
 
-⚠️ **O nome da métrica que o `--selar` escreve é um chute.** Ele sai da palavra logo depois do
-número na frase — *"84 testes"* vira `testes=84`. Renomeie para `repo.testes`, que é o nome que a
-sonda cobre. A ferramenta diz isso na saída de toda rodada que escreve; não é uma pegadinha, é uma
-sugestão declarada como sugestão.
+⚠️ **The metric name that `--selar` writes is a guess.** It comes from the word right after the
+number in the sentence — *"84 tests"* becomes `tests=84`. Rename it to `repo.testes`, which is the
+name the probe covers. The tool says so in the output of every run that writes; it is not a trick,
+it is a suggestion declared as a suggestion.
 
-## Os treze com sonda pronta
+## The thirteen with a ready probe
 
 ```markdown
-<!-- measured: repo.arquivos=N nature=count on=AAAA-MM-DD expires=90d source=disco -->
-<!-- measured: repo.fontes=N nature=count on=AAAA-MM-DD expires=90d source=disco -->
-<!-- measured: repo.linhas=N nature=count on=AAAA-MM-DD expires=90d source=codigo -->
-<!-- measured: repo.linguagens=N nature=count on=AAAA-MM-DD expires=90d source=extensoes -->
-<!-- measured: repo.testes=N nature=count on=AAAA-MM-DD expires=90d source=codigo -->
-<!-- measured: repo.arquivos_de_teste=N nature=count on=AAAA-MM-DD expires=90d source=disco -->
-<!-- measured: repo.dependencias=N nature=count on=AAAA-MM-DD expires=60d source=manifesto -->
-<!-- measured: repo.dependencias_dev=N nature=count on=AAAA-MM-DD expires=60d source=manifesto -->
-<!-- measured: repo.workflows=N nature=count on=AAAA-MM-DD expires=90d source=.github/workflows -->
-<!-- measured: repo.pendencias=N nature=count on=AAAA-MM-DD expires=90d source=codigo -->
-<!-- measured: repo.maior_arquivo=N nature=count on=AAAA-MM-DD expires=90d source=codigo -->
-<!-- measured: repo.contribuidores=N nature=count on=AAAA-MM-DD expires=90d source=git -->
-<!-- measured: repo.commits=N nature=count on=AAAA-MM-DD expires=90d source=git -->
+<!-- measured: repo.arquivos=N nature=count on=YYYY-MM-DD expires=90d source=disk -->
+<!-- measured: repo.fontes=N nature=count on=YYYY-MM-DD expires=90d source=disk -->
+<!-- measured: repo.linhas=N nature=count on=YYYY-MM-DD expires=90d source=code -->
+<!-- measured: repo.linguagens=N nature=count on=YYYY-MM-DD expires=90d source=extensions -->
+<!-- measured: repo.testes=N nature=count on=YYYY-MM-DD expires=90d source=code -->
+<!-- measured: repo.arquivos_de_teste=N nature=count on=YYYY-MM-DD expires=90d source=disk -->
+<!-- measured: repo.dependencias=N nature=count on=YYYY-MM-DD expires=60d source=manifest -->
+<!-- measured: repo.dependencias_dev=N nature=count on=YYYY-MM-DD expires=60d source=manifest -->
+<!-- measured: repo.workflows=N nature=count on=YYYY-MM-DD expires=90d source=.github/workflows -->
+<!-- measured: repo.pendencias=N nature=count on=YYYY-MM-DD expires=90d source=code -->
+<!-- measured: repo.maior_arquivo=N nature=count on=YYYY-MM-DD expires=90d source=code -->
+<!-- measured: repo.contribuidores=N nature=count on=YYYY-MM-DD expires=90d source=git -->
+<!-- measured: repo.commits=N nature=count on=YYYY-MM-DD expires=90d source=git -->
 ```
 
-Todas são de **contagem**: elas andam quando alguém escreve código. Divergiu, resele e siga — é o
-comportamento normal, não defeito. Se você quiser que uma delas *não* ande — um teto de
-`repo.maior_arquivo`, por exemplo —, isso não é uma medida, é uma **escolha**, e a marca é outra:
+All of them are `count`: they move when someone writes code. It diverged, re-seal and move on — it
+is normal behavior, not a defect. If you want one of them *not* to move — a ceiling on
+`repo.maior_arquivo`, for example — that is not a measurement, it is a **choice**, and the mark is
+another:
 
 ```markdown
-Nenhum arquivo deste repositório passa de 400 linhas.
-<!-- arbitrated: repo.teto_de_arquivo=400 by="time de plataforma" on=AAAA-MM-DD expires=180d
-     breaks="o primeiro arquivo que só fique legível acima disso" -->
+No file in this repository is over 400 lines.
+<!-- arbitrated: repo.teto_de_arquivo=400 by="platform team" on=YYYY-MM-DD expires=180d
+     breaks="the first file that is only readable above that" -->
 ```
 
-## O que NÃO selar
+## What NOT to seal
 
-**Nada gerado.** Se o número está num arquivo produzido por um script a partir de outra fonte, selar
-o valor é check espelho: os dois lados saem do mesmo lugar e o par passa verde **travando** o
-defeito. Para artefato derivado, use **um** selo de `natureza=relacao` que responda *"isto ainda
-corresponde à fonte?"* — ele não anda quando alguém acrescenta um item, só anda se alguém editou o
-publicado à mão ou mexeu na fonte sem regerar.
+**Nothing generated.** If the number is in a file produced by a script from another source, sealing
+the value is a mirror check: both sides come from the same place and the pair passes green
+**locking** the defect in. For a derived artifact, use **one** `nature=relation` seal that answers
+*"does this still match the source?"* — it does not move when someone adds an item, it only moves if
+someone edited the published one by hand or touched the source without regenerating.
 
-**Nada sobre o mundo lá fora.** *"O mais rápido do mercado"*, *"usado por 200 empresas"*, *"o padrão
-da indústria"*. Nenhuma sonda offline alcança isso. Ou a frase ganha denominador e data e vira um
-`frozen:` honesto, ou ela sai.
+**Nothing about the world out there.** *"The fastest on the market"*, *"used by 200 companies"*,
+*"the industry standard"*. No offline probe reaches that. Either the sentence gets a denominator and
+a date and becomes an honest `frozen:`, or it goes.
 
 ```markdown
-Em 2026-08-20, entre os três vizinhos que encontramos, era o único com prazo na asserção.
-<!-- frozen: comparação feita em 2026-08-20 lendo página pública dos três; alegação daquela
-     data, não asserção viva sobre a de hoje -->
+On 2026-08-20, among the three neighbors we found, it was the only one with a deadline in the claim.
+<!-- frozen: neighbors.with_deadline=1 reason="comparison made on 2026-08-20 reading the three public pages; a claim about that date, not a live assertion about today's" -->
 ```

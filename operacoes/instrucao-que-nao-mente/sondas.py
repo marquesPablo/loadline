@@ -1,23 +1,24 @@
-"""Sondas da operação `instrucao-que-nao-mente`.
+"""Probes for the `instrucao-que-nao-mente` operation.
 
-nature: fix — sonda que estoura vira `UNPROVEN` no relatório, com o erro
-por extenso. Ela nunca devolve um palpite.
+nature: fix — a probe that blows up becomes `UNPROVEN` in the report, with
+the error written out. It never returns a guess.
 
-COPIE ESTE ARQUIVO para a raiz do seu repositório, como `sondas.py`.
-Para combinar com outra operação, concatene os arquivos — nenhum nome auxiliar
-daqui colide com o das outras (todos começam com `_instr_`).
+COPY THIS FILE to the root of your repository, as `sondas.py`.
+To combine with another operation, concatenate the files — no helper name here
+collides with the others' (they all start with `_instr_`).
 
-⚠️ **A regra anti-espelho, e como ela é respeitada aqui.** O número escrito mora
-no arquivo de instrução (`AGENTS.md`, `CLAUDE.md`, …). Estas sondas LEEM esse
-mesmo arquivo — mas nenhuma tira o VALOR dele. Elas extraem de lá as *promessas*
-(o comando que ele manda rodar, o caminho que ele manda editar) e vão conferir
-cada uma numa segunda fonte independente: `package.json`, o `Makefile`, o sistema
-de arquivos. O par continua tendo dois lados; o que o arquivo de instrução
-fornece é a pergunta, nunca a resposta.
+⚠️ **The anti-mirror rule, and how it is respected here.** The written number
+lives in the instruction file (`AGENTS.md`, `CLAUDE.md`, …). These probes READ
+that same file — but none of them takes the VALUE from it. They extract the
+*promises* from there (the command it tells you to run, the path it tells you
+to edit) and go check each one against a second independent source:
+`package.json`, the `Makefile`, the file system. The pair still has two sides;
+what the instruction file provides is the question, never the answer.
 
-O limite honesto disso está escrito no `LACUNAS.md` que a forja emite ao compilar
-o agente desta operação, e vale a pena repetir: se ninguém CITA um comando no
-arquivo de instrução, nada aqui descobre que ele existia e sumiu.
+The honest limit of this is written in the `LACUNAS.md` the forge emits when it
+compiles this operation's agent, and it is worth repeating: if nobody CITES a
+command in the instruction file, nothing here finds that it existed and
+disappeared.
 """
 
 from __future__ import annotations
@@ -30,9 +31,9 @@ from loadline import sonda
 
 RAIZ = Path(__file__).resolve().parent
 
-#: Os arquivos que os harnesses de hoje leem como instrução. A lista é fechada e
-#: cresce quando um harness novo aparece — nome desconhecido não é tratado como
-#: inofensivo, ele simplesmente não é lido, e o denominador diz quantos foram.
+#: The files today's harnesses read as an instruction. The list is closed and
+#: grows when a new harness appears — an unknown name is not treated as
+#: harmless, it simply is not read, and the denominator says how many were.
 NOMES_DE_INSTRUCAO = (
     "AGENTS.md",
     "AGENT.md",
@@ -65,10 +66,11 @@ def _instr_texto() -> str:
 
 
 def _instr_comandos() -> list[str]:
-    """Linhas de comando citadas dentro de cerca de código, e só elas.
+    """Command lines cited inside a code fence, and only those.
 
-    Comando citado em prosa não conta: `npm test` no meio de uma frase pode ser
-    exemplo, contraexemplo ou o que NÃO fazer. Dentro da cerca é instrução.
+    A command cited in prose does not count: `npm test` in the middle of a
+    sentence can be an example, a counter-example or what NOT to do. Inside the
+    fence it is an instruction.
     """
     linhas: list[str] = []
     for bloco in _CERCA.findall(_instr_texto()):
@@ -104,10 +106,10 @@ def _instr_alvos_de_make() -> set[str]:
 
 
 def _instr_quebrado(comando: str) -> bool:
-    """`True` só quando dá para PROVAR que o alvo do comando não existe.
+    """`True` only when it can PROVE the command's target does not exist.
 
-    Conservadora de propósito: o que ela não consegue decidir, ela deixa passar.
-    Uma sonda que grita lobo é uma sonda que alguém apaga na segunda semana.
+    Conservative on purpose: what it cannot decide, it lets through. A probe
+    that cries wolf is a probe someone deletes in the second week.
     """
     palavras = comando.split()
     if len(palavras) < 2:
@@ -117,7 +119,7 @@ def _instr_quebrado(comando: str) -> bool:
 
     if gerenciador in {"npm", "pnpm", "yarn", "bun"}:
         scripts = _instr_scripts_do_pacote()
-        if not scripts:  # sem package.json não há como decidir
+        if not scripts:  # no package.json, no way to decide
             return False
         if resto[0] in {"run", "run-script"} and len(resto) > 1:
             return resto[1] not in scripts
@@ -148,7 +150,7 @@ def _instr_quebrado(comando: str) -> bool:
 
 
 def _instr_caminhos() -> list[str]:
-    """Caminhos relativos citados entre crases. Só o que é inequivocamente caminho."""
+    """Relative paths cited between backticks. Only what is unambiguously a path."""
     vistos: list[str] = []
     for bruto in _CRASE.findall(_instr_texto()):
         alvo = bruto.strip().rstrip(",.;:)")
@@ -156,7 +158,7 @@ def _instr_caminhos() -> list[str]:
             continue
         if any(c in alvo for c in " <>*?{}|$\\\"'!"):
             continue
-        if ":" in alvo:  # `arquivo.py:42` é endereço de linha, não caminho
+        if ":" in alvo:  # `arquivo.py:42` is a line address, not a path
             continue
         tem_pasta = "/" in alvo
         tem_extensao = re.search(r"\.[a-z0-9]{1,5}$", alvo) is not None
@@ -176,16 +178,16 @@ def _instr_titulos(arquivo: Path) -> set[str]:
 
 
 # ---------------------------------------------------------------------------
-# As sondas
+# The probes
 # ---------------------------------------------------------------------------
 
 
-@sonda("instrucao.arquivos", origem="arquivos de instrução presentes na raiz, pela lista fechada")
+@sonda("instrucao.arquivos", origem="instruction files present at the root, from the closed list")
 def arquivos_de_instrucao() -> int:
     return len(_instr_arquivos())
 
 
-@sonda("instrucao.linhas", origem="soma das linhas dos arquivos de instrução")
+@sonda("instrucao.linhas", origem="the sum of the instruction files' lines")
 def linhas_de_instrucao() -> int:
     return sum(
         len(p.read_text(encoding="utf-8", errors="replace").splitlines())
@@ -193,27 +195,27 @@ def linhas_de_instrucao() -> int:
     )
 
 
-@sonda("instrucao.comandos", origem="linhas de comando dentro de cerca de código, distintas")
+@sonda("instrucao.comandos", origem="distinct command lines inside a code fence")
 def comandos_citados() -> int:
     return len(set(_instr_comandos()))
 
 
 @sonda(
     "instrucao.comandos_quebrados",
-    origem="comandos citados cujo script/alvo NÃO existe em package.json, Makefile ou no disco",
+    origem="cited commands whose script/target does NOT exist in package.json, Makefile or on disk",
 )
 def comandos_quebrados() -> int:
     return sum(1 for c in set(_instr_comandos()) if _instr_quebrado(c))
 
 
-@sonda("instrucao.caminhos", origem="caminhos relativos citados entre crases, distintos")
+@sonda("instrucao.caminhos", origem="distinct relative paths cited between backticks")
 def caminhos_citados() -> int:
     return len(_instr_caminhos())
 
 
 @sonda(
     "instrucao.caminhos_quebrados",
-    origem="caminhos citados que NÃO existem no sistema de arquivos",
+    origem="cited paths that do NOT exist on the file system",
 )
 def caminhos_quebrados() -> int:
     return sum(1 for alvo in _instr_caminhos() if not (RAIZ / alvo).exists())
@@ -221,7 +223,7 @@ def caminhos_quebrados() -> int:
 
 @sonda(
     "instrucao.divergencia",
-    origem="títulos presentes em um arquivo de instrução e ausentes em outro",
+    origem="headings present in one instruction file and absent from another",
 )
 def divergencia_entre_arquivos() -> int:
     arquivos = [p for p in _instr_arquivos() if p.suffix == ".md"]

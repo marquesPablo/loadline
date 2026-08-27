@@ -1,137 +1,138 @@
-# Operação 6 · `cerebro-local`
+# Operation 6 · `cerebro-local`
 
-> As suas notas estão no disco. O seu assistente não as alcança.
-> Hoje você faz uma de duas coisas: **cola pedaço no chat** — e ele responde sobre o pedaço, sem
-> saber o que havia em volta — ou **manda tudo para um serviço**, e o seu material passa a morar
-> na infraestrutura de outra pessoa.
-> Existe uma terceira: um processo local, somente-leitura, que serve as suas notas como ferramentas.
-> **Sem chave de API, sem nuvem, sem embedding, sem banco vetorial.**
+> Your notes are on the disk. Your assistant does not reach them.
+> Today you do one of two things: **paste a fragment into the chat** — and it answers about the
+> fragment, without knowing what was around it — or **send everything to a service**, and your
+> material starts living on someone else's infrastructure.
+> There is a third: a local, read-only process that serves your notes as tools.
+> **No API key, no cloud, no embedding, no vector store.**
 
-## A dor
+## The pain
 
-Um assistente sem acesso ao seu material é um estranho muito articulado. Ele nunca vai dizer *"você
-já decidiu isso em março, e escreveu o motivo"* — ele vai dizer o que costuma ser verdade, com uma
-confiança que o seu material não sustenta.
+An assistant with no access to your material is a very articulate stranger. It will never say *"you
+already decided this in March, and wrote the reason"* — it will say what is usually true, with a
+confidence your material does not support.
 
-E as duas saídas usuais custam caro:
+And the two usual ways out cost dearly:
 
-- **Colar no chat** é reintroduzir o contexto a cada sessão, escolhendo à mão o que é relevante
-  antes de saber o que a pergunta vai exigir. Você acaba sendo o índice.
-- **Subir tudo** resolve o acesso e cria três problemas: o material sai da sua máquina, o índice
-  defasa em silêncio, e você passa a pagar por token para reler o que já é seu.
+- **Pasting into the chat** is reintroducing the context every session, choosing by hand what is
+  relevant before knowing what the question will need. You end up being the index.
+- **Uploading everything** solves access and creates three problems: the material leaves your
+  machine, the index falls behind silently, and you start paying per token to re-read what is
+  already yours.
 
-O que falta é pequeno: **um processo que fale o protocolo que o seu cliente já fala, e leia o disco.**
+What is missing is small: **a process that speaks the protocol your client already speaks, and
+reads the disk.**
 
-## O que esta operação instala
+## What this operation installs
 
-Um servidor MCP em **um arquivo**, `servidor.py`, com quatro ferramentas e **zero dependências** —
-só a stdlib do Python.
+An MCP server in **one file**, `servidor.py`, with four tools and **zero dependencies** — just the
+Python stdlib.
 
-| Ferramenta | Responde |
+| Tool | Answers |
 |---|---|
-| `mapa` | a raiz, quantas notas são servidas, e como elas se distribuem — **chame primeiro** |
-| `listar_notas` | o que existe numa pasta, com tamanho |
-| `ler_nota` | o texto integral de uma nota |
-| `buscar` | `caminho:linha` de um termo literal, **atravessando junction e symlink** |
+| `map` | the root, how many notes are served, and how they are spread — **call first** |
+| `list_notes` | what exists in a folder, with size |
+| `read_note` | the full text of a note |
+| `search` | `path:line` of a literal term, **crossing a junction and a symlink** |
 
 ```console
-$ cp -r operacoes/cerebro-local  /caminho/do/seu/repo/cerebro
-$ cd /caminho/do/seu/repo
-$ python cerebro/servidor.py --raiz ~/notas --teste
+$ cp -r operacoes/cerebro-local  /path/to/your/repo/cerebro
+$ cd /path/to/your/repo
+$ python cerebro/servidor.py --root ~/notes --test
 ```
 
-`--teste` não fala MCP: ele chama as quatro ferramentas e imprime, para você ver que funciona antes
-de registrar em cliente nenhum. **Inclusive a recusa:**
+`--test` does not speak MCP: it calls the four tools and prints, so you can see it works before
+registering it in any client. **Including the refusal:**
 
 ```console
-=== a recusa, provada ===
-RECUSADO, como tem de ser: `../../../etc/passwd` resolve para fora da raiz declarada.
-Este servidor lê debaixo de `/home/voce/notas` e nada mais.
+=== the refusal, proven ===
+REFUSED, as it must: `../../../etc/passwd` resolves outside the declared root.
+This server reads under `/home/you/notes` and nothing else.
 ```
 
-Para usar de verdade, registre no seu cliente (o exemplo é o formato do Claude Code, em `.mcp.json`;
-outros clientes usam o mesmo trio comando/argumentos/ambiente):
+To use it for real, register it in your client (the example is the Claude Code format, in
+`.mcp.json`; other clients use the same command/args/env trio):
 
 ```json
 {
   "mcpServers": {
-    "notas": {
+    "notes": {
       "command": "python",
-      "args": ["cerebro/servidor.py", "--raiz", "/caminho/das/suas/notas"]
+      "args": ["cerebro/servidor.py", "--root", "/path/to/your/notes"]
     }
   }
 }
 ```
 
-Não há segundo passo. Não há conta para criar.
+There is no second step. There is no account to create.
 
-## A armadilha que custa caro, e ela não dá erro
+## The trap that costs dearly, and it gives no error
 
-**`rg`, `grep -r` e `find` não atravessam junction do Windows nem symlink de diretório.** Não
-avisam, não erram, não retornam código diferente de zero: **devolvem menos arquivos, com a mesma
-cara de resposta completa.**
+**`rg`, `grep -r` and `find` do not cross a Windows junction or a directory symlink.** They do not
+warn, do not error, do not return a non-zero code: **they return fewer files, with the same look of
+a complete answer.**
 
-Num vault de conhecimento isso é a regra, não a exceção — pastas ligadas são como a maioria das
-pessoas junta material de vários lugares num lugar só. A busca responde sobre metade do corpus e
-ninguém tem como saber.
+In a knowledge vault that is the rule, not the exception — linked folders are how most people gather
+material from several places into one. The search answers about half the corpus and nobody can tell.
 
-`os.walk(followlinks=True)` atravessa. É por isso que a `buscar` deste servidor é `os.walk` e não um
-`subprocess` chamando `grep` — e é por isso que a anti-descrição do agente proíbe, por escrito, usar
-busca de linha de comando sobre um vault ligado.
+`os.walk(followlinks=True)` crosses. That is why this server's `search` is `os.walk` and not a
+`subprocess` calling `grep` — and it is why the agent's anti-description forbids, in writing, using
+a command-line search over a linked vault.
 
-**Se você reescrever a busca chamando `grep`, o número cai e nada acusa.** É a família de defeito
-mais cara que existe: a que devolve uma resposta plausível.
+**If you rewrite the search calling `grep`, the number drops and nothing accuses.** It is the most
+expensive family of defect there is: the one that returns a plausible answer.
 
-## As oito sondas
+## The eight probes
 
 <!-- measured: operacao.cerebro.sondas=8 nature=count on=2026-08-21 expires=never source=operacoes/cerebro-local/sondas.py -->
 
-| Métrica | O que recomputa | Natureza |
+| Metric | What it recomputes | Nature |
 |---|---|---|
-| `cerebro.notas` · `cerebro.pastas` | o tamanho real do corpus servido | contagem |
-| **`cerebro.ferramentas`** | **entradas de `FERRAMENTAS` no código — não o que o README promete** | **relação** |
-| **`cerebro.dependencias`** | **imports de terceiros no servidor: tem de ser zero, e a sonda prova** | **relação** |
-| **`cerebro.orfas`** | **notas que nenhuma outra cita — só o autor as alcança** | **relação** |
-| **`cerebro.links_quebrados`** | **alvos distintos de `[[link]]` que não existem** | **relação** |
-| `cerebro.sem_titulo` | notas sem título markdown na primeira linha | contagem |
-| `cerebro.maior_nota` | bytes do maior arquivo | contagem |
+| `cerebro.notas` · `cerebro.pastas` | the real size of the served corpus | count |
+| **`cerebro.ferramentas`** | **entries in `FERRAMENTAS` in the code — not what the README promises** | **relation** |
+| **`cerebro.dependencias`** | **third-party imports in the server: it must be zero, and the probe proves it** | **relation** |
+| **`cerebro.orfas`** | **notes that no other note cites — only the author reaches them** | **relation** |
+| **`cerebro.links_quebrados`** | **distinct `[[link]]` targets that do not exist** | **relation** |
+| `cerebro.sem_titulo` | notes with no markdown title on the first line | count |
+| `cerebro.maior_nota` | bytes of the largest file | count |
 
-**`cerebro.dependencias` é a mais importante das oito, e a menos óbvia.** *"Zero dependências"* é a
-frase que faz alguém rodar isto numa máquina que não administra. Ela morre no dia em que alguém
-acrescenta um `import` por conveniência — e nenhuma revisão de código repara, porque o diff mostra
-uma linha. A sonda lê o `servidor.py` e conta.
+**`cerebro.dependencias` is the most important of the eight, and the least obvious.** *"Zero
+dependencies"* is the sentence that makes someone run this on a machine they do not administer. It
+dies the day someone adds an `import` for convenience — and no code review catches it, because the
+diff shows one line. The probe reads `servidor.py` and counts.
 
-## O ajuste
+## The adjustment
 
-**Um campo**, no topo do `sondas.py`:
+**One field**, at the top of `sondas.py`:
 
 ```python
-PASTA_DE_NOTAS = "."   # "." = o repositório inteiro
+PASTA_DE_NOTAS = "."   # "." = the whole repository
 ```
 
-E, se as suas notas usam outra extensão, `_CER_EXTENSOES` — que precisa bater com `EXTENSOES` do
-`servidor.py`. Se divergirem, a sonda conta um corpus e o servidor serve outro, e o selo verde
-estaria medindo a coisa errada.
+And, if your notes use another extension, `_CER_EXTENSOES` — which has to match `EXTENSOES` in
+`servidor.py`. If they diverge, the probe counts one corpus and the server serves another, and the
+green seal would be measuring the wrong thing.
 
-## O que esta operação NÃO faz
+## What this operation does NOT do
 
-1. **Não escreve, e isso é estrutural.** Não há ferramenta de escrita no servidor. Não é uma
-   promessa no prompt — é a ausência do código. Um agente não pode usar mal uma ferramenta que não
-   existe.
+1. **It does not write, and that is structural.** There is no write tool in the server. It is not a
+   promise in the prompt — it is the absence of the code. An agent cannot misuse a tool that does
+   not exist.
 
-2. **Não resolve contradição entre as suas notas.** O agente exibe as duas citações e para.
-   Escolher exigiria saber qual é mais recente, qual foi mais pensada, ou qual você ainda sustenta —
-   e nenhuma das três está no texto. Um agente que escolhe apaga o achado: que existe uma decisão
-   pendente.
+2. **It does not resolve a contradiction between your notes.** The agent shows the two citations and
+   stops. Choosing would need knowing which is more recent, which was more thought through, or which
+   you still hold — and none of the three is in the text. An agent that chooses erases the finding:
+   that there is a pending decision.
 
-3. **Não sabe se o que você anotou é verdade.** Ele lê. Uma nota errada é citada com a mesma
-   confiança de uma certa, e nenhuma sonda offline alcança o mundo lá fora. É para isso que serve o
-   `vence=` dos selos.
+3. **It does not know whether what you wrote is true.** It reads. A wrong note is cited with the
+   same confidence as a right one, and no offline probe reaches the world out there. That is what
+   the seals' `expires=` is for.
 
-4. **Não indexa, de propósito.** Sem banco vetorial, sem BM25, sem embedding. Um índice defasa, e a
-   defasagem é silenciosa: ele responde com o corpus de ontem e com a confiança de hoje. A alguns
-   megabytes, `os.walk` + busca literal é instantâneo — e sempre certo sobre o disco de agora.
+4. **It does not index, on purpose.** No vector store, no BM25, no embedding. An index falls behind,
+   and the lag is silent: it answers with yesterday's corpus and today's confidence. At a few
+   megabytes, `os.walk` + literal search is instant — and always right about the disk of now.
 
-5. **Não protege contra o que está DENTRO das suas notas.** Se uma nota sua contém uma ordem
-   dirigida a um agente — porque você colou material de fora —, este servidor a entrega como
-   entrega qualquer outro texto. A cerca dele é de **caminho**, não de conteúdo.
+5. **It does not protect against what is INSIDE your notes.** If a note of yours contains an order
+   aimed at an agent — because you pasted external material — this server delivers it like it
+   delivers any other text. Its fence is a **path** fence, not a content one.

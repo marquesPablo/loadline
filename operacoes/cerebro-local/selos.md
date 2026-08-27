@@ -1,72 +1,72 @@
-# Os selos desta operação
+# The seals of this operation
 
-## Os quatro que mandam parar
+## The four that tell you to stop
 
-Cole **no README do seu vault** — o arquivo que descreve o que o corpus é e o que o servidor serve.
-
-```markdown
-Este servidor expõe quatro ferramentas somente-leitura sobre as minhas notas, sem nenhuma
-dependência de terceiros, e o grafo não tem aresta para o vazio.
-<!-- measured: cerebro.ferramentas=4 nature=relation on=AAAA-MM-DD expires=never source=servidor.py -->
-<!-- measured: cerebro.dependencias=0 nature=relation on=AAAA-MM-DD expires=never source=servidor.py -->
-<!-- measured: cerebro.links_quebrados=0 nature=relation on=AAAA-MM-DD expires=30d source=corpus -->
-<!-- measured: cerebro.orfas=0 nature=relation on=AAAA-MM-DD expires=90d source=corpus -->
-```
-
-**`cerebro.dependencias=0` é o selo mais valioso desta operação**, e o menos óbvio. *"Zero
-dependências"* é a frase que faz alguém rodar isto numa máquina que não administra — e ela morre no
-dia em que alguém acrescenta um `import` por conveniência. O diff mostra uma linha; nenhuma revisão
-de código repara. A sonda lê o código e conta.
-
-**`cerebro.ferramentas` com `vence=nunca`, de propósito.** Ela não envelhece com o tempo: ela anda
-quando alguém mexe no servidor, e é exatamente aí que ela tem de reprovar. Pôr prazo nela faria a
-mesma métrica reprovar por duas razões diferentes, e o vermelho deixaria de dizer qual.
-
-## As duas contagens do corpus
+Paste **into your vault's README** — the file that describes what the corpus is and what the server
+serves.
 
 ```markdown
-<!-- measured: cerebro.notas=N nature=count on=AAAA-MM-DD expires=90d source=corpus -->
-<!-- measured: cerebro.pastas=N nature=count on=AAAA-MM-DD expires=90d source=corpus -->
+This server exposes four read-only tools over my notes, with no third-party dependency at all,
+and the graph has no edge to the void.
+<!-- measured: cerebro.ferramentas=4 nature=relation on=YYYY-MM-DD expires=never source=servidor.py -->
+<!-- measured: cerebro.dependencias=0 nature=relation on=YYYY-MM-DD expires=never source=servidor.py -->
+<!-- measured: cerebro.links_quebrados=0 nature=relation on=YYYY-MM-DD expires=30d source=corpus -->
+<!-- measured: cerebro.orfas=0 nature=relation on=YYYY-MM-DD expires=90d source=corpus -->
 ```
 
-Estas andam toda vez que você escreve. Divergiram, resele e siga — é o caso em que o vermelho
-significa *"você trabalhou"*.
+**`cerebro.dependencias=0` is the most valuable seal of this operation**, and the least obvious.
+*"Zero dependencies"* is the sentence that makes someone run this on a machine they do not
+administer — and it dies the day someone adds an `import` for convenience. The diff shows one line;
+no code review catches it. The probe reads the code and counts.
 
-## ⚠️ O erro que esta operação convida você a cometer
+**`cerebro.ferramentas` with `expires=never`, on purpose.** It does not age with time: it moves when
+someone touches the server, and that is exactly where it has to fail. Putting a deadline on it would
+make the same metric fail for two different reasons, and the red would stop saying which.
 
-**Nunca escreva `[[wiki-link]]` dentro do comentário de um selo, nem numa nota que exista para
-MEDIR o grafo.**
-
-Nomear uma nota órfã lhe dá uma aresta de entrada. Se o arquivo onde você registra as órfãs as cita
-por wiki-link, ele **fecha o buraco que está medindo** — e `cerebro.orfas` cai para zero por causa
-do próprio registro. O número fica verde e a medição morreu.
-
-Vale para o selo também: o parser de link não distingue o comentário HTML do texto. Se precisar
-nomear uma nota dentro de um selo ou de um registro de órfãs, escreva o nome **por extenso, sem os
-colchetes duplos**.
-
-## O prazo é escolha, e ela tem dono
+## The two corpus counts
 
 ```markdown
-O grafo de notas é reconferido a cada 30 dias.
-<!-- arbitrated: cerebro.prazo=30 by="quem adotou a operação" on=AAAA-MM-DD expires=180d
-     breaks="um vault que só recebe notas novas, ou um em que várias pessoas renomeiam arquivo" -->
+<!-- measured: cerebro.notas=N nature=count on=YYYY-MM-DD expires=90d source=corpus -->
+<!-- measured: cerebro.pastas=N nature=count on=YYYY-MM-DD expires=90d source=corpus -->
 ```
 
-Trinta dias para link quebrado e noventa para órfã não é simetria esquecida: **link quebrado nasce
-de um rename e conserta-se em segundos**; **órfã é julgamento** — muitas notas legitimamente não
-são citadas por ninguém ainda, e cobrar isso a cada mês treina você a criar link de fachada.
+These move every time you write. They diverged, re-seal and move on — it is the case where the red
+means *"you worked"*.
 
-## O que NÃO selar aqui
+## ⚠️ The mistake this operation invites you to make
 
-**Nada sobre o CONTEÚDO estar certo.** As sondas contam arquivo, link e import. Uma nota inteira
-errada passa por todas elas. Um selo verde aqui diz que o corpus está bem ligado, jamais que ele
-está correto.
+**Never write a `[[wiki-link]]` inside a seal's comment, nor in a note that exists to MEASURE the
+graph.**
 
-**Nada sobre desempenho ou tamanho de contexto.** *"O servidor responde em 40 ms"* depende da
-máquina de quem rodou, e um número desses selado no seu README vira uma promessa que você faz com o
-computador de outra pessoa.
+Naming an orphan note gives it an incoming edge. If the file where you record the orphans cites them
+by wiki-link, it **closes the hole it is measuring** — and `cerebro.orfas` drops to zero because of
+the record itself. The number goes green and the measurement died.
 
-**Nada sobre segurança do conteúdo.** A cerca do servidor é de **caminho**: ele recusa ler fora da
-raiz. Ele não julga o que está escrito dentro das notas que serve, e um selo verde não é atestado
-de que o seu corpus não contém ordem dirigida a agente.
+It holds for the seal too: the link parser does not tell an HTML comment from text. If you need to
+name a note inside a seal or an orphan record, write the name **out in full, without the double
+brackets**.
+
+## The deadline is a choice, and it has an owner
+
+```markdown
+The notes graph is re-checked every 30 days.
+<!-- arbitrated: cerebro.prazo=30 by="whoever adopted the operation" on=YYYY-MM-DD expires=180d
+     breaks="a vault that only receives new notes, or one where several people rename files" -->
+```
+
+Thirty days for a broken link and ninety for an orphan is not forgotten symmetry: **a broken link
+comes from a rename and is fixed in seconds**; **an orphan is a judgment** — many notes legitimately
+are not cited by anyone yet, and charging that every month trains you to create a fake link.
+
+## What NOT to seal here
+
+**Nothing about the CONTENT being right.** The probes count files, links and imports. A whole wrong
+note passes all of them. A green seal here says the corpus is well linked, never that it is correct.
+
+**Nothing about performance or context size.** *"The server answers in 40 ms"* depends on the
+machine of whoever ran it, and a number like that sealed in your README becomes a promise you make
+with someone else's computer.
+
+**Nothing about content security.** The server's fence is a **path** fence: it refuses to read
+outside the root. It does not judge what is written inside the notes it serves, and a green seal is
+not proof that your corpus contains no order aimed at an agent.

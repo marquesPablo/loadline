@@ -1,32 +1,36 @@
-# Operação 1 — o agente que abre a quebra que a sonda só contou.
+# Operation 1 — the agent that opens the break the probe only counted.
 #
-# A sonda devolve `instrucao.comandos_quebrados=2`. Este agente devolve QUAIS,
-# e o conserto de cada um. São trabalhos diferentes: a sonda é o gate, o agente
-# é o diagnóstico. Um número sem o diagnóstico vira alarme que alguém desliga.
+# The probe returns `instrucao.comandos_quebrados=2`. This agent returns WHICH,
+# and the fix for each. They are different jobs: the probe is the gate, the
+# agent is the diagnosis. A number with no diagnosis becomes an alarm someone
+# switches off.
 #
-# Compile com:  python -m forja operacoes/instrucao-que-nao-mente/agente.toml
+# (The TOML keys below are still Portuguese — translating the spec schema is its
+#  own step.)
+#
+# Compile with:  python -m forja operacoes/instrucao-que-nao-mente/agente.toml
 
 [agente]
 slug = "guardiao-de-instrucao"
-nome = "Guardião de instrução"
+nome = "Instruction guardian"
 uma_frase = """
-Lê os arquivos de instrução de agente do repositório — `AGENTS.md`, `CLAUDE.md`, `.cursorrules` e \
-os irmãos — e devolve, com arquivo e linha, todo comando que ele manda rodar e não existe mais, \
-todo caminho que ele manda editar e foi deletado, e todo trecho que existe num dos arquivos e \
-não no outro.\
+Reads the repository's agent instruction files — `AGENTS.md`, `CLAUDE.md`, `.cursorrules` and their \
+siblings — and returns, with file and line, every command it tells you to run and that no longer \
+exists, every path it tells you to edit and that was deleted, and every passage that exists in one \
+file and not the other.\
 """
 usar_quando = [
-  "o repositório tem AGENTS.md e CLAUDE.md e você não sabe se os dois ainda dizem a mesma coisa",
-  "um agente falhou seguindo a instrução e você quer saber se a instrução é que está velha",
-  "antes de aceitar um PR que muda script de build, para ver o que a instrução prometia sobre ele",
-  "a sonda `instrucao.comandos_quebrados` saiu de zero e você precisa saber quais",
+  "the repository has AGENTS.md and CLAUDE.md and you do not know whether the two still say the same thing",
+  "an agent failed following the instruction and you want to know whether the instruction is the stale one",
+  "before accepting a PR that changes a build script, to see what the instruction promised about it",
+  "the `instrucao.comandos_quebrados` probe left zero and you need to know which ones",
 ]
 nunca_usar = [
-  "reescrever o arquivo de instrução — ele acusa e nunca conserta; o conserto é decisão de quem é dono do repositório",
-  "julgar se a instrução é BOA; ele responde se ela ainda é verdadeira, que é outra pergunta",
-  "revisar código em busca de bug ou de vulnerabilidade — nada aqui olha para a lógica do programa",
-  "auditar a fronteira dos subagentes (quem escreve onde, quem fala com quem) — isso é a vistoria de roster da `forja` (`python -m forja`)",
-  "decidir qual harness o time deve usar — ele lê os arquivos que existem, não recomenda ferramenta",
+  "rewriting the instruction file — it accuses and never fixes; the fix is a decision for whoever owns the repository",
+  "judging whether the instruction is GOOD; it answers whether it is still true, which is another question",
+  "reviewing code for a bug or a vulnerability — nothing here looks at the program's logic",
+  "auditing the subagents' boundary (who writes where, who talks to whom) — that is the `forja` roster survey (`python -m forja`)",
+  "deciding which harness the team should use — it reads the files that exist, it does not recommend a tool",
 ]
 
 [fronteira]
@@ -35,48 +39,51 @@ toca_alvo = false
 
 [prova]
 lacunas = [
-  "só enxerga o que está ESCRITO: se ninguém cita um comando no arquivo de instrução, ele não descobre que o comando existia e sumiu",
-  "só lê comando dentro de cerca de código; comando citado em prosa pode ser exemplo ou contraexemplo, e ele não distingue os dois",
-  "não resolve alias de shell, variável de ambiente nem script que chama script — `npm run ci` existindo não prova que o que ele chama existe",
-  "não sabe se o caminho citado foi RENOMEADO ou DELETADO; ele sabe que não está lá, e as duas exigem consertos diferentes",
-  "não lê monorepo por workspace: um `package.json` de pacote interno não é consultado se o comando não disser em qual pasta rodar",
-  "não julga divergência SEMÂNTICA entre dois arquivos de instrução — dois títulos iguais com regras contrárias passam sem acusação",
+  "it only sees what is WRITTEN: if nobody cites a command in the instruction file, it does not find that the command existed and disappeared",
+  "it only reads a command inside a code fence; a command cited in prose can be an example or a counter-example, and it does not tell the two apart",
+  "it does not resolve a shell alias, an environment variable or a script that calls a script — `npm run ci` existing does not prove that what it calls exists",
+  "it does not know whether the cited path was RENAMED or DELETED; it knows it is not there, and the two need different fixes",
+  "it does not read a monorepo by workspace: an internal package's `package.json` is not consulted if the command does not say which folder to run in",
+  "it does not judge a SEMANTIC divergence between two instruction files — two identical headings with opposite rules pass with no accusation",
 ]
 
 [[prova.golden]]
-pergunta = "O AGENTS.md manda rodar `npm run test:unit` e o `package.json` só declara `build` e `test`. O que o agente responde?"
+pergunta = "AGENTS.md tells you to run `npm run test:unit` and `package.json` only declares `build` and `test`. What does the agent answer?"
 esperado = """
-Que o comando está quebrado, citando as duas linhas: a do `AGENTS.md` onde ele é mandado rodar, e a \
-do `package.json` onde os scripts existentes estão declarados. E que o conserto é de UM dos dois \
-lados — renomear no arquivo de instrução, ou recriar o script — nunca dos dois, e ele não escolhe qual.\
+That the command is broken, citing the two lines: the one in `AGENTS.md` where it is told to run, \
+and the one in `package.json` where the existing scripts are declared. And that the fix is on ONE \
+of the two sides — rename it in the instruction file, or recreate the script — never both, and it \
+does not choose which.\
 """
-derivado_de = "operacoes/instrucao-que-nao-mente/sondas.py:_instr_quebrado — o ramo `npm`/`pnpm`/`yarn`/`bun`"
+derivado_de = "operacoes/instrucao-que-nao-mente/sondas.py:_instr_quebrado — the `npm`/`pnpm`/`yarn`/`bun` branch"
 
 [[prova.golden]]
-pergunta = "O AGENTS.md manda rodar `make lint` e o repositório não tem Makefile nenhum. O agente acusa?"
+pergunta = "AGENTS.md tells you to run `make lint` and the repository has no Makefile at all. Does the agent accuse?"
 esperado = """
-Não acusa como quebra, e diz por quê: sem `Makefile` no repositório não há como PROVAR que o alvo \
-não existe — o comando pode vir de um `make` instalado globalmente ou de outra pasta. Ele reporta \
-como indecidível, com o motivo, em vez de contar como defeito. Errar para o lado de calar é decisão \
-declarada: uma sonda que grita lobo é apagada na segunda semana.\
+It does not accuse it as a break, and says why: with no `Makefile` in the repository there is no \
+way to PROVE the target does not exist — the command could come from a globally installed `make` or \
+from another folder. It reports it as undecidable, with the reason, instead of counting it as a \
+defect. Erring on the side of going quiet is a declared decision: a probe that cries wolf is \
+deleted in the second week.\
 """
-derivado_de = "operacoes/instrucao-que-nao-mente/sondas.py:_instr_quebrado — o `return False` quando `alvos` vem vazio"
+derivado_de = "operacoes/instrucao-que-nao-mente/sondas.py:_instr_quebrado — the `return False` when `alvos` comes back empty"
 
 [[prova.golden]]
-pergunta = "`AGENTS.md` tem os títulos «Instruções» e «Como rodar»; `CLAUDE.md` tem esses dois mais «Convenções de commit». Qual a divergência?"
+pergunta = "`AGENTS.md` has the headings «Instruções» and «Como rodar»; `CLAUDE.md` has those two plus «Convenções de commit». What is the divergence?"
 esperado = """
-Uma. A união dos títulos tem três e a interseção tem dois; o que sobra é «Convenções de commit», \
-presente só no `CLAUDE.md`. O agente nomeia o título e o arquivo em que ele falta — e diz que a \
-medida é de PRESENÇA, não de conteúdo: dois títulos iguais com regras contrárias não seriam acusados.\
+One. The union of headings has three and the intersection has two; what is left is «Convenções de \
+commit», present only in `CLAUDE.md`. The agent names the heading and the file it is missing from — \
+and says the measure is of PRESENCE, not content: two identical headings with opposite rules would \
+not be accused.\
 """
-derivado_de = "operacoes/instrucao-que-nao-mente/sondas.py:divergencia_entre_arquivos — união menos interseção"
+derivado_de = "operacoes/instrucao-que-nao-mente/sondas.py:divergencia_entre_arquivos — union minus intersection"
 
 [[prova.golden]]
-pergunta = "Existe um arquivo de instrução com 400 linhas e nenhum número dentro. O agente reprova?"
+pergunta = "There is an instruction file with 400 lines and no number inside. Does the agent fail it?"
 esperado = """
-Não. Tamanho não é defeito por esta régua, e `instrucao.linhas` é de natureza `contagem` — ela anda \
-quando alguém escreve, e divergir ali é normal. O que reprovaria seria um selo dizendo 180 linhas \
-quando a sonda mede 400, ou um `vence=` estourado. O agente diz isso explicitamente em vez de \
-inventar um limite de tamanho que ninguém escolheu.\
+No. Size is not a defect by this rule, and `instrucao.linhas` is of nature `count` — it moves when \
+someone writes, and diverging there is normal. What would fail is a seal saying 180 lines when the \
+probe measures 400, or a blown `expires=`. The agent says so explicitly instead of inventing a size \
+limit nobody chose.\
 """
-derivado_de = "README.md § `DERIVOU` sozinho não diz nada — a definição de `natureza=contagem`"
+derivado_de = "README.md § `DRIFTED` alone says nothing — the definition of `nature=count`"

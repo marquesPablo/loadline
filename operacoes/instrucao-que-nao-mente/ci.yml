@@ -1,15 +1,16 @@
-# Copie para `.github/workflows/instrucao.yml`.
+# Copy to `.github/workflows/instrucao.yml`.
 #
-# O ponto deste job não é ficar verde. É distinguir TRÊS estados que quase todo
-# CI achata em dois — e o terceiro é o que decide se um verde vale alguma coisa:
+# The point of this job is not to be green. It is to tell THREE states apart
+# that almost every CI flattens into two — and the third is the one that
+# decides whether a green means anything:
 #
-#   0  tudo conferido e no prazo
-#   1  REPROVA        — alguma coisa conferida não bate
-#   2  SEM DENOMINADOR — nada reprova, e há afirmação que ninguém confere
+#   0  everything checked and within the deadline
+#   1  FAIL           — something checked does not match
+#   2  NO DENOMINATOR — nothing fails, and there is a claim nobody verifies
 #
-# Um repositório que nunca anotou nada devolve 2, não 0. Tratar os dois como a
-# mesma coisa é `não medido` virando `zero`, que é exatamente o defeito que esta
-# ferramenta existe para proibir.
+# A repository that never annotated anything returns 2, not 0. Treating the two
+# as the same thing is `not measured` turning into `zero`, which is exactly the
+# defect this tool exists to forbid.
 
 name: instrucao-que-nao-mente
 
@@ -18,9 +19,9 @@ on:
     branches: [main, master]
   pull_request:
   schedule:
-    # O `vence=` só morde se alguém rodar. Sem esta linha, um selo vencido
-    # espera o próximo commit — e o repositório mais parado é justamente o que
-    # tem mais documentação velha.
+    # `expires=` only bites if someone runs. Without this line, an expired seal
+    # waits for the next commit — and the most idle repository is exactly the
+    # one with the most stale documentation.
     - cron: "0 6 * * 1"
 
 jobs:
@@ -31,34 +32,34 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"   # `tomllib` é stdlib a partir daqui
+          python-version: "3.11"   # `tomllib` is stdlib from here on
 
-      - name: instalar o loadline
+      - name: install loadline
         run: |
           git clone --depth 1 https://github.com/marquesPablo/loadline.git /tmp/loadline
           echo "PYTHONPATH=/tmp/loadline" >> "$GITHUB_ENV"
 
-      - name: conferir o que os arquivos de instrução prometem
+      - name: check what the instruction files promise
         id: aferir
         continue-on-error: true
         run: python -m loadline .
 
-      - name: decidir
+      - name: decide
         run: |
           case "${{ steps.aferir.outcome }}" in
-            success) echo "tudo conferido e no prazo" ;;
+            success) echo "everything checked and within the deadline" ;;
             *)
               python -m loadline . || codigo=$?
               case "${codigo:-0}" in
-                1) echo "::error::alguma coisa escrita não bate mais com o repositório"; exit 1 ;;
-                2) echo "::warning::há afirmação que nenhum selo cobre — rode \`python -m loadline . --selar\`"; exit 0 ;;
-                *) echo "::error::o loadline não pôde rodar"; exit 1 ;;
+                1) echo "::error::something written no longer matches the repository"; exit 1 ;;
+                2) echo "::warning::there is a claim no seal covers — run \`python -m loadline . --selar\`"; exit 0 ;;
+                *) echo "::error::loadline could not run"; exit 1 ;;
               esac
               ;;
           esac
 
-# ⚠️ A linha do `exit 0` no caso `2` é uma ESCOLHA, e ela tem dono: quem adota.
-#    Deixar `SEM DENOMINADOR` passar no CI é razoável na primeira semana e é
-#    dívida a partir da segunda. Quando o time estiver pronto, troque por
-#    `exit 1` — e sele a decisão. O selo pronto para copiar está em `selos.md`,
-#    na seção «O mínimo», com o `por=` e o `derruba=` que ele exige.
+# ⚠️ The `exit 0` line in the `2` case is a CHOICE, and it has an owner: the
+#    adopter. Letting `NO DENOMINATOR` pass in CI is reasonable in the first
+#    week and is debt from the second. When the team is ready, swap it for
+#    `exit 1` — and seal the decision. The seal ready to copy is in `selos.md`,
+#    in the «The minimum» section, with the `by=` and the `breaks=` it requires.

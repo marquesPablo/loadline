@@ -1,71 +1,71 @@
-# Os selos desta operação
+# The seals of this operation
 
-## Onde eles moram, e aqui isso é a decisão inteira
+## Where they live, and here that is the whole decision
 
-Cole **dentro do próprio arquivo de retomada**, no topo. Em nenhuma outra operação da prateleira o
-lugar importa tanto: o selo tem de estar no documento que ele julga, porque é esse documento que
-alguém vai abrir daqui a três semanas acreditando nele.
+Paste **inside the handoff file itself**, at the top. In no other operation on the shelf does the
+place matter this much: the seal has to be in the document it judges, because it is that document
+someone will open in three weeks believing it.
 
-Um selo sobre o handoff guardado no README é um aviso pendurado na porta errada.
+A seal about the handoff kept in the README is a warning hung on the wrong door.
 
-## Os três que mandam parar
-
-```markdown
-Este arquivo foi escrito lendo o disco: nenhum caminho citado está morto, nenhum comando perdeu o
-alvo, e o que ele diz sobre o estado do repositório é o que o git diz.
-<!-- measured: handoff.caminhos_mortos=0 nature=relation on=AAAA-MM-DD expires=7d source=disco -->
-<!-- measured: handoff.comandos_sem_alvo=0 nature=relation on=AAAA-MM-DD expires=7d source=disco -->
-<!-- measured: handoff.deriva_de_git=0 nature=relation on=AAAA-MM-DD expires=7d source=git -->
-```
-
-**`vence=7d` nos três, e é o prazo mais curto de toda a prateleira** — junto com o da fila de
-decisão. Não é rigor: é que o valor deles caduca em dias. Um handoff que estava correto há um mês
-não está *quase* correto hoje; ele está falso com aparência de específico, que é o estado mais caro
-de todos.
-
-⚠️ **`handoff.deriva_de_git` é 0 ou 1, não uma contagem.** Ela responde *"o documento afirma uma
-coisa sobre o estado e o git afirma outra?"*. Se o documento **não afirma nada** sobre o estado, ela
-é 0 — silêncio não é asserção, e acusá-lo transformaria a sonda numa cobrança de estilo.
-
-## A idade, que é o número que abre a conversa
+## The three that tell you to stop
 
 ```markdown
-Escrito depois do commit N. Nada entrou desde então.
-<!-- measured: handoff.commits_desde=0 nature=count on=AAAA-MM-DD expires=7d source=git -->
-<!-- measured: handoff.sessoes_desde=0 nature=count on=AAAA-MM-DD expires=7d source=harness -->
+This file was written reading the disk: no cited path is dead, no command lost its target, and what
+it says about the state of the repository is what git says.
+<!-- measured: handoff.caminhos_mortos=0 nature=relation on=YYYY-MM-DD expires=7d source=disk -->
+<!-- measured: handoff.comandos_sem_alvo=0 nature=relation on=YYYY-MM-DD expires=7d source=disk -->
+<!-- measured: handoff.deriva_de_git=0 nature=relation on=YYYY-MM-DD expires=7d source=git -->
 ```
 
-De contagem: elas andam sozinhas, todo dia, e é essa a graça. **Divergiram, resele — mas leia o
-número antes.** Se `commits_desde` foi de 0 para 40, o resselo não é a tarefa: a tarefa é reescrever
-o documento, e o resselo é a consequência.
+**`expires=7d` on all three, and it is the shortest deadline on the whole shelf** — together with
+the decision queue's. It is not rigor: it is that their value goes stale in days. A handoff that was
+right a month ago is not *almost* right today; it is false with the look of specific, which is the
+most expensive state of all.
 
-⚠️ **As duas só valem na sua árvore de trabalho.** O git não preserva `mtime`; num clone limpo elas
-estouram para o total. **Não leia o verde delas no CI como prova** — e se o seu CI rodar esta
-operação, leia a advertência que está no `ci.yml`.
+⚠️ **`handoff.deriva_de_git` is 0 or 1, not a count.** It answers *"does the document claim one
+thing about the state and git claim another?"*. If the document **claims nothing** about the state,
+it is 0 — silence is not an assertion, and accusing it would turn the probe into a style demand.
 
-## O tamanho, e por que ele é `arbitrated:` e não `measured:`
+## The age, which is the number that opens the conversation
 
 ```markdown
-Este arquivo cabe em 400 linhas. Passou disso, alguma coisa aqui virou histórico e devia sair.
-<!-- arbitrated: handoff.teto_de_linhas=400 by="quem cuida do projeto" on=AAAA-MM-DD expires=180d
-     breaks="um projeto com muitas frentes paralelas, ou um handoff que passou a ser lido por gente de fora" -->
-<!-- measured: handoff.linhas=N nature=count on=AAAA-MM-DD expires=30d source=disco -->
+Written after commit N. Nothing landed since then.
+<!-- measured: handoff.commits_desde=0 nature=count on=YYYY-MM-DD expires=7d source=git -->
+<!-- measured: handoff.sessoes_desde=0 nature=count on=YYYY-MM-DD expires=7d source=harness -->
 ```
 
-**O teto é uma escolha, não uma medida** — por isso a terceira marca. Um handoff morre de duas
-formas: envelhecendo e **inchando**. A segunda é mais silenciosa, porque ninguém o rejeita: ele
-apenas passa a ocupar o começo de toda sessão sem devolver nada, e cada rodada acrescenta um pouco.
+`count`: they move on their own, every day, and that is the point. **They diverged, re-seal — but
+read the number first.** If `commits_desde` went from 0 to 40, the re-seal is not the task: the task
+is to rewrite the document, and the re-seal is the consequence.
 
-## O que NÃO selar aqui
+⚠️ **The two only hold in your working tree.** git does not preserve `mtime`; in a clean clone they
+blow up to the total. **Do not read their green in CI as proof** — and if your CI runs this
+operation, read the warning in `ci.yml`.
 
-**Nada que afirme que as verificações PASSAM.** Esta operação não executa nada — ela confere que o
-alvo do comando existe. `comandos_sem_alvo=0` e *"a suíte está verde"* são afirmações diferentes, e
-selar a segunda com a sonda da primeira é dar marca de medida a uma esperança.
+## The size, and why it is `arbitrated:` and not `measured:`
 
-**Nada sobre o que foi decidido na sessão.** As sondas leem o disco. O que foi combinado e não virou
-arquivo é invisível para todas as oito, e um selo verde não é atestado de que o contexto está
-completo.
+```markdown
+This file fits in 400 lines. Past that, something here became history and should have left.
+<!-- arbitrated: handoff.teto_de_linhas=400 by="whoever looks after the project" on=YYYY-MM-DD expires=180d
+     breaks="a project with many parallel fronts, or a handoff that came to be read by people from outside" -->
+<!-- measured: handoff.linhas=N nature=count on=YYYY-MM-DD expires=30d source=disk -->
+```
 
-**Nada sobre o handoff estar CERTO.** Ele pode ter zero caminho morto, zero deriva, zero commits em
-cima — e descrever mal o que importa. As sondas medem se ele corresponde ao disco. Se ele conta a
-história certa continua sendo julgamento de quem escreve.
+**The ceiling is a choice, not a measurement** — hence the third mark. A handoff dies in two ways:
+by aging and by **bloating**. The second is quieter, because nobody rejects it: it just starts
+taking up the beginning of every session without giving anything back, and each round adds a little.
+
+## What NOT to seal here
+
+**Nothing claiming that the checks PASS.** This operation executes nothing — it checks that the
+command's target exists. `comandos_sem_alvo=0` and *"the suite is green"* are different claims, and
+sealing the second with the first's probe is giving a measurement's mark to a hope.
+
+**Nothing about what was decided in the session.** The probes read the disk. What was agreed and did
+not become a file is invisible to all eight, and a green seal is not proof that the context is
+complete.
+
+**Nothing about the handoff being RIGHT.** It can have zero dead paths, zero drift, zero commits on
+top — and describe badly what matters. The probes measure whether it matches the disk. Whether it
+tells the right story stays a judgment for whoever writes.

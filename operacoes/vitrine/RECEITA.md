@@ -1,47 +1,49 @@
-# Operação 11 · `vitrine`
+# Operation 11 · `vitrine`
 
-> Um agente decide carregar uma skill lendo **dois campos**: `name` e `description`.
-> O corpo do `SKILL.md` só é lido **depois** que a decisão já foi tomada.
-> **Ninguém confere esses dois campos, porque nada olha para eles.**
+> An agent decides to load a skill by reading **two fields**: `name` and `description`.
+> The body of the `SKILL.md` is only read **after** the decision has already been made.
+> **Nobody checks those two fields, because nothing looks at them.**
 
-## A dor
+## The pain
 
-Medido nesta máquina, em 2026-08-23, sem tocar em nenhuma linha de código: das **31 skills do
-marketplace oficial da Anthropic**, **26 não declaram quando NÃO usar** e **1 declara um `name` que
-não bate com o nome da própria pasta** — `writing-rules/SKILL.md` diz `name: writing-hookify-rules`.
+Measured on this machine, on 2026-08-23, without touching a line of code: of the **31 skills in
+Anthropic's official marketplace**, **26 do not declare when NOT to use them** and **1 declares a
+`name` that does not match its own folder name** — `writing-rules/SKILL.md` says
+`name: writing-hookify-rules`.
 
-Isso não é um erro de sintaxe. É um erro que **não produz erro nenhum**: a skill continua existindo,
-continua sendo lida por quem abre o arquivo, e continua **invisível** para o roteador que decide, em
-tempo de execução, qual skill carregar. O relato de fora é sempre "a skill não pegou", nunca "o
-`name` diverge da pasta" — porque nada nunca disse isso.
+This is not a syntax error. It is an error that **produces no error at all**: the skill keeps
+existing, keeps being read by whoever opens the file, and keeps being **invisible** to the router
+that decides, at runtime, which skill to load. The report from outside is always "the skill did not
+catch", never "the `name` diverges from the folder" — because nothing ever said so.
 
-## O que esta operação instala
+## What this operation installs
 
-Duas sondas que recomputam a vitrine outra vez a cada rodada — nunca a partir do que já foi escrito:
+Two probes that recompute the window again on every run — never from what was already written:
 <!-- measured: operacao.vitrine.sondas=2 nature=count on=2026-08-23 expires=never source=operacoes/vitrine/sondas.py -->
 
-| Métrica | O que recomputa | Natureza |
+| Metric | What it recomputes | Nature |
 |---|---|---|
-| `vitrine.skills` | quantos `SKILL.md` existem sob o caminho declarado | contagem |
-| **`vitrine.reprovas`** | **quantas dessas skills têm ⛔ em alguma das onze regras da `vitrine`** (nome divergente da pasta, gramática do nome, sem gatilho de uso, sem gatilho negativo, duas skills se confundindo) | **relação** |
+| `vitrine.skills` | how many `SKILL.md` exist under the declared path | count |
+| **`vitrine.reprovas`** | **how many of those skills have a ⛔ on any of the eleven `vitrine` rules** (name diverging from the folder, name grammar, no usage trigger, no negative trigger, two skills getting confused) | **relation** |
 
-A segunda é o coração. Ela deveria ser sempre `0`; quando sai de zero, isso não é "o número mudou",
-é **defeito** — uma skill ficou invisível ou vai ficar, e a ferramenta diz isso com essas palavras.
+The second is the heart. It should always be `0`; when it leaves zero, that is not "the number
+changed", it is **a defect** — a skill went invisible or is about to, and the tool says exactly that,
+in those words.
 
-As onze regras completas, cada uma citando a fonte pública de onde sai, estão em
-`vitrine/regras.py`. Rodar o linter isolado, fora deste selo: `python -m vitrine <caminho>`.
+The eleven full rules, each citing the public source it comes from, are in `vitrine/regras.py`. To
+run the linter on its own, outside this seal: `python -m vitrine <path>`.
 
-**A vitrine também sabe CRIAR uma skill nova**, não só auditar as que já existem —
-`python -m vitrine --colher <slug> --diz "o que ela faz"` recusa nascer se colidir com uma skill já
-existente (mesma régua `S11`) e escreve um `SKILL.md` que já nasce limpo nas regras estruturais,
-com `?` só nos dois campos que ninguém além de quem viveu o trabalho sabe preencher: o gatilho
-positivo e o negativo. Sem modelo, sem chave de API — ver `vitrine/colheita.py`.
+**The vitrine also knows how to CREATE a new skill**, not just audit the ones that already exist —
+`python -m vitrine --harvest <slug> --says "what it does"` refuses to be born if it collides with a
+skill that already exists (the same `S11` rule) and writes a `SKILL.md` that is born clean on the
+structural rules, with a `?` only in the two fields nobody but whoever lived the work can fill in:
+the positive trigger and the negative one. No model, no API key — see `vitrine/colheita.py`.
 
-## O ajuste
+## The adjustment
 
-**Um campo.** Abra `sondas.py` desta operação e troque `CAMINHO_DE_SKILLS` pelo caminho real da sua
-pasta de skills — o padrão aponta para `.claude/skills`, que é onde Claude Code, e a maioria dos
-harnesses com suporte a Agent Skills, procuram.
+**One field.** Open this operation's `sondas.py` and change `CAMINHO_DE_SKILLS` to the real path of
+your skills folder — the default points at `.claude/skills`, which is where Claude Code, and most
+harnesses with Agent Skills support, look.
 
-⚠️ **Copie a pasta `vitrine/` inteira**, não só o `sondas.py` desta operação — é a única gaveta da
-prateleira, com a `cerebro-local`, que traz mais do que os cinco arquivos padrão.
+⚠️ **Copy the whole `vitrine/` folder**, not just this operation's `sondas.py` — it is the only
+drawer on the shelf, along with `cerebro-local`, that ships more than the five standard files.

@@ -1,13 +1,13 @@
-# Copie para `.github/workflows/readme.yml`.
+# Copy to `.github/workflows/readme.yml`.
 #
-# Este job comenta no pull request em vez de reprovar. É deliberado: a primeira
-# semana de adoção não pode ser uma parede vermelha, ou a resposta do time é
-# desligar o job — e um gate desligado é pior que um gate ausente, porque
-# alguém ainda acha que ele está lá.
+# This job comments on the pull request instead of failing. It is deliberate:
+# the first week of adoption cannot be a red wall, or the team's answer is to
+# switch the job off — and a switched-off gate is worse than a missing one,
+# because someone still thinks it is there.
 #
-# Quando o time estiver pronto, troque `continue-on-error: true` por `false` e
-# sele a decisão, com dono e com `derruba=`. O selo pronto para copiar está em
-# `selos.md`, na seção «O prazo é escolha, e ela tem dono».
+# When the team is ready, swap `continue-on-error: true` for `false` and seal
+# the decision, with an owner and with `breaks=`. The seal ready to copy is in
+# `selos.md`, in the «The deadline is a choice» section.
 
 name: readme-que-nao-mente
 
@@ -15,9 +15,9 @@ on:
   pull_request:
     paths: ["**/*.md"]
   schedule:
-    # O `vence=` só morde se alguém rodar. Sem esta linha, um número que
-    # envelheceu espera o próximo PR que toque um `.md` — e o texto mais
-    # esquecido é justamente o que ninguém toca.
+    # `expires=` only bites if someone runs. Without this line, a number that
+    # aged waits for the next PR that touches a `.md` — and the most forgotten
+    # text is exactly the one nobody touches.
     - cron: "0 6 1 * *"
 
 jobs:
@@ -29,25 +29,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # `repo.commits` e `repo.contribuidores` leem o histórico
+          fetch-depth: 0   # `repo.commits` and `repo.contribuidores` read the history
 
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: instalar o loadline
+      - name: install loadline
         run: |
           git clone --depth 1 https://github.com/marquesPablo/loadline.git /tmp/loadline
           echo "PYTHONPATH=/tmp/loadline" >> "$GITHUB_ENV"
 
-      - name: conferir o que a documentação afirma
+      - name: check what the documentation claims
         id: aferir
         continue-on-error: true
         run: |
           python -m loadline . | tee relatorio.txt
           echo "codigo=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
 
-      - name: comentar no PR
+      - name: comment on the PR
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
@@ -61,11 +61,11 @@ jobs:
               body: '### loadline\n\n```\n' + corpo.slice(0, 60000) + '\n```',
             });
 
-      - name: decidir
+      - name: decide
         run: |
           case "${{ steps.aferir.outputs.codigo }}" in
-            0) echo "tudo conferido e no prazo" ;;
-            1) echo "::warning::alguma coisa escrita não bate mais — veja o comentário no PR" ;;
-            2) echo "::warning::há afirmação que nenhum selo cobre — rode \`python -m loadline . --selar\`" ;;
-            *) echo "::error::o loadline não pôde rodar"; exit 1 ;;
+            0) echo "everything checked and within the deadline" ;;
+            1) echo "::warning::something written no longer matches — see the PR comment" ;;
+            2) echo "::warning::there is a claim no seal covers — run \`python -m loadline . --selar\`" ;;
+            *) echo "::error::loadline could not run"; exit 1 ;;
           esac

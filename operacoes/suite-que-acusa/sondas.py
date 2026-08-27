@@ -1,28 +1,28 @@
-"""Sondas da operação `suite-que-acusa`.
+"""Probes for the `suite-que-acusa` operation.
 
-nature: fix — sonda que estoura vira `UNPROVEN` no relatório, com o erro
-por extenso. Ela nunca devolve um palpite.
+nature: fix — a probe that blows up becomes `UNPROVEN` in the report, with
+the error written out. It never returns a guess.
 
-COPIE ESTE ARQUIVO para a raiz do seu repositório, como `sondas.py`.
-Para combinar com outra operação, concatene os arquivos — nenhum nome auxiliar
-daqui colide com o das outras (todos começam com `_su_`).
+COPY THIS FILE to the root of your repository, as `sondas.py`.
+To combine with another operation, concatenate the files — no helper name here
+collides with the others' (they all start with `_su_`).
 
-⚠️ **A pergunta desta operação não é «os testes passam».** É: **se alguém
-apagasse o mecanismo que este teste protege, ele ainda passaria?**
+⚠️ **This operation's question is not «do the tests pass».** It is: **if someone
+deleted the mechanism this test protects, would it still pass?**
 
-Um teste que só confirma o caminho feliz passa igual depois de o mecanismo ser
-removido. Ele não prova nada — e o custo dele não é zero: é dar a alguém a
-sensação de estar coberto. Uma suíte verde inteira feita desses testes é pior
-que nenhuma suíte, porque ninguém vai procurar o que já parece protegido.
+A test that only confirms the happy path passes the same after the mechanism is
+removed. It proves nothing — and its cost is not zero: it is giving someone the
+feeling of being covered. A whole green suite made of those tests is worse than
+no suite, because nobody looks for what already seems protected.
 
-O remédio é o **controle negativo**: o teste reintroduz o defeito que existe
-para pegar, e falha se o mecanismo não reclamar.
+The remedy is the **negative control**: the test reintroduces the defect it
+exists to catch, and fails if the mechanism does not complain.
 
-⚠️ **E o limite honesto, que é grande.** `suite.sem_controle_negativo` é
-HEURÍSTICA. Ela procura construções que indicam expectativa de falha, e vai
-errar nos dois sentidos: um teste que reintroduz o defeito de um jeito que ela
-não reconhece é acusado à toa, e um `pytest.raises` decorativo passa por ela.
-**Trate o número como uma lista de leitura, nunca como veredito.**
+⚠️ **And the honest limit, which is large.** `suite.sem_controle_negativo` is a
+HEURISTIC. It looks for constructs that indicate an expectation of failure, and
+it will get it wrong both ways: a test that reintroduces the defect in a way it
+does not recognize is accused for nothing, and a decorative `pytest.raises`
+gets past it. **Treat the number as a reading list, never as a verdict.**
 """
 
 from __future__ import annotations
@@ -36,17 +36,17 @@ from loadline import sonda
 
 RAIZ = Path(__file__).resolve().parent
 
-#: AJUSTE ÚNICO desta operação: onde moram os seus testes.
+#: THE ONE ADJUSTMENT of this operation: where your tests live.
 PASTA_DE_TESTES = "tests"
 
-#: Onde você declara o que a suíte NÃO mede — a terceira lista.
+#: Where you declare what the suite does NOT measure — the third list.
 ARQUIVO_DE_LACUNAS = "LACUNAS.md"
 
 _SU_NOME_DE_TESTE = re.compile(r"^(test_|_[a-z]{1,3}$|check)", re.I)
 
-#: Construções que indicam que o teste ESPERA uma falha — isto é, que ele
-#: reintroduz o defeito. A lista é aberta de propósito: cada projeto tem o
-#: próprio dialeto, e um vocabulário fechado aqui acusaria a casa inteira.
+#: Constructs that indicate the test EXPECTS a failure — that is, that it
+#: reintroduces the defect. The list is open on purpose: every project has its
+#: own dialect, and a closed vocabulary here would accuse the whole house.
 _SU_CONTROLE_NEGATIVO = (
     "raises",
     "assertraises",
@@ -58,6 +58,7 @@ _SU_CONTROLE_NEGATIVO = (
     "must_fail",
     "deve_falhar",
     "reintroduz",
+    "reintroduces",
     "controle negativo",
     "negative control",
 )
@@ -69,9 +70,9 @@ def _su_base() -> Path:
     base = (RAIZ / PASTA_DE_TESTES).resolve()
     if not base.is_dir():
         raise LookupError(
-            f"`{PASTA_DE_TESTES}` não existe. Ajuste PASTA_DE_TESTES no topo de sondas.py. "
-            "Zero testes por eu não ter olhado é diferente de zero testes, e as duas coisas "
-            "não podem sair com o mesmo número"
+            f"`{PASTA_DE_TESTES}` does not exist. Adjust PASTA_DE_TESTES at the top of sondas.py. "
+            "Zero tests because I did not look is different from zero tests, and the two cannot "
+            "come out with the same number"
         )
     return base
 
@@ -85,17 +86,17 @@ def _su_arquivos() -> list[Path]:
         )
         achados += [Path(pasta) / a for a in sorted(arquivos) if a.endswith(".py")]
     if not achados:
-        raise LookupError(f"`{PASTA_DE_TESTES}` existe e não tem nenhum arquivo .py")
+        raise LookupError(f"`{PASTA_DE_TESTES}` exists and has no .py file")
     return achados
 
 
 def _su_funcoes() -> list[tuple[Path, ast.FunctionDef, str]]:
-    """(arquivo, nó, texto-fonte da função) para cada função de teste.
+    """(file, node, function source text) for each test function.
 
-    Usa `ast`, e não expressão regular sobre o texto: um `def` dentro de uma
-    string, num comentário ou aninhado noutra função seria contado por regex, e
-    o denominador da suíte inteira sairia errado — que é a pior classe de erro
-    numa ferramenta que existe para cobrar denominador.
+    Uses `ast`, not a regular expression over the text: a `def` inside a string,
+    in a comment or nested in another function would be counted by regex, and
+    the whole suite's denominator would come out wrong — which is the worst
+    class of error in a tool that exists to demand a denominator.
     """
     funcoes: list[tuple[Path, ast.FunctionDef, str]] = []
     for arquivo in _su_arquivos():
@@ -103,7 +104,7 @@ def _su_funcoes() -> list[tuple[Path, ast.FunctionDef, str]]:
         try:
             arvore = ast.parse(texto)
         except SyntaxError as exc:
-            raise LookupError(f"`{arquivo}` não compila: {exc}") from exc
+            raise LookupError(f"`{arquivo}` does not compile: {exc}") from exc
         for no in ast.walk(arvore):
             if isinstance(no, (ast.FunctionDef, ast.AsyncFunctionDef)) and _SU_NOME_DE_TESTE.match(
                 no.name
@@ -111,14 +112,14 @@ def _su_funcoes() -> list[tuple[Path, ast.FunctionDef, str]]:
                 funcoes.append((arquivo, no, ast.get_source_segment(texto, no) or ""))
     if not funcoes:
         raise LookupError(
-            f"nenhuma função de teste em `{PASTA_DE_TESTES}`. Procurei nomes começando com "
-            "`test_` ou `check`; se o seu dialeto for outro, ajuste `_SU_NOME_DE_TESTE`"
+            f"no test function in `{PASTA_DE_TESTES}`. Looked for names starting with "
+            "`test_` or `check`; if your dialect is another, adjust `_SU_NOME_DE_TESTE`"
         )
     return funcoes
 
 
 def _su_tem_assercao(no: ast.AST) -> bool:
-    """Um `assert`, ou uma chamada `assert*`/`raise`. Sem isso o teste não falha."""
+    """An `assert`, or an `assert*`/`raise` call. Without one the test does not fail."""
     for filho in ast.walk(no):
         if isinstance(filho, (ast.Assert, ast.Raise)):
             return True
@@ -131,49 +132,49 @@ def _su_tem_assercao(no: ast.AST) -> bool:
 
 
 # ---------------------------------------------------------------------------
-# As sondas
+# The probes
 # ---------------------------------------------------------------------------
 
 
-@sonda("suite.arquivos", origem="arquivos .py sob a pasta de testes")
+@sonda("suite.arquivos", origem=".py files under the tests folder")
 def su_arquivos() -> int:
     return len(_su_arquivos())
 
 
-@sonda("suite.checks", origem="funções de teste contadas pela árvore sintática, não por regex")
+@sonda("suite.checks", origem="test functions counted by the syntax tree, not by regex")
 def su_checks() -> int:
     return len(_su_funcoes())
 
 
 @sonda(
     "suite.sem_assercao",
-    origem="funções de teste sem nenhum assert, assert* ou raise no corpo",
+    origem="test functions with no assert, assert* or raise in the body",
 )
 def su_sem_assercao() -> int:
-    """De RELAÇÃO, e é a única sonda desta operação que é veredito, não suspeita.
+    """A RELATION, and it is the only probe of this operation that is a verdict, not a suspicion.
 
-    Uma função de teste sem asserção **não pode falhar**. Ela roda, devolve
-    verde, entra na contagem de cobertura e não verifica nada. Não é heurística:
-    é uma propriedade do código, e o número certo dela é zero.
+    A test function with no assertion **cannot fail**. It runs, returns green,
+    enters the coverage count and verifies nothing. It is not a heuristic: it is
+    a property of the code, and its right number is zero.
     """
     return sum(1 for _, no, _ in _su_funcoes() if not _su_tem_assercao(no))
 
 
 @sonda(
     "suite.sem_controle_negativo",
-    origem="funções de teste sem construção que ESPERE falha (heurística, ver o docstring)",
+    origem="test functions with no construct that EXPECTS a failure (heuristic, see the docstring)",
 )
 def su_sem_controle_negativo() -> int:
-    """De RELAÇÃO — e é uma LISTA DE LEITURA, não um veredito.
+    """A RELATION — and it is a READING LIST, not a verdict.
 
-    A pergunta que ela tenta responder: *se alguém apagasse o mecanismo que este
-    teste protege, ele ainda passaria?* Um teste que só percorre o caminho feliz
-    passa igual, e o custo dele não é zero — é a sensação de cobertura.
+    The question it tries to answer: *if someone deleted the mechanism this test
+    protects, would it still pass?* A test that only walks the happy path passes
+    the same, and its cost is not zero — it is the feeling of coverage.
 
-    ⚠️ **Ela erra nos dois sentidos, e isso está declarado.** Um teste que
-    reintroduz o defeito de um jeito que ela não reconhece é acusado à toa; um
-    `pytest.raises` decorativo passa por ela. O número serve para produzir a
-    lista de quais abrir — nunca para reprovar sozinho no CI.
+    ⚠️ **It gets it wrong both ways, and that is declared.** A test that
+    reintroduces the defect in a way it does not recognize is accused for
+    nothing; a decorative `pytest.raises` gets past it. The number serves to
+    produce the list of which ones to open — never to fail on its own in CI.
     """
     sem = 0
     for _, _, fonte in _su_funcoes():
@@ -183,64 +184,63 @@ def su_sem_controle_negativo() -> int:
     return sem
 
 
-@sonda("suite.pulados", origem="testes marcados com skip/xfail")
+@sonda("suite.pulados", origem="tests marked with skip/xfail")
 def su_pulados() -> int:
-    """De RELAÇÃO. Um teste pulado é um teste que não existe, com aparência de existir.
+    """A RELATION. A skipped test is a test that does not exist, with the look of existing.
 
-    Ele conta na lista, aparece no relatório, e a única coisa que ele mede é
-    quanto tempo faz que alguém desistiu dele.
+    It counts in the list, shows up in the report, and the only thing it
+    measures is how long ago someone gave up on it.
     """
     return sum(1 for _, _, fonte in _su_funcoes() if _SU_PULADO.search(fonte))
 
 
 @sonda(
     "suite.lacunas_declaradas",
-    origem="itens de lista no arquivo de lacunas — a terceira lista",
+    origem="list items in the gap file — the third list",
 )
 def su_lacunas_declaradas() -> int:
-    """De CONTAGEM. É o número que decide se o verde dos outros vale alguma coisa.
+    """A COUNT. It is the number that decides whether the green of the others is worth anything.
 
-    Toda suíte publica o que passou e o que falhou. Quase nenhuma publica **o
-    que nunca olhou** — e sem essa terceira lista um verde só diz que o que foi
-    olhado passou, o que é bem menos do que parece.
+    Every suite publishes what passed and what failed. Almost none publishes
+    **what it never looked at** — and without that third list a green only says
+    that what was looked at passed, which is far less than it seems.
 
-    ⚠️ Zero aqui **estoura**, e não devolve zero. Uma suíte sem lacunas
-    declaradas não é uma suíte completa: é uma suíte que nunca escreveu os
-    próprios limites, e as duas coisas são indistinguíveis pelo número.
+    ⚠️ Zero here **blows up**, and does not return zero. A suite with no
+    declared gaps is not a complete suite: it is a suite that never wrote its
+    own limits, and the two are indistinguishable by the number.
     """
     arquivo = RAIZ / ARQUIVO_DE_LACUNAS
     if not arquivo.is_file():
         raise LookupError(
-            f"`{ARQUIVO_DE_LACUNAS}` não existe. É a terceira lista: o que a sua suíte NÃO "
-            "mede. Sem ela, um verde diz apenas que o que foi olhado passou — e ninguém "
-            "consegue saber o que não foi olhado. Crie o arquivo com uma lista de itens"
+            f"`{ARQUIVO_DE_LACUNAS}` does not exist. It is the third list: what your suite does "
+            "NOT measure. Without it, a green only says that what was looked at passed — and "
+            "nobody can tell what was not looked at. Create the file with a list of items"
         )
     return len(_su_itens_abertos(arquivo.read_text(encoding="utf-8", errors="replace")))
 
 
-#: Uma lacuna é um item de lista OU um título numerado (`## 3 · ...`, `## 3. ...`).
-#: Aceitar as duas formas não é frouxidão: uma lista de oito lacunas com um
-#: parágrafo cada é escrita com título por quase todo mundo, e uma régua que só
-#: reconhece marcador contaria 0 num arquivo bem escrito.
+#: A gap is a list item OR a numbered heading (`## 3 · ...`, `## 3. ...`).
+#: Accepting both is not laxity: a list of eight gaps with a paragraph each is
+#: written with a heading by almost everyone, and a rule that only recognizes a
+#: bullet would count 0 in a well-written file.
 _SU_ITEM = re.compile(r"^\s*(?:[-*+]\s+\S|\d+\.\s+\S|#{2,6}\s*\d+\s*[.·)-]\s*\S)", re.M)
 
-#: Onde a contagem PARA. Uma lacuna fechada listada junto das abertas é o mesmo
-#: defeito que uma lacuna não listada — em ambos os casos o leitor não sabe o
-#: tamanho real do ponto cego. E o erro é para o lado otimista, que é o pior.
+#: Where the count STOPS. A closed gap listed with the open ones is the same
+#: defect as an unlisted gap — in both cases the reader does not know the real
+#: size of the blind spot. And the error is on the optimistic side, which is the worst.
 _SU_FECHADAS = re.compile(r"^#{1,6}\s*(fechad|closed|resolvid|encerrad)", re.I | re.M)
 
 
 def _su_itens_abertos(texto: str) -> list[str]:
-    """Os itens declarados, cortando o que vier depois do título de fechadas."""
+    """The declared items, cutting off whatever comes after the "closed" heading."""
     corte = _SU_FECHADAS.search(texto)
     if corte:
         texto = texto[: corte.start()]
     itens = _SU_ITEM.findall(texto)
     if not itens:
         raise LookupError(
-            f"`{ARQUIVO_DE_LACUNAS}` existe e não declara nenhuma lacuna ABERTA. Procurei "
-            "item de lista e título numerado, parando na seção de fechadas. Um arquivo de "
-            "lacunas vazio afirma que não há ponto cego — a afirmação mais forte possível, "
-            "e a menos provável"
+            f"`{ARQUIVO_DE_LACUNAS}` exists and declares no OPEN gap. Looked for a list item "
+            "and a numbered heading, stopping at the closed section. An empty gap file claims "
+            "there is no blind spot — the strongest possible claim, and the least likely"
         )
     return itens

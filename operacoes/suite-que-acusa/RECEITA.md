@@ -1,126 +1,125 @@
-# Operação 9 · `suite-que-acusa`
+# Operation 9 · `suite-que-acusa`
 
-> A sua suíte está verde. **Se alguém apagasse o mecanismo que ela protege, ela ficaria vermelha?**
-> Para uma boa parte dos testes que existem por aí, a resposta é não. Eles percorrem o caminho
-> feliz, confirmam que ele funciona, e passariam idênticos com o mecanismo removido.
-> **O custo disso não é zero.** É dar a alguém a sensação de estar coberto — e ninguém vai procurar
-> o que já parece protegido.
+> Your suite is green. **If someone deleted the mechanism it protects, would it go red?**
+> For a good share of the tests out there, the answer is no. They walk the happy path, confirm it
+> works, and would pass identical with the mechanism removed.
+> **The cost of that is not zero.** It is giving someone the feeling of being covered — and nobody
+> looks for what already seems protected.
 
-## O teste que passa igual sem o mecanismo
+## The test that passes the same without the mechanism
 
 ```python
 def test_validacao():
     assert validar("entrada-valida@exemplo.com") is True
 ```
 
-Troque o corpo inteiro de `validar` por `return True`. **O teste continua verde.**
+Replace the whole body of `validar` with `return True`. **The test stays green.**
 
-Ele não prova que a validação valida. Prova que ela não estoura. E a diferença aparece no dia em que
-alguém simplifica a função durante um refactor, o teste passa, e a validação some da produção sem
-que nenhuma luz acenda.
+It does not prove that the validation validates. It proves that it does not blow up. And the
+difference shows up the day someone simplifies the function during a refactor, the test passes, and
+the validation disappears from production without a single light coming on.
 
-O conserto é o **controle negativo** — o teste reintroduz o defeito que ele existe para pegar:
+The fix is the **negative control** — the test reintroduces the defect it exists to catch:
 
 ```python
 def test_validacao():
     assert validar("entrada-valida@exemplo.com") is True
 
-    # O controle negativo: sem ele, o teste acima passa com `return True`.
+    # The negative control: without it, the test above passes with `return True`.
     assert validar("nao-e-email") is False
 ```
 
-Duas linhas. E agora o teste morre junto com o mecanismo, que é a única coisa que um teste tem de
-fazer.
+Two lines. And now the test dies along with the mechanism, which is the only thing a test has to do.
 
-## A terceira lista
+## The third list
 
-Toda suíte publica duas listas: **o que passou** e **o que falhou**. Quase nenhuma publica a
-terceira — **o que ela nunca olhou.**
+Every suite publishes two lists: **what passed** and **what failed**. Almost none publishes the
+third — **what it never looked at.**
 
-Sem a terceira, um verde diz apenas *"o que foi olhado passou"*, que é bem menos do que ele parece
-dizer. Com ela, o verde passa a ter tamanho: *"olhamos estas 40 coisas, estas 12 estão fora do nosso
-alcance, e sabemos quais são."*
+Without the third, a green only says *"what was looked at passed"*, which is far less than it seems
+to say. With it, the green gets a size: *"we looked at these 40 things, these 12 are outside our
+reach, and we know which."*
 
-Por isso `suite.lacunas_declaradas` **estoura** quando o arquivo não existe, em vez de devolver
-zero. Zero lacunas declaradas afirma que a suíte não tem ponto cego — a afirmação mais forte
-possível, e a menos provável.
+That is why `suite.lacunas_declaradas` **blows up** when the file does not exist, instead of
+returning zero. Zero declared gaps claims the suite has no blind spot — the strongest possible
+claim, and the least likely.
 
-## O que esta operação instala
+## What this operation installs
 
-Seis sondas sobre a sua pasta de testes:
+Six probes over your tests folder:
 <!-- measured: operacao.suite.sondas=6 nature=count on=2026-08-21 expires=never source=operacoes/suite-que-acusa/sondas.py -->
 
-| Métrica | O que recomputa | Natureza |
+| Metric | What it recomputes | Nature |
 |---|---|---|
-| `suite.arquivos` · `suite.checks` | o tamanho da suíte, contado pela árvore sintática | contagem |
-| **`suite.sem_assercao`** | **funções de teste que não podem falhar** | **relação** |
-| **`suite.sem_controle_negativo`** | **testes que passariam sem o mecanismo (heurística)** | **relação** |
-| **`suite.pulados`** | **testes marcados `skip`/`xfail`** | **relação** |
-| `suite.lacunas_declaradas` | itens da terceira lista | contagem |
+| `suite.arquivos` · `suite.checks` | the size of the suite, counted by the syntax tree | count |
+| **`suite.sem_assercao`** | **test functions that cannot fail** | **relation** |
+| **`suite.sem_controle_negativo`** | **tests that would pass without the mechanism (heuristic)** | **relation** |
+| **`suite.pulados`** | **tests marked `skip`/`xfail`** | **relation** |
+| `suite.lacunas_declaradas` | items in the third list | count |
 
-**`suite.checks` é contado pela árvore sintática, não por expressão regular.** Um `def` dentro de
-uma string, num comentário ou aninhado noutra função seria contado por regex — e o denominador da
-suíte inteira sairia errado, que é a pior classe de erro numa ferramenta que existe para cobrar
-denominador.
+**`suite.checks` is counted by the syntax tree, not by a regular expression.** A `def` inside a
+string, in a comment or nested in another function would be counted by regex — and the whole suite's
+denominator would come out wrong, which is the worst class of error in a tool that exists to demand
+a denominator.
 
-## ⚠️ Uma das seis é veredito, a outra é lista de leitura
+## ⚠️ One of the six is a verdict, the other is a reading list
 
-Esta distinção é a coisa mais importante desta receita.
+This distinction is the most important thing in this recipe.
 
-**`suite.sem_assercao` é veredito.** Uma função de teste sem `assert`, sem `assert*` e sem `raise`
-**não pode falhar**. Não é opinião, é uma propriedade do código. Ela roda, devolve verde, entra na
-contagem de cobertura e não verifica nada. O número certo dela é zero.
+**`suite.sem_assercao` is a verdict.** A test function with no `assert`, no `assert*` and no `raise`
+**cannot fail**. It is not opinion, it is a property of the code. It runs, returns green, enters the
+coverage count and verifies nothing. Its right number is zero.
 
-**`suite.sem_controle_negativo` é HEURÍSTICA, e ela erra nos dois sentidos.** Ela procura
-construções que indicam expectativa de falha (`raises`, `xfail`, `deve_falhar`, a palavra
-*reintroduz*…). Um teste que reintroduz o defeito de um jeito que ela não reconhece **é acusado à
-toa**. Um `pytest.raises` decorativo **passa por ela**.
+**`suite.sem_controle_negativo` is a HEURISTIC, and it gets it wrong both ways.** It looks for
+constructs that indicate an expectation of failure (`raises`, `xfail`, `deve_falhar`, the word
+*reintroduces*…). A test that reintroduces the defect in a way it does not recognize **is accused
+for nothing**. A decorative `pytest.raises` **gets past it**.
 
-**Use-a para produzir a lista de quais testes abrir, nunca para reprovar sozinha no CI.** E se ela
-acusar um teste que está certo, o conserto é acrescentar a construção ao vocabulário
-`_SU_CONTROLE_NEGATIVO` — **não reescrever o teste para agradar a régua.** Uma régua que faz o
-código mudar de forma para caber nela parou de medir o código e passou a medir a si mesma.
+**Use it to produce the list of which tests to open, never to fail on its own in CI.** And if it
+accuses a test that is right, the fix is to add the construct to the `_SU_CONTROLE_NEGATIVO`
+vocabulary — **not to rewrite the test to please the rule.** A rule that makes the code change shape
+to fit it has stopped measuring the code and started measuring itself.
 
-## O ajuste
+## The adjustment
 
-**Dois campos**, no topo do `sondas.py`:
+**Two fields**, at the top of `sondas.py`:
 
 ```python
 PASTA_DE_TESTES = "tests"
 ARQUIVO_DE_LACUNAS = "LACUNAS.md"
 ```
 
-E, se o seu dialeto de teste não usa `test_` no nome, `_SU_NOME_DE_TESTE`.
+And, if your test dialect does not use `test_` in the name, `_SU_NOME_DE_TESTE`.
 
-## Como rodar
+## How to run
 
 ```console
-$ cp operacoes/suite-que-acusa/sondas.py  /caminho/do/seu/repo/sondas.py
-$ cd /caminho/do/seu/repo
-$ PYTHONPATH=/caminho/para/loadline python -m loadline .
+$ cp operacoes/suite-que-acusa/sondas.py  /path/to/your/repo/sondas.py
+$ cd /path/to/your/repo
+$ PYTHONPATH=/path/to/loadline python -m loadline .
 ```
 
 ```console
-REPROVA   README.md:31  suite.sem_assercao: escrito=0 medido=4
-          → natureza=relacao — PARE e investigue.
-SEM PROVA README.md:32  suite.lacunas_declaradas
-          → `LACUNAS.md` não existe. É a terceira lista: o que a sua suíte NÃO mede.
+FAIL       README.md:31  suite.sem_assercao: written=0 measured=4
+           → nature=relation — STOP and investigate.
+UNVERIFIED README.md:32  suite.lacunas_declaradas
+           → `LACUNAS.md` does not exist. It is the third list: what your suite does NOT measure.
 ```
 
-**Quatro funções de teste que não podem falhar**, e nenhuma terceira lista. Os dois são achados, e o
-segundo é o que faz o verde dos outros valer alguma coisa.
+**Four test functions that cannot fail**, and no third list. Both are findings, and the second is
+what makes the green of the others worth something.
 
-## O que esta operação NÃO faz
+## What this operation does NOT do
 
-1. **Não roda a suíte.** Ela lê o código-fonte dos testes. Um teste que passa por acidente e um que
-   passa por mérito são idênticos para ela.
+1. **It does not run the suite.** It reads the tests' source code. A test that passes by accident
+   and one that passes on merit are identical to it.
 
-2. **Não mede cobertura de linha.** É outra pergunta, já tem ferramenta, e **cobertura alta com
-   controle negativo zero é exatamente o estado que esta operação existe para achar** — a suíte
-   percorre tudo e não verifica nada.
+2. **It does not measure line coverage.** That is another question, there is already a tool, and
+   **high coverage with zero negative control is exactly the state this operation exists to find** —
+   the suite walks everything and verifies nothing.
 
-3. **Não sabe o que ninguém testou.** O que não virou teste é invisível para ela — a mesma lacuna
-   que a sua suíte tem, e é para isso que serve a terceira lista, escrita à mão.
+3. **It does not know what nobody tested.** What did not become a test is invisible to it — the same
+   gap your suite has, and that is what the third list is for, written by hand.
 
-4. **Não julga se o mecanismo testado deveria existir.** Ela pergunta se o teste morre junto com
-   ele. Se a regra imposta é a certa continua sendo julgamento de quem escreveu.
+4. **It does not judge whether the tested mechanism should exist.** It asks whether the test dies
+   along with it. Whether the imposed rule is the right one stays a judgment for whoever wrote it.

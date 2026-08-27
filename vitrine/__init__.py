@@ -1,16 +1,16 @@
-"""`vitrine` — a sua skill está na vitrine, ou está no estoque?
+"""`vitrine` — is your skill in the window, or in the stockroom?
 
-Um agente decide carregar uma skill lendo dois campos: `name` e `description`.
-O corpo do `SKILL.md` só é lido DEPOIS que a decisão já foi tomada. Esses dois
-campos são a vitrine; todo o resto é estoque.
+An agent decides to load a skill by reading two fields: `name` and `description`.
+The body of the `SKILL.md` is only read AFTER the decision has already been made.
+Those two fields are the window; everything else is stock.
 
-Nenhum compilador confere essa vitrine. A escolha é probabilística, feita por um
-modelo, em tempo de execução — e quando ela falha, **não há erro**: a skill
-simplesmente nunca é carregada, e ninguém fica sabendo.
+No compiler checks that window. The choice is probabilistic, made by a model, at
+runtime — and when it fails, **there is no error**: the skill simply never gets
+loaded, and nobody finds out.
 
-Este módulo confere a vitrine por regra, sem chamar modelo nenhum. E ele também sabe CRIAR uma
-skill nova — `colher()` recusa nascer skill redundante em vez de auditar a redundância depois do
-fato, sem chamar modelo nenhum também.
+This module checks the window rule by rule, calling no model. And it also knows how to CREATE a new
+skill — `colher()` refuses to be born a redundant skill instead of auditing the redundancy after the
+fact, calling no model either.
 """
 
 from .colheita import Recusa as RecusaDeColheita

@@ -1,21 +1,21 @@
-"""Sondas da operação `readme-que-nao-mente`.
+"""Probes for the `readme-que-nao-mente` operation.
 
-nature: fix — sonda que estoura vira `UNPROVEN` no relatório, com o erro
-por extenso. Ela nunca devolve um palpite.
+nature: fix — a probe that blows up becomes `UNPROVEN` in the report, with
+the error written out. It never returns a guess.
 
-COPIE ESTE ARQUIVO para a raiz do seu repositório, como `sondas.py`.
-Para combinar com outra operação, concatene os arquivos — nenhum nome auxiliar
-daqui colide com o das outras (todos começam com `_repo_`).
+COPY THIS FILE to the root of your repository, as `sondas.py`.
+To combine with another operation, concatenate the files — no helper name here
+collides with the others' (they all start with `_repo_`).
 
-⚠️ **A regra anti-espelho.** O número escrito está no `README.md`, em prosa
-escrita à mão. Nenhuma sonda daqui lê `.md` nenhum: elas leem o código, os
-manifestos de dependência e o `git`. São dois artefatos independentes — mexer
-num sem mexer no outro reprova, que é exatamente o ponto.
+⚠️ **The anti-mirror rule.** The written number is in the `README.md`, in prose
+written by hand. No probe here reads any `.md`: they read the code, the
+dependency manifests and `git`. They are two independent artifacts — touching
+one without touching the other fails, which is exactly the point.
 
-⚠️ **E um limite honesto.** Estas sondas contam o que dá para contar sem julgar.
-`repo.testes` conta funções que PARECEM teste pela convenção da linguagem; ela
-não sabe se o teste testa alguma coisa. Contagem não é qualidade, e o
-`LACUNAS.md` do agente desta operação diz isso por extenso.
+⚠️ **And an honest limit.** These probes count what can be counted without
+judging. `repo.testes` counts functions that LOOK LIKE a test by the language's
+convention; it does not know whether the test tests anything. A count is not
+quality, and this operation's agent `LACUNAS.md` says so in full.
 """
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ from loadline import sonda
 
 RAIZ = Path(__file__).resolve().parent
 
-#: Pastas que não são o projeto. Contá-las faria `repo.linhas` medir o npm.
+#: Folders that are not the project. Counting them would make `repo.linhas` measure npm.
 _REPO_IGNORAR = {
     ".git", ".hg", ".svn", "node_modules", ".venv", "venv", "env", "__pycache__",
     ".mypy_cache", ".pytest_cache", ".ruff_cache", ".tox", "dist", "build",
@@ -57,7 +57,7 @@ _REPO_PENDENCIA = re.compile(r"\b(TODO|FIXME|XXX|HACK)\b[:( ]")
 
 
 def _repo_andar():
-    """Todo arquivo do projeto, sem as pastas que não são o projeto."""
+    """Every project file, without the folders that are not the project."""
     pilha = [RAIZ]
     while pilha:
         pasta = pilha.pop()
@@ -105,11 +105,11 @@ def _repo_manifesto_node() -> dict:
 
 
 def _repo_dependencias(dev: bool) -> int:
-    """Dependências declaradas, somadas sobre os manifestos que existirem.
+    """Declared dependencies, summed over whatever manifests exist.
 
-    Quatro ecossistemas. Nenhum encontrado devolve `0`, e o `0` aqui é honesto:
-    ele diz *este repositório não declara dependência em manifesto que eu leia*,
-    não *este repositório não tem dependência*. A diferença está no `LACUNAS.md`.
+    Four ecosystems. None found returns `0`, and the `0` here is honest: it says
+    *this repository declares no dependency in a manifest I read*, not *this
+    repository has no dependency*. The difference is in `LACUNAS.md`.
     """
     total = 0
 
@@ -143,36 +143,36 @@ def _repo_dependencias(dev: bool) -> int:
 
 
 # ---------------------------------------------------------------------------
-# As sondas
+# The probes
 # ---------------------------------------------------------------------------
 
 
-@sonda("repo.arquivos", origem="arquivos fora das pastas de dependência e de build")
+@sonda("repo.arquivos", origem="files outside the dependency and build folders")
 def arquivos() -> int:
     return sum(1 for _ in _repo_andar())
 
 
-@sonda("repo.fontes", origem="arquivos com extensão de linguagem de programação")
+@sonda("repo.fontes", origem="files with a programming-language extension")
 def fontes() -> int:
     return len(_repo_fontes())
 
 
-@sonda("repo.linhas", origem="linhas somadas dos arquivos de código-fonte")
+@sonda("repo.linhas", origem="summed lines of the source files")
 def linhas() -> int:
     return sum(len(_repo_ler(p).splitlines()) for p in _repo_fontes())
 
 
-@sonda("repo.linguagens", origem="extensões de linguagem distintas presentes")
+@sonda("repo.linguagens", origem="distinct language extensions present")
 def linguagens() -> int:
     return len({p.suffix for p in _repo_fontes()})
 
 
-@sonda("repo.testes", origem="funções de teste pela convenção de cada linguagem")
+@sonda("repo.testes", origem="test functions by each language's convention")
 def testes() -> int:
     return sum(len(_REPO_TESTE.findall(_repo_ler(p))) for p in _repo_fontes())
 
 
-@sonda("repo.arquivos_de_teste", origem="arquivos cujo nome segue a convenção de teste")
+@sonda("repo.arquivos_de_teste", origem="files whose name follows the test convention")
 def arquivos_de_teste() -> int:
     return sum(
         1
@@ -182,17 +182,17 @@ def arquivos_de_teste() -> int:
     )
 
 
-@sonda("repo.dependencias", origem="dependências de produção em pyproject/package.json/requirements/go.mod")
+@sonda("repo.dependencias", origem="production dependencies in pyproject/package.json/requirements/go.mod")
 def dependencias() -> int:
     return _repo_dependencias(dev=False)
 
 
-@sonda("repo.dependencias_dev", origem="dependências de desenvolvimento nos mesmos manifestos")
+@sonda("repo.dependencias_dev", origem="development dependencies in the same manifests")
 def dependencias_dev() -> int:
     return _repo_dependencias(dev=True)
 
 
-@sonda("repo.workflows", origem="arquivos .yml/.yaml em .github/workflows/")
+@sonda("repo.workflows", origem=".yml/.yaml files in .github/workflows/")
 def workflows() -> int:
     pasta = RAIZ / ".github" / "workflows"
     if not pasta.is_dir():
@@ -200,20 +200,21 @@ def workflows() -> int:
     return sum(1 for p in pasta.iterdir() if p.suffix in {".yml", ".yaml"})
 
 
-@sonda("repo.pendencias", origem="marcas TODO/FIXME/XXX/HACK no código-fonte")
+@sonda("repo.pendencias", origem="TODO/FIXME/XXX/HACK marks in the source code")
 def pendencias() -> int:
     return sum(len(_REPO_PENDENCIA.findall(_repo_ler(p))) for p in _repo_fontes())
 
 
-@sonda("repo.maior_arquivo", origem="linhas do maior arquivo de código-fonte")
+@sonda("repo.maior_arquivo", origem="lines of the largest source file")
 def maior_arquivo() -> int:
     return max((len(_repo_ler(p).splitlines()) for p in _repo_fontes()), default=0)
 
 
-@sonda("repo.contribuidores", origem="autores distintos em `git shortlog -sne --all`")
+@sonda("repo.contribuidores", origem="distinct authors in `git shortlog -sne --all`")
 def contribuidores() -> int:
-    """Sai de `git`. Sem repositório git, ela estoura e vira `UNPROVEN` — que é
-    a resposta certa: *não dá para conferir* nunca deve virar *zero*."""
+    """Comes from `git`. With no git repository it blows up and becomes
+    `UNPROVEN` — which is the right answer: *cannot be verified* must never
+    become *zero*."""
     saida = subprocess.run(
         ["git", "-C", str(RAIZ), "shortlog", "-sne", "--all", "--no-merges"],
         capture_output=True, text=True, timeout=30, check=True, stdin=subprocess.DEVNULL,

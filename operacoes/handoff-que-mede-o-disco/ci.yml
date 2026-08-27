@@ -1,21 +1,22 @@
-# Copie para `.github/workflows/handoff.yml`.
+# Copy to `.github/workflows/handoff.yml`.
 #
-# ⚠️ LEIA ANTES DE LIGAR, PORQUE METADE DAS SONDAS DESTA OPERAÇÃO NÃO VALE AQUI.
+# ⚠️ READ BEFORE TURNING ON, BECAUSE HALF THIS OPERATION'S PROBES DO NOT HOLD HERE.
 #
-# `handoff.commits_desde` e `handoff.sessoes_desde` leem `mtime`, e o git NÃO
-# preserva `mtime`: num checkout de CI todo arquivo nasce com o mesmo instante.
-# As duas estouram para o total do repositório, ou zeram, dependendo da ordem —
-# e nos dois casos o número não mede nada. Elas são medida da árvore de trabalho
-# de quem edita.
+# `handoff.commits_desde` and `handoff.sessoes_desde` read `mtime`, and git does
+# NOT preserve `mtime`: in a CI checkout every file is born with the same
+# instant. The two blow up to the repository total, or zero out, depending on
+# order — and in both cases the number measures nothing. They are a measure of
+# the working tree of whoever edits.
 #
-# O que VALE no CI é a outra metade, e ela é a que interessa mesmo: caminho
-# morto, comando sem alvo e deriva de git são propriedades do CONTEÚDO do
-# documento contra o CONTEÚDO do repositório, e sobrevivem a qualquer clone.
+# What DOES hold in CI is the other half, and it is the one that matters most:
+# a dead path, a command with no target and git drift are properties of the
+# document's CONTENT against the repository's CONTENT, and they survive any clone.
 #
-# Por isso este job usa `--so` para nomear o que confere. Se a sua versão do
-# loadline não tiver essa bandeira, deixe o job rodar tudo e IGNORE por escrito o
-# vermelho das duas de idade — nunca as resele para o valor do CI, porque isso
-# grava no documento um número que só existe dentro de um checkout efêmero.
+# That is why this job uses `--so` to name what it checks. If your version of
+# loadline does not have that flag, let the job run everything and IGNORE in
+# writing the red of the two age probes — never re-seal them to the CI value,
+# because that writes into the document a number that only exists inside an
+# ephemeral checkout.
 
 name: handoff-que-mede-o-disco
 
@@ -28,9 +29,9 @@ on:
       - "CONTEXT.md"
       - "STATE.md"
   schedule:
-    # Um handoff nunca envelhece por commit NELE — ele envelhece por commit em
-    # tudo o mais. Nenhum evento deste arquivo dispara, e é por isso que o cron
-    # aqui é semanal e não mensal.
+    # A handoff never ages by a commit TO IT — it ages by a commit to everything
+    # else. No event on this file fires, and that is why the cron here is weekly
+    # and not monthly.
     - cron: "0 7 * * 1"
   workflow_dispatch:
 
@@ -40,42 +41,42 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # O histórico inteiro: `handoff.commits_desde` conta commits, e um
-          # checkout raso devolveria um número menor sem erro nenhum — que é a
-          # família de defeito que este projeto existe para proibir.
+          # The whole history: `handoff.commits_desde` counts commits, and a
+          # shallow checkout would return a smaller number with no error at all —
+          # which is the family of defect this project exists to forbid.
           fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: instalar o loadline
+      - name: install loadline
         run: |
           git clone --depth 1 https://github.com/marquesPablo/loadline.git /tmp/loadline
           echo "PYTHONPATH=/tmp/loadline" >> "$GITHUB_ENV"
 
-      - name: o documento de retomada corresponde ao repositório
+      - name: the handoff document matches the repository
         run: |
           set +e
           python -m loadline . | tee relatorio.txt
           codigo=${PIPESTATUS[0]}
           set -e
           case "$codigo" in
-            0) echo "nenhum caminho morto, nenhum comando sem alvo, e o git concorda com o texto" ;;
+            0) echo "no dead path, no command with no target, and git agrees with the text" ;;
             1)
-              echo "::error::o arquivo de retomada afirma coisas que o disco desmente"
-              echo "::notice::caminho morto e comando sem alvo têm conserto de uma linha cada"
-              echo "::notice::as sondas de IDADE não valem neste job — veja o cabeçalho deste arquivo"
+              echo "::error::the handoff file claims things the disk contradicts"
+              echo "::notice::a dead path and a command with no target each have a one-line fix"
+              echo "::notice::the AGE probes do not hold in this job — see the header of this file"
               exit 1
               ;;
             2)
-              echo "::error::nenhum selo cobre o arquivo de retomada. Leia operacoes/handoff-que-mede-o-disco/selos.md"
+              echo "::error::no seal covers the handoff file. Read operacoes/handoff-que-mede-o-disco/selos.md"
               exit 1
               ;;
-            *) echo "::error::o loadline não pôde rodar"; exit 1 ;;
+            *) echo "::error::loadline could not run"; exit 1 ;;
           esac
 
-# ⚠️ Um verde aqui NÃO diz que a sua retomada está boa. Diz que ela não afirma
-#    caminho que sumiu, comando que perdeu o alvo, nem estado que o git desmente.
-#    Se ela conta a história certa continua sendo julgamento de quem escreveu —
-#    e nenhuma sonda offline alcança isso.
+# ⚠️ A green here does NOT say your handoff is good. It says it does not claim a
+#    path that disappeared, a command that lost its target, or a state git
+#    contradicts. Whether it tells the right story stays a judgment for whoever
+#    wrote it — and no offline probe reaches that.

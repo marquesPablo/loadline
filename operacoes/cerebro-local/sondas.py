@@ -1,23 +1,25 @@
-"""Sondas da operação `cerebro-local`.
+"""Probes for the `cerebro-local` operation.
 
-nature: fix — sonda que estoura vira `UNPROVEN` no relatório, com o erro
-por extenso. Ela nunca devolve um palpite.
+nature: fix — a probe that blows up becomes `UNPROVEN` in the report, with
+the error written out. It never returns a guess.
 
-COPIE ESTE ARQUIVO para a raiz do seu repositório, como `sondas.py`.
-Para combinar com outra operação, concatene os arquivos — nenhum nome auxiliar
-daqui colide com o das outras (todos começam com `_cer_`).
+COPY THIS FILE to the root of your repository, as `sondas.py`.
+To combine with another operation, concatenate the files — no helper name here
+collides with the others' (they all start with `_cer_`).
 
-⚠️ **A regra anti-espelho, aqui.** O número escrito mora na sua documentação
-("temos 340 notas", "o servidor expõe 4 ferramentas"). O número medido sai do
-**sistema de arquivos** e do **código do servidor** — nunca do `.md` que o
-afirma. Os dois lados têm donos diferentes, que é o que faz o par valer.
+⚠️ **The anti-mirror rule, here.** The written number lives in your
+documentation ("we have 340 notes", "the server exposes 4 tools"). The measured
+number comes from the **file system** and the **server code** — never from the
+`.md` that claims it. The two sides have different owners, which is what makes
+the pair worth anything.
 
-⚠️ **A armadilha que domina esta operação, e ela não dá erro.** `rg`, `grep -r`
-e `find` **não atravessam junction do Windows nem symlink de diretório**, e não
-avisam: a resposta volta plausível, sem erro, e sem os arquivos de dentro. Num
-vault de conhecimento as pastas ligadas são a regra, não a exceção. Estas sondas
-usam `os.walk(followlinks=True)`, que atravessa. Se você reescrever qualquer uma
-delas chamando `grep` por `subprocess`, o número cai e nada acusa.
+⚠️ **The trap that dominates this operation, and it gives no error.** `rg`,
+`grep -r` and `find` **do not cross a Windows junction or a directory symlink**,
+and do not warn: the answer comes back plausible, with no error, and without the
+files inside. In a knowledge vault linked folders are the rule, not the
+exception. These probes use `os.walk(followlinks=True)`, which crosses. If you
+rewrite any of them calling `grep` via `subprocess`, the number drops and
+nothing accuses.
 """
 
 from __future__ import annotations
@@ -30,13 +32,14 @@ from loadline import sonda
 
 RAIZ = Path(__file__).resolve().parent
 
-#: AJUSTE ÚNICO desta operação: onde moram as suas notas, relativo a este arquivo.
-#: `"."` significa "o repositório inteiro".
+#: THE ONE ADJUSTMENT of this operation: where your notes live, relative to this
+#: file. `"."` means "the whole repository".
 PASTA_DE_NOTAS = "."
 
-#: Precisa bater com `EXTENSOES` do `servidor.py`. Se divergirem, a sonda conta
-#: um corpus e o servidor serve outro — e o selo verde estaria medindo a coisa
-#: errada. A sonda `cerebro.ferramentas` existe justamente para ancorar isto.
+#: Must match `EXTENSOES` in `servidor.py`. If they diverge, the probe counts
+#: one corpus and the server serves another — and the green seal would be
+#: measuring the wrong thing. The `cerebro.ferramentas` probe exists precisely
+#: to anchor this.
 _CER_EXTENSOES = (".md", ".markdown", ".txt", ".org")
 _CER_IGNORAR = {".git", ".obsidian", "node_modules", "__pycache__", ".venv", ".trash", "build"}
 
@@ -48,14 +51,14 @@ def _cer_base() -> Path:
     base = (RAIZ / PASTA_DE_NOTAS).resolve()
     if not base.is_dir():
         raise LookupError(
-            f"`{PASTA_DE_NOTAS}` não é uma pasta que existe. Ajuste PASTA_DE_NOTAS no topo de "
-            "sondas.py — um zero por eu não ter olhado é pior que nenhum número"
+            f"`{PASTA_DE_NOTAS}` is not a folder that exists. Adjust PASTA_DE_NOTAS at the top of "
+            "sondas.py — a zero because I did not look is worse than no number"
         )
     return base
 
 
 def _cer_notas() -> list[Path]:
-    """`os.walk` com `followlinks=True` — ver o aviso do topo do arquivo."""
+    """`os.walk` with `followlinks=True` — see the warning at the top of the file."""
     base = _cer_base()
     achadas: list[Path] = []
     for pasta, subpastas, arquivos in os.walk(base, followlinks=True):
@@ -67,9 +70,9 @@ def _cer_notas() -> list[Path]:
         ]
     if not achadas:
         raise LookupError(
-            f"nenhuma nota sob `{PASTA_DE_NOTAS}` com extensão {_CER_EXTENSOES}. "
-            "Ou a pasta está errada, ou as suas notas têm outra extensão — nos dois casos "
-            "devolver zero seria transformar «não olhei» em «não há»"
+            f"no note under `{PASTA_DE_NOTAS}` with extension {_CER_EXTENSOES}. "
+            "Either the folder is wrong, or your notes have another extension — in both cases "
+            "returning zero would be turning «I did not look» into «there is nothing»"
         )
     return achadas
 
@@ -79,7 +82,7 @@ def _cer_texto(nota: Path) -> str:
 
 
 def _cer_alvos_citados() -> dict[str, set[str]]:
-    """nota de origem -> nomes que ela cita, por wiki-link ou link markdown."""
+    """source note -> names it cites, by wiki-link or markdown link."""
     citados: dict[str, set[str]] = {}
     for nota in _cer_notas():
         texto = _cer_texto(nota)
@@ -90,16 +93,16 @@ def _cer_alvos_citados() -> dict[str, set[str]]:
 
 
 # ---------------------------------------------------------------------------
-# As sondas
+# The probes
 # ---------------------------------------------------------------------------
 
 
-@sonda("cerebro.notas", origem="arquivos servíveis sob a pasta de notas, via os.walk")
+@sonda("cerebro.notas", origem="servable files under the notes folder, via os.walk")
 def cer_notas() -> int:
     return len(_cer_notas())
 
 
-@sonda("cerebro.pastas", origem="pastas de primeiro nível que contêm ao menos uma nota")
+@sonda("cerebro.pastas", origem="first-level folders that contain at least one note")
 def cer_pastas() -> int:
     base = _cer_base()
     return len({n.relative_to(base).parts[0] for n in _cer_notas() if n.parent != base})
@@ -107,38 +110,39 @@ def cer_pastas() -> int:
 
 @sonda(
     "cerebro.ferramentas",
-    origem="entradas da lista FERRAMENTAS em servidor.py — lido do código, não da documentação",
+    origem="entries in the FERRAMENTAS list in servidor.py — read from the code, not the documentation",
 )
 def cer_ferramentas() -> int:
-    """De RELAÇÃO. Ela não anda quando você escreve uma nota.
+    """A RELATION. It does not move when you write a note.
 
-    Ela só anda quando alguém acrescenta ou tira uma ferramenta do servidor — e
-    aí a documentação que promete quatro passou a mentir. É o par mais direto
-    desta operação: o número está no `.md`, a verdade está no `.py`.
+    It only moves when someone adds or removes a tool from the server — and then
+    the documentation that promises four has started lying. It is the most
+    direct pair of this operation: the number is in the `.md`, the truth is in
+    the `.py`.
     """
     servidor = RAIZ / "servidor.py"
     if not servidor.is_file():
         raise LookupError(
-            "`servidor.py` não está ao lado de sondas.py. Copie os dois juntos — sem o "
-            "servidor esta métrica não tem segundo lado, e um lado só não verifica nada"
+            "`servidor.py` is not next to sondas.py. Copy the two together — without the "
+            "server this metric has no second side, and one side alone verifies nothing"
         )
     texto = servidor.read_text(encoding="utf-8", errors="replace")
     bloco = re.search(r"^FERRAMENTAS\s*=\s*\[(.*?)^\]", texto, re.MULTILINE | re.DOTALL)
     if not bloco:
-        raise LookupError("não achei a lista `FERRAMENTAS` em servidor.py")
+        raise LookupError("did not find the `FERRAMENTAS` list in servidor.py")
     return len(re.findall(r'^\s{4}\{\s*$', bloco.group(1), re.MULTILINE))
 
 
 @sonda(
     "cerebro.orfas",
-    origem="notas que nenhuma outra nota cita — nem por wiki-link, nem por link markdown",
+    origem="notes that no other note cites — neither by wiki-link, nor by markdown link",
 )
 def cer_orfas() -> int:
-    """De RELAÇÃO, e é o número que diz se o seu vault é um grafo ou uma pilha.
+    """A RELATION, and it is the number that says whether your vault is a graph or a pile.
 
-    Uma nota órfã não é uma nota ruim: é uma nota que só o autor alcança. Ela
-    não aparece em navegação nenhuma, e a única forma de chegar nela é lembrar
-    que ela existe — que é exatamente o que um cérebro externo deveria dispensar.
+    An orphan note is not a bad note: it is a note only the author reaches. It
+    shows up in no navigation, and the only way to get to it is to remember it
+    exists — which is exactly what an external brain should make unnecessary.
     """
     citados = _cer_alvos_citados()
     alcancados = set().union(*citados.values()) if citados else set()
@@ -147,14 +151,14 @@ def cer_orfas() -> int:
 
 @sonda(
     "cerebro.links_quebrados",
-    origem="alvos de [[wiki-link]] e de link .md que não correspondem a nenhuma nota",
+    origem="targets of [[wiki-link]] and .md links that match no note",
 )
 def cer_links_quebrados() -> int:
-    """De RELAÇÃO. Um link quebrado é uma aresta para o vazio.
+    """A RELATION. A broken link is an edge to the void.
 
-    ⚠️ Ele conta ALVOS DISTINTOS, não ocorrências. Um nome errado citado em
-    trinta notas é UM link quebrado, e é assim que o conserto se mede: um nome,
-    um conserto.
+    ⚠️ It counts DISTINCT TARGETS, not occurrences. A wrong name cited in thirty
+    notes is ONE broken link, and that is how the fix is measured: one name, one
+    fix.
     """
     citados = _cer_alvos_citados()
     existentes = set(citados)
@@ -162,7 +166,7 @@ def cer_links_quebrados() -> int:
     return len(quebrados)
 
 
-@sonda("cerebro.sem_titulo", origem="notas cuja primeira linha não-vazia não é um título markdown")
+@sonda("cerebro.sem_titulo", origem="notes whose first non-empty line is not a markdown title")
 def cer_sem_titulo() -> int:
     sem = 0
     for nota in _cer_notas():
@@ -173,25 +177,25 @@ def cer_sem_titulo() -> int:
     return sem
 
 
-@sonda("cerebro.maior_nota", origem="bytes do maior arquivo servível")
+@sonda("cerebro.maior_nota", origem="bytes of the largest servable file")
 def cer_maior_nota() -> int:
     return max(n.stat().st_size for n in _cer_notas())
 
 
 @sonda(
     "cerebro.dependencias",
-    origem="imports de terceiros em servidor.py — tem de ser zero, e a sonda prova",
+    origem="third-party imports in servidor.py — it must be zero, and the probe proves it",
 )
 def cer_dependencias() -> int:
-    """De RELAÇÃO, e é a promessa mais fácil de quebrar sem perceber.
+    """A RELATION, and it is the easiest promise to break without noticing.
 
-    *"Zero dependências"* é a frase que faz alguém rodar isto numa máquina que
-    não administra. Ela morre no dia em que alguém acrescenta um `import` por
-    conveniência, e nenhuma revisão de código repara — o diff mostra uma linha.
+    *"Zero dependencies"* is the sentence that makes someone run this on a
+    machine they do not administer. It dies the day someone adds an `import` for
+    convenience, and no code review catches it — the diff shows one line.
     """
     servidor = RAIZ / "servidor.py"
     if not servidor.is_file():
-        raise LookupError("`servidor.py` não está ao lado de sondas.py")
+        raise LookupError("`servidor.py` is not next to sondas.py")
     stdlib = {
         "argparse", "json", "os", "sys", "re", "pathlib", "__future__",
         "dataclasses", "typing", "collections", "datetime", "textwrap", "unicodedata",

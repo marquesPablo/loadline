@@ -1,15 +1,15 @@
-# Copie para `.github/workflows/sala-de-decisao.yml`.
+# Copy to `.github/workflows/sala-de-decisao.yml`.
 #
-# Este job tem um gatilho que os outros da prateleira não têm: `schedule`
-# DIÁRIO. E a razão é a natureza do que ele mede.
+# This job has a trigger the others on the shelf do not: a DAILY `schedule`.
+# And the reason is the nature of what it measures.
 #
-# Um item parado esperando decisão não dispara evento nenhum. Não há commit, não
-# há PR, não há diff — o arquivo está lá, idêntico, e vai ficando velho. Todos os
-# outros jobs desta prateleira medem coisas que mudam quando alguém escreve;
-# este mede uma coisa que piora quando NINGUÉM escreve.
+# A stuck item waiting on a decision fires no event. There is no commit, no PR,
+# no diff — the file is there, identical, and it keeps getting old. Every other
+# job on this shelf measures things that change when someone writes; this one
+# measures a thing that gets worse when NOBODY writes.
 #
-# Um cron semanal já seria melhor que nada. Diário é o que faz a fila ser vista
-# antes de alguém precisar dela.
+# A weekly cron would already be better than nothing. Daily is what makes the
+# queue get seen before someone needs it.
 
 name: sala-de-decisao
 
@@ -31,35 +31,36 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: instalar o loadline
+      - name: install loadline
         run: |
           git clone --depth 1 https://github.com/marquesPablo/loadline.git /tmp/loadline
           echo "PYTHONPATH=/tmp/loadline" >> "$GITHUB_ENV"
 
-      - name: conferir a integridade do acervo
+      - name: check the archive's integrity
         run: |
           set +e
           python -m loadline . | tee relatorio.txt
           codigo=${PIPESTATUS[0]}
           set -e
           case "$codigo" in
-            0) echo "acervo íntegro: todo status declarado, toda revogação com contra-ponteiro" ;;
+            0) echo "archive intact: every status declared, every revocation with a back-pointer" ;;
             1)
-              echo "::error::o acervo de decisões divergiu do que está escrito sobre ele"
-              echo "::notice::relacao divergindo = PARE e investigue. contagem = leia o número, depois resele."
+              echo "::error::the decision archive diverged from what is written about it"
+              echo "::notice::a relation diverging = STOP and investigate. a count = read the number, then re-seal."
               exit 1
               ;;
             2)
-              echo "::error::nenhum selo cobre o índice de decisões. Leia operacoes/sala-de-decisao/selos.md"
+              echo "::error::no seal covers the decisions index. Read operacoes/sala-de-decisao/selos.md"
               exit 1
               ;;
-            *) echo "::error::o loadline não pôde rodar"; exit 1 ;;
+            *) echo "::error::loadline could not run"; exit 1 ;;
           esac
 
-      # A fila é informação, não defeito — e por isso ela AVISA sem reprovar.
-      # Um job que falha porque alguém ainda não decidiu treina o time a fechar
-      # gate no grito para o CI ficar verde, que é o oposto do que a fila serve.
-      - name: dizer o que está esperando alguém
+      # The queue is information, not a defect — and so it WARNS without failing.
+      # A job that fails because someone has not decided yet trains the team to
+      # close a gate under pressure so CI goes green, which is the opposite of
+      # what the queue is for.
+      - name: say what is waiting on someone
         if: always()
         run: |
           set -e
@@ -73,14 +74,14 @@ jobs:
               abertos = registro.medir("decisao.gates_abertos", None)
               dias = registro.medir("decisao.gate_mais_velho_dias", None)
           except LookupError as exc:
-              print(f"::warning::não consegui ler a fila: {exc}")
+              print(f"::warning::could not read the queue: {exc}")
               raise SystemExit(0)
           if abertos:
-              print(f"::warning::{abertos} item(ns) esperando decisão. O mais antigo há {dias} dia(s).")
+              print(f"::warning::{abertos} item(s) waiting on a decision. The oldest for {dias} day(s).")
           else:
-              print("nada esperando decisão.")
+              print("nothing waiting on a decision.")
           PY
 
-# ⚠️ Este job NÃO diz que as decisões estão sendo cumpridas, nem que foram boas.
-#    Ele diz que o acervo está íntegro — status declarado, alternativa escrita,
-#    revogação com aviso dos dois lados — e diz em voz alta o que está parado.
+# ⚠️ This job does NOT say the decisions are being followed, nor that they were
+#    good. It says the archive is intact — status declared, alternative written,
+#    revocation warned on both sides — and it says out loud what is stuck.
