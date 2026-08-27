@@ -1,30 +1,33 @@
-# Spec de exemplo da forja — e ela é real, não didática.
+# A forge example spec — and it is real, not a toy.
 #
-# Este agente responde a pergunta que o Censo mediu como a mais cara do
-# ecossistema: "posso usar este repositório no meu projeto aberto?". Ele existe
-# porque `CC BY-NC` e `AGPL-3.0` são as duas licenças que mais aparecem descritas
-# como "open source" por quem só leu o README.
+# This agent answers the question the Census measured as the most expensive in
+# the ecosystem: "can I use this repository in my open-source project?". It
+# exists because `CC BY-NC` and `AGPL-3.0` are the two licenses most often
+# described as "open source" by people who only read the README.
 #
-# Compile com:  python -m forja forja/exemplos/revisor-de-licenca.toml
+# (The TOML keys below are still Portuguese — translating the spec schema is its
+#  own step, like the seal vocabulary was.)
+#
+# Compile with:  python -m forja forja/exemplos/revisor-de-licenca.toml
 
 [agente]
 slug = "revisor-de-licenca"
-nome = "Revisor de licença"
+nome = "License reviewer"
 uma_frase = """
-Responde se uma dependência pode entrar num projeto open source, citando a licença lida \
-na PÁGINA do repositório — e separa as três portas que quase todo mundo trata como uma só: \
-rodar, ler a arquitetura como especificação, e copiar o código para dentro.\
+Answers whether a dependency can go into an open-source project, citing the license read \
+on the repository's PAGE — and separates the three doors almost everyone treats as one: \
+running it, reading the architecture as a specification, and copying the code in.\
 """
 usar_quando = [
-  "você vai acrescentar uma dependência e quer saber o que ela obriga",
-  "alguém disse que um repositório é open source e você quer conferir",
-  "você precisa decidir entre vendorizar o código e reimplementar a arquitetura",
+  "you are about to add a dependency and want to know what it obliges",
+  "someone said a repository is open source and you want to check",
+  "you need to decide between vendoring the code and reimplementing the architecture",
 ]
 nunca_usar = [
-  "escolher a licença do SEU projeto — isso é decisão de dono, não de análise",
-  "dar parecer jurídico; isto lê identificador declarado, não substitui advogado",
-  "revisar código em busca de vulnerabilidade — é outro agente",
-  "julgar patente, marca ou contrato — nada aqui olha para isso",
+  "choosing the license of YOUR project — that is an owner's decision, not an analysis",
+  "giving legal advice; this reads a declared identifier, it does not replace a lawyer",
+  "reviewing code for vulnerabilities — that is another agent",
+  "judging a patent, trademark or contract — nothing here looks at that",
 ]
 
 [fronteira]
@@ -41,38 +44,38 @@ toca_alvo = false
 
 [prova]
 lacunas = [
-  "não lê o texto integral da licença — lê o identificador declarado no repositório, e um LICENSE editado à mão desmente o identificador",
-  "não sabe se o repositório relicenciou depois da data em que a página foi lida",
-  "não vê licença de dependência transitiva; um MIT que puxa um AGPL continua puxando um AGPL",
-  "não distingue dual-licensing (código aberto + licença comercial paga) quando o repositório não o declara na página principal",
-  "não julga se o SEU projeto é comercial — essa é a pergunta que decide o caso `NC`, e ela é sua",
+  "does not read the full license text — it reads the identifier declared in the repository, and a hand-edited LICENSE contradicts the identifier",
+  "does not know whether the repository relicensed after the date the page was read",
+  "does not see a transitive dependency's license; an MIT that pulls an AGPL still pulls an AGPL",
+  "does not tell dual-licensing (open code + paid commercial license) apart when the repository does not declare it on the main page",
+  "does not judge whether YOUR project is commercial — that is the question that decides the `NC` case, and it is yours",
 ]
 
-# O que este agente precisa que já exista lá fora. A forja abre o Censo e
-# devolve as peças REAIS de cada estágio, com licença e aviso de colisão, em vez
-# de recomendar de cabeça.
+# What this agent needs to already exist out there. The forge opens the Census
+# and returns the REAL components for each stage, with license and collision
+# warning, instead of recommending off the top of its head.
 [censo]
 precisa = ["ontologia", "controle", "memoria"]
 
 [[prova.golden]]
-pergunta = "O PANO (ALW1EZ/PANO) pode ser copiado para dentro de um projeto MIT?"
+pergunta = "Can PANO (ALW1EZ/PANO) be copied into an MIT project?"
 esperado = """
-Não. A licença é CC BY-NC, que não é aprovada pela OSI e é incompatível com MIT. \
-As outras duas portas continuam abertas: rodar a ferramenta é permitido, e ler o catálogo \
-entity/transform como especificação e reimplementar também.\
+No. The license is CC BY-NC, which is not OSI-approved and is incompatible with MIT. \
+The other two doors stay open: running the tool is allowed, and reading the entity/transform \
+catalog as a specification and reimplementing it too.\
 """
 derivado_de = "censo/ecossistema.json:projetos[PANO].veredito_licenca"
 
 [[prova.golden]]
-pergunta = "O repowise é OSI? Posso usá-lo sem consequência num projeto fechado?"
+pergunta = "Is repowise OSI? Can I use it with no consequence in a closed project?"
 esperado = """
-É OSI, e mesmo assim a resposta à segunda pergunta é não-trivial: AGPL-3.0 é copyleft forte \
-e alcança uso em rede. O censo o marca como `osi_copyleft_forte` justamente porque as duas \
-respostas divergem, e o repositório oferece licença comercial paga como saída.\
+It is OSI, and even so the answer to the second question is non-trivial: AGPL-3.0 is strong \
+copyleft and reaches network use. The census marks it `osi_copyleft_forte` precisely because \
+the two answers diverge, and the repository offers a paid commercial license as a way out.\
 """
 derivado_de = "censo/ecossistema.json:projetos[repowise].veredito_licenca"
 
 [[prova.golden]]
-pergunta = "Quantos dos projetos catalogados têm licença OSI verificada na página?"
-esperado = "Sete. Dois são explicitamente não-OSI e o restante está `nao_verificado` — que nunca vira zero."
-derivado_de = "censo/CENSO.md § O denominador desta leitura"
+pergunta = "How many of the cataloged projects have an OSI license verified on the page?"
+esperado = "Seven. Two are explicitly non-OSI and the rest are `nao_verificado` — which never becomes zero."
+derivado_de = "censo/CENSO.md § The denominator of this reading"

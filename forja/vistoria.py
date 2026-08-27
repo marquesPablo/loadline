@@ -1,31 +1,32 @@
-"""Vistoria: lê os agentes que VOCÊ JÁ TEM, e diz o que falta no SISTEMA.
+"""Survey: reads the agents YOU ALREADY HAVE, and says what the SYSTEM is missing.
 
-nature: fix — a saída é sempre impressa por inteiro, inclusive quando
-reprova. Uma vistoria que só aparece quando passa não é vistoria.
+nature: fix — the output is always printed in full, even when it fails. A
+survey that only shows up when it passes is not a survey.
 
-A forja compila spec → artefato. Esta é a direção contrária, e é por onde todo
-mundo chega: você já tem doze agentes escritos à mão e não vai escrever doze
-specs na fé. A vistoria lê os doze e devolve o que só aparece a partir do
-quinto — os defeitos que não moram em nenhum agente, e sim ENTRE eles.
+The forge compiles spec → artifact. This is the other direction, and it is how
+everyone arrives: you already have twelve hand-written agents and you are not
+going to write twelve specs on faith. The survey reads the twelve and returns
+what only shows up from the fifth on — the defects that live in no single
+agent, but BETWEEN them.
 
-    python -m forja                      # vistoria de `.claude/agents/`
-    python -m forja --adotar             # ESCREVE: uma spec por agente lido
+    python -m forja                      # survey of `.claude/agents/`
+    python -m forja --adotar             # WRITES: one spec per agent read
 
-Sete achados. Os cinco primeiros são de UM agente; os dois últimos só existem
-porque há mais de um, e são a razão de esta ferramenta existir:
+Seven findings. The first five are about ONE agent; the last two only exist
+because there is more than one, and they are the reason this tool exists:
 
-    V1  não diz o que NUNCA faz          o orquestrador despacha por tema
-    V2  não diz QUANDO usar              agente que ninguém alcança
-    V3  fronteira só na prosa            pede escrita/rede sem declarar onde
-    V4  não diz o que não cobre          silêncio é lido como cobertura
-    V5  nada confere a RESPOSTA          você testa o código, nunca a resposta
-    V6  dois se confundem                descrições sobrepostas, e nenhum
-                                         nomeia o outro
-    V7  ferramenta sem dono              herda tudo o que o harness oferece
+    V1  does not say what it NEVER does   the orchestrator dispatches by topic
+    V2  does not say WHEN to use it       an agent nobody reaches
+    V3  boundary only in the prose        asks for write/network without declaring where
+    V4  does not say what it does not cover   silence is read as coverage
+    V5  nothing checks the ANSWER         you test the code, never the answer
+    V6  two get confused                  overlapping descriptions, and neither
+                                          names the other
+    V7  tool with no owner                inherits everything the harness offers
 
-Código de saída: 0 nada encontrado · 1 defeito · 2 não havia o que ler.
-O 2 é o ponto: pasta que não existe é RECUSA, e nunca verde. Um erro de
-digitação no caminho não pode deixar um gate aprovando para sempre.
+Exit code: 0 nothing found · 1 defect · 2 there was nothing to read.
+The 2 is the point: a folder that does not exist is a REFUSAL, and never green.
+A typo in the path must not leave a gate approving forever.
 """
 
 from __future__ import annotations
@@ -38,26 +39,29 @@ from pathlib import Path
 
 from .spec import CONHECIDAS, ESCRITA, REDE
 
-# Onde os harnesses de hoje guardam agente. A busca é por pasta declarada, e
-# nunca por varredura do projeto inteiro: varrer `.` acha `node_modules` e
-# devolve uma resposta plausível e errada.
+# Where today's harnesses keep agents. The search is by declared folder, and
+# never by scanning the whole project: scanning `.` finds `node_modules` and
+# returns a plausible, wrong answer.
 PASTAS = (".claude/agents", ".claude/subagents", "agents", ".cursor/agents")
 
-# Fora do vocabulário: `tools:` ausente NÃO significa "nenhuma ferramenta".
-# Nos harnesses de hoje significa **todas** — que é o oposto, e é o defeito V7.
-HERDA_TUDO = "«herda todas»"
+# Outside the vocabulary: a missing `tools:` does NOT mean "no tools".
+# In today's harnesses it means **all** — which is the opposite, and is defect V7.
+HERDA_TUDO = "«inherits all»"
 
 _ACENTO = re.compile(r"[̀-ͯ]")
 _PALAVRA = re.compile(r"[a-z0-9]{5,}")
 
-# Palavras que aparecem em toda descrição de agente e não distinguem nada.
-# Sem esta lista, dois agentes quaisquer "se parecem" e o V6 vira ruído.
+# Words that show up in every agent description and distinguish nothing.
+# Without this list, any two agents "look alike" and V6 becomes noise.
 VAZIAS = frozenset(
     """
     agente agentes usar quando nunca sempre projeto arquivo arquivos pasta
     pastas quando sobre cada todos todas outro outra apenas mesmo mesma
     porque coisa coisas forma partir depois antes ainda entao tambem
     escrever escreve escrito leitura ler nunca_usar deve devem podem
+    agent agents when never always project file files folder folders about
+    each every other only same because thing things after before still also
+    write writes written read never_use must should when should_not this
     """.split()
 )
 
@@ -67,13 +71,13 @@ def _sem_acento(texto: str) -> str:
 
 
 def _significativas(texto: str) -> set[str]:
-    """As palavras de uma descrição que de fato a distinguem das outras."""
+    """The words in a description that actually set it apart from the others."""
     return {p for p in _PALAVRA.findall(_sem_acento(texto))} - VAZIAS
 
 
 @dataclass
 class Lido:
-    """Um agente COMO ELE ESTÁ no disco — não como alguém gostaria que fosse."""
+    """An agent AS IT IS on disk — not as someone would like it to be."""
 
     caminho: Path
     slug: str
@@ -81,14 +85,14 @@ class Lido:
     ferramentas: list[str]
     corpo: str
     tools_ausente: bool
-    #: A raiz do projeto que contém este agente — de onde os arquivos irmãos
-    #: (hook, golden, lacunas) são procurados. `None` quando não dá para dizer.
+    #: The project root that contains this agent — where the sibling files
+    #: (hook, golden, gaps) are looked for. `None` when it cannot be said.
     raiz: Path | None = None
-    #: O frontmatter INTEIRO, `chave: valor` cru — não só `name`/`description`/
-    #: `tools`. Existe porque `saida_cercada`/`dominios_permitidos` (as duas
-    #: marcas de fronteira que V3 procura) costumam morar AQUI, não na prosa do
-    #: corpo — e um campo estruturado é sinal mais forte que a mesma frase
-    #: escrita como texto (mesmo raciocínio de `_irmao_declara`).
+    #: The WHOLE frontmatter, raw `key: value` — not just `name`/`description`/
+    #: `tools`. It exists because `write_paths`/`allowed_domains` (the two
+    #: boundary marks V3 looks for) usually live HERE, not in the body prose —
+    #: and a structured field is a stronger signal than the same sentence
+    #: written as text (same reasoning as `_irmao_declara`).
     campos: dict[str, str] = field(default_factory=dict)
 
     @property
@@ -115,19 +119,19 @@ class Achado:
     conserto: str
     itens: list[str] = field(default_factory=list)
     grave: bool = True
-    #: Os agentes DISTINTOS atingidos. Separado de `itens` porque um agente pode
-    #: render duas linhas (escrita E rede), e contar linha como agente faria o
-    #: denominador dizer «4 de 2» — não medido virando número inventado, dentro
-    #: da ferramenta que existe para proibir isso.
+    #: The DISTINCT agents hit. Kept apart from `itens` because one agent can
+    #: yield two lines (write AND network), and counting a line as an agent
+    #: would make the denominator say «4 of 2» — not measured turning into an
+    #: invented number, inside the tool that exists to forbid it.
     agentes: set[str] = field(default_factory=set)
 
 
 def _frontmatter(texto: str) -> tuple[dict[str, str], str]:
-    """Frontmatter mínimo, sem dependência: `---` … `---`, uma chave por linha.
+    """Minimal frontmatter, no dependency: `---` … `---`, one key per line.
 
-    Não é um parser de YAML e não finge ser. Ele lê o que os harnesses de hoje
-    de fato escrevem — `chave: valor` de uma linha — e devolve o resto como
-    corpo. Valor multi-linha não é lido, e isso está declarado em LACUNAS.
+    It is not a YAML parser and does not pretend to be. It reads what today's
+    harnesses actually write — one-line `key: value` — and returns the rest as
+    the body. A multi-line value is not read, and that is declared in LACUNAS.
     """
     if not texto.startswith("---"):
         return {}, texto
@@ -144,7 +148,7 @@ def _frontmatter(texto: str) -> tuple[dict[str, str], str]:
 
 
 def _desaspar(valor: str) -> str:
-    """`description:` costuma vir como string JSON. Aspas soltas não são dado."""
+    """`description:` usually comes as a JSON string. Loose quotes are not data."""
     valor = valor.strip()
     if valor[:1] in {'"', "'"}:
         try:
@@ -155,14 +159,14 @@ def _desaspar(valor: str) -> str:
 
 
 def ler_agente(caminho: Path, raiz: Path | None = None) -> Lido | None:
-    """Um arquivo → um agente lido. `None` quando o arquivo não é um agente."""
+    """One file → one agent read. `None` when the file is not an agent."""
     try:
         texto = caminho.read_text(encoding="utf-8", errors="replace")
     except OSError:
         return None
     campos, corpo = _frontmatter(texto)
     if "name" not in campos and "description" not in campos:
-        return None  # markdown solto na pasta; não é agente, e não vira número.
+        return None  # loose markdown in the folder; not an agent, and not a number.
     bruto = campos.get("tools", "").strip()
     return Lido(
         caminho=caminho,
@@ -185,7 +189,7 @@ def achar_pasta(raiz: Path) -> Path | None:
 
 
 def raiz_do_projeto(pasta: Path) -> Path:
-    """De `<raiz>/.claude/agents` volta para `<raiz>`. É de lá que saem os irmãos."""
+    """From `<root>/.claude/agents` back to `<root>`. That is where the siblings are."""
     partes = [p.lower() for p in pasta.parts]
     return pasta.parent.parent if ".claude" in partes else pasta.parent
 
@@ -196,33 +200,40 @@ def ler_roster(pasta: Path) -> list[Lido]:
     return [x for x in lidos if x is not None]
 
 
-# ----------------------------------------------------------- os sete --------
+# ----------------------------------------------------------- the seven -----
 #
-# ⚠️ Todo achado abaixo é a AUSÊNCIA de uma declaração legível por máquina —
-# nunca um julgamento sobre a qualidade do agente. A diferença importa: um
-# agente excelente cuja fronteira está escrita em prosa aparece aqui, e deve
-# aparecer. Prosa não é cerca; ela é intenção, e nenhum runtime a lê.
+# ⚠️ Every finding below is the ABSENCE of a machine-readable declaration —
+# never a judgment about the quality of the agent. The difference matters: an
+# excellent agent whose boundary is written in prose shows up here, and should.
+# Prose is not a fence; it is intent, and no runtime reads it.
 #
-# Cada marca é uma lista fechada, e ela está escrita aqui para que quem discorde
-# possa apontar o que falta em vez de descobrir o limite sendo surpreendido.
+# Each mark is a closed list, and it is written here so that whoever disagrees
+# can point at what is missing instead of finding the limit by being surprised.
 
-DIZ_QUE_NAO_FAZ = ("nunca usar", "nunca use", "não usar para", "nao usar para", "never use")
-DIZ_QUANDO_USAR = ("usar quando", "usar para", "use quando", "use when", "use this")
-DIZ_ONDE_ESCREVE = ("saida_cercada", "escreve só em", "escreve apenas em", "um caminho só")
-DIZ_ONDE_FALA = ("dominios_permitidos", "domínios permitidos", "allowed_domains")
-DIZ_O_QUE_NAO_COBRE = ("lacuna", "não mede", "nao mede", "não cobre", "nao cobre", "o que este")
-DIZ_QUE_CONFERE_RESPOSTA = ("golden", "resposta esperada", "caso de verificação")
+DIZ_QUE_NAO_FAZ = ("nunca usar", "nunca use", "não usar para", "nao usar para",
+                   "never use", "do not use", "never used for", "not for")
+DIZ_QUANDO_USAR = ("usar quando", "usar para", "use quando", "use when", "use this",
+                   "use for", "use it when")
+DIZ_ONDE_ESCREVE = ("write_paths", "saida_cercada", "escreve só em", "escreve apenas em",
+                    "um caminho só", "writes only in", "writes only to", "one path only")
+DIZ_ONDE_FALA = ("allowed_domains", "dominios_permitidos", "domínios permitidos",
+                 "allowed domains", "talks only to")
+DIZ_O_QUE_NAO_COBRE = ("lacuna", "não mede", "nao mede", "não cobre", "nao cobre", "o que este",
+                       "gap", "does not measure", "does not cover", "what this agent does not")
+DIZ_QUE_CONFERE_RESPOSTA = ("golden", "resposta esperada", "caso de verificação",
+                            "expected answer", "verification case")
 
-# Acima disto, duas descrições disputam o mesmo despacho. O valor é ESCOLHIDO,
-# não medido — e por isso ele está aqui, com o dono, em vez de enterrado num if.
+# Above this, two descriptions fight over the same dispatch. The value is
+# CHOSEN, not measured — and that is why it is here, with its owner, instead of
+# buried in an if.
 LIMIAR_CONFUSAO = 0.30
 
 
-# Onde uma declaração pode morar FORA do `.md` do agente. Um hook num arquivo
-# irmão é uma cerca de verdade — mais de verdade, aliás, do que a mesma frase
-# escrita na prosa do prompt, que nenhum runtime lê. Procurar só dentro do `.md`
-# acusaria a saída do próprio compilador, que é a família de defeito em que uma
-# ferramenta passa a medir a superfície errada e chama isso de achado.
+# Where a declaration can live OUTSIDE the agent's `.md`. A hook in a sibling
+# file is a real fence — more real, in fact, than the same sentence written in
+# the prompt prose, which no runtime reads. Searching only inside the `.md`
+# would flag the compiler's own output, which is the family of defect where a
+# tool starts measuring the wrong surface and calls it a finding.
 IRMAOS = {
     "cerca": ("hooks", ".claude/hooks"),
     "golden": ("golden", "evals", "eval", "tests/golden"),
@@ -232,11 +243,11 @@ NOMES_DE_LACUNA = ("lacunas.md", "limitacoes.md", "limitations.md", "gaps.md")
 
 
 def _irmao_declara(raiz: Path | None, slug: str, familia: str) -> bool:
-    """Existe, ao lado do agente, um arquivo que o nomeia e faz esta declaração?
+    """Is there, next to the agent, a file that names it and makes this declaration?
 
-    A busca é por PASTA declarada e um nível de profundidade — nunca varredura
-    do projeto inteiro. Varrer `.` acha `node_modules` e devolve uma resposta
-    plausível e errada, que é pior do que não achar nada.
+    The search is by DECLARED folder and one level deep — never a scan of the
+    whole project. Scanning `.` finds `node_modules` and returns a plausible,
+    wrong answer, which is worse than finding nothing.
     """
     if raiz is None:
         return False
@@ -263,25 +274,28 @@ def _contem(lido: Lido, marcas: tuple[str, ...]) -> bool:
     return any(_sem_acento(m) in alvo for m in marcas)
 
 
-def _campo_declarado(lido: Lido, chave: str) -> bool:
-    """`chave` existe no FRONTMATTER com valor não-vazio?
+def _campo_declarado(lido: Lido, *chaves: str) -> bool:
+    """Does any of `chaves` exist in the FRONTMATTER with a non-empty value?
 
-    Achado nesta rodada: `_contem` nunca via `saida_cercada`/`dominios_permitidos`
-    quando o agente os declara do jeito CERTO — como campo estruturado do
-    frontmatter — porque `_frontmatter()` os retira do texto antes de `corpo`
-    existir, e `descricao` só carrega o campo `description`. Um agente com
-    `saida_cercada: "caminho/"` no YAML reprovava V3 pela MESMA razão que
-    reprovaria um agente sem cerca nenhuma — falso negativo na própria marca
-    que dá nome à constante. Campo estruturado é sinal mais forte que a mesma
-    frase em prosa (mesmo raciocínio de `_irmao_declara`), então ele decide
-    sozinho, sem precisar também aparecer no corpo.
+    Found this round: `_contem` never saw `saida_cercada`/`dominios_permitidos`
+    when the agent declared them the RIGHT way — as a structured frontmatter
+    field — because `_frontmatter()` pulls them out of the text before `corpo`
+    exists, and `descricao` only carries the `description` field. An agent with
+    `saida_cercada: "path/"` in the YAML failed V3 for the SAME reason a
+    fenceless agent would — a false negative on the very mark the constant is
+    named after. A structured field is a stronger signal than the same
+    sentence in prose (same reasoning as `_irmao_declara`), so it decides on
+    its own, without also having to show up in the body.
     """
-    valor = lido.campos.get(chave, "").strip().strip('"').strip("'").strip()
-    return bool(valor)
+    for chave in chaves:
+        valor = lido.campos.get(chave, "").strip().strip('"').strip("'").strip()
+        if valor:
+            return True
+    return False
 
 
 def _confusao(a: Lido, b: Lido) -> float:
-    """Quanto duas descrições disputam o mesmo despacho. Jaccard, sem mistério."""
+    """How much two descriptions fight over the same dispatch. Jaccard, no mystery."""
     pa, pb = _significativas(a.descricao), _significativas(b.descricao)
     if not pa or not pb:
         return 0.0
@@ -289,7 +303,7 @@ def _confusao(a: Lido, b: Lido) -> float:
 
 
 def _um_nomeia_o_outro(a: Lido, b: Lido) -> bool:
-    """Anti-descrição de verdade é nominal: ela cita o irmão pelo slug."""
+    """A real anti-description is nominal: it names the sibling by its slug."""
     return (
         _sem_acento(b.slug) in _sem_acento(a.descricao + a.corpo)
         or _sem_acento(a.slug) in _sem_acento(b.descricao + b.corpo)
@@ -297,19 +311,19 @@ def _um_nomeia_o_outro(a: Lido, b: Lido) -> bool:
 
 
 def _fronteiras_abertas(a: Lido) -> tuple[tuple[str, str, bool], ...]:
-    """As duas fronteiras de um agente, e se cada uma está declarada."""
+    """An agent's two boundaries, and whether each one is declared."""
     return (
         (
-            "escrita",
-            "onde pode escrever",
+            "write",
+            "where it may write",
             a.usa_escrita
             and not _campo_declarado(a, "saida_cercada")
             and not _contem(a, DIZ_ONDE_ESCREVE)
             and not _irmao_declara(a.raiz, a.slug, "cerca"),
         ),
         (
-            "rede",
-            "com quem pode falar",
+            "network",
+            "who it may talk to",
             a.usa_rede
             and not _campo_declarado(a, "dominios_permitidos")
             and not _contem(a, DIZ_ONDE_FALA)
@@ -334,26 +348,26 @@ def vistoriar(roster: list[Lido]) -> list[Achado]:
 
     marcar(
         "V1",
-        "NÃO DIZEM O QUE NUNCA FAZEM",
-        "sem anti-descrição, o orquestrador despacha por TEMA — e o tema de dois "
-        "agentes se parece muito mais do que o trabalho deles.",
+        "DO NOT SAY WHAT THEY NEVER DO",
+        "with no anti-description, the orchestrator dispatches by TOPIC — and the "
+        "topic of two agents looks far more alike than their work does.",
         [a.nome_curto for a in roster if not _contem(a, DIZ_QUE_NAO_FAZ)],
     )
     marcar(
         "V2",
-        "NÃO DIZEM QUANDO USAR",
-        "um agente que não declara o próprio gatilho é um agente que ninguém "
-        "alcança — ele existe no disco e nunca no despacho.",
+        "DO NOT SAY WHEN TO USE THEM",
+        "an agent that does not declare its own trigger is an agent nobody "
+        "reaches — it exists on disk and never in the dispatch.",
         [a.nome_curto for a in roster if not _contem(a, DIZ_QUANDO_USAR)],
     )
     marcar(
         "V3",
-        "A FRONTEIRA ESTÁ SÓ NA PROSA",
-        '"escrevo num caminho só" e "só consulto a documentação" são intenção. '
-        "Nenhum runtime lê prosa: sem declaração, o agente alcança tudo o que o "
-        "harness alcança.",
+        "THE BOUNDARY IS ONLY IN THE PROSE",
+        '"I only write in one path" and "I only read the docs" are intent. '
+        "No runtime reads prose: with no declaration, the agent reaches "
+        "everything the harness reaches.",
         [
-            f"{a.nome_curto:<34} pede {classe} e não declara {campo}"
+            f"{a.nome_curto:<34} asks for {classe} and does not declare {campo}"
             for a in roster
             for classe, campo, falta in _fronteiras_abertas(a)
             if falta
@@ -362,9 +376,9 @@ def vistoriar(roster: list[Lido]) -> list[Achado]:
     )
     marcar(
         "V4",
-        "NÃO DIZEM O QUE NÃO COBREM",
-        "silêncio é lido como cobertura. Quem recebe a resposta não tem como "
-        "saber o que o agente nunca olhou — e vai tratar o que faltou como ausente.",
+        "DO NOT SAY WHAT THEY DO NOT COVER",
+        "silence is read as coverage. Whoever gets the answer has no way to "
+        "know what the agent never looked at — and will treat what was missing as absent.",
         [
             a.nome_curto
             for a in roster
@@ -373,9 +387,9 @@ def vistoriar(roster: list[Lido]) -> list[Achado]:
     )
     marcar(
         "V5",
-        "NADA CONFERE A RESPOSTA DELES",
-        "não há nenhuma pergunta cujo acerto esteja escrito à mão. Sem isso você "
-        "testa se o agente RODOU, nunca se ele acertou.",
+        "NOTHING CHECKS THEIR ANSWER",
+        "there is no question whose correct answer is written by hand. Without "
+        "that you test whether the agent RAN, never whether it was right.",
         [
             a.nome_curto
             for a in roster
@@ -384,84 +398,84 @@ def vistoriar(roster: list[Lido]) -> list[Achado]:
     )
     marcar(
         "V7",
-        "HERDAM TODA FERRAMENTA DO HARNESS",
-        "`tools:` ausente não quer dizer nenhuma ferramenta — nos harnesses de "
-        "hoje quer dizer TODAS, que é o oposto. Um agente de leitura herda a "
-        "escrita e a rede sem ninguém decidir isso.",
+        "INHERIT EVERY TOOL FROM THE HARNESS",
+        "a missing `tools:` does not mean no tools — in today's harnesses it "
+        "means ALL, which is the opposite. A read-only agent inherits write "
+        "and network with nobody deciding it.",
         [a.nome_curto for a in roster if a.tools_ausente],
     )
 
     pares = [
-        f"{a.nome_curto} × {b.nome_curto}".ljust(46) + f"{_confusao(a, b):.0%} das palavras em comum"
+        f"{a.nome_curto} × {b.nome_curto}".ljust(46) + f"{_confusao(a, b):.0%} of the words in common"
         for i, a in enumerate(roster)
         for b in roster[i + 1 :]
         if _confusao(a, b) >= LIMIAR_CONFUSAO and not _um_nomeia_o_outro(a, b)
     ]
     marcar(
         "V6",
-        "SE CONFUNDEM ENTRE SI",
-        "descrições disputando o mesmo despacho, e nenhum dos dois nomeia o "
-        "outro. O conserto é nominal: cada um cita o irmão no que NUNCA faz.",
+        "GET CONFUSED WITH EACH OTHER",
+        "descriptions fighting over the same dispatch, and neither one names "
+        "the other. The fix is nominal: each cites the sibling in what it NEVER does.",
         pares,
-        agentes=set(),  # um par não é um agente; ele não entra no denominador.
+        agentes=set(),  # a pair is not an agent; it does not enter the denominator.
     )
     return achados
 
 
-# ------------------------------------------------------- o relatório --------
+# ------------------------------------------------------- the report --------
 LARGURA = 74
 
 
 def relatorio(roster: list[Lido], achados: list[Achado], pasta: Path, hoje: str) -> list[str]:
-    linhas = [f"vistoria · {pasta} · em {hoje}", "=" * LARGURA]
-    linhas.append(f"Li {len(roster)} agente(s).")
+    linhas = [f"survey · {pasta} · on {hoje}", "=" * LARGURA]
+    linhas.append(f"Read {len(roster)} agent(s).")
     linhas.append("")
 
     for achado in sorted(achados, key=lambda a: (not a.grave, -len(a.itens))):
         marca = "⛔" if achado.grave else "⚠️"
         contagem = (
-            f"{len(achado.itens)} par(es)"
+            f"{len(achado.itens)} pair(s)"
             if achado.regra == "V6"
-            else f"{len(achado.agentes)} de {len(roster)}"
+            else f"{len(achado.agentes)} of {len(roster)}"
         )
         cabeca = f"{marca} {achado.titulo}"
         linhas.append(f"{cabeca}{' ' * max(1, LARGURA - len(cabeca) - len(contagem) - 1)}{contagem}")
         for item in achado.itens[:8]:
             linhas.append(f"     {item}")
         if len(achado.itens) > 8:
-            linhas.append(f"     … e mais {len(achado.itens) - 8}")
+            linhas.append(f"     … and {len(achado.itens) - 8} more")
         linhas.append(f"     → {achado.conserto}")
         linhas.append("")
 
-    # Seis declarações por agente: o que nunca faz · quando usar · onde escreve
-    # ou fala · o que não cobre · o que confere a resposta · que ferramenta tem.
-    # O denominador está escrito aqui porque um número sem denominador é o que
-    # esta ferramenta inteira existe para cobrar.
+    # Six declarations per agent: what it never does · when to use it · where it
+    # writes or talks · what it does not cover · what checks its answer · which
+    # tools it has. The denominator is written here because a number with no
+    # denominator is what this whole tool exists to demand.
     declaracoes_possiveis = len(roster) * 6
     ausentes = sum(len(a.agentes) for a in achados if a.regra != "V6")
     linhas.append("-" * LARGURA)
     linhas.append(
-        f"{len(roster)} agente(s) · {len(achados)} tipo(s) de defeito · "
-        f"{ausentes} de {declaracoes_possiveis} declarações ausentes"
+        f"{len(roster)} agent(s) · {len(achados)} defect type(s) · "
+        f"{ausentes} of {declaracoes_possiveis} declarations missing"
     )
     return linhas
 
 
 CABECA_TOML = """\
-# Spec adotada de `{origem}` em {hoje}, por `python -m forja --adotar`.
+# Spec adopted from `{origem}` on {hoje}, by `python -m forja --adotar`.
 #
-# ⚠️ Ela NÃO está pronta: cada `?` abaixo é um buraco que já existia no agente e
-# que ninguém tinha onde ver. A forja se RECUSA a compilar enquanto houver um,
-# e toda recusa traz o conserto escrito.
+# ⚠️ It is NOT ready: each `?` below is a hole that already existed in the agent
+# and that nobody had anywhere to see. The forge REFUSES to compile while one
+# stands, and every refusal carries the fix written out.
 #
-# O que está preenchido foi LIDO do arquivo original, nunca inferido.
+# What is filled in was READ from the original file, never inferred.
 #
 #     python -m forja {saida}
 """
 
 
 def _t(valor: str) -> str:
-    """String TOML segura, sem dependência: aspas triplas e escape do que quebra."""
+    """A safe TOML string, no dependency: triple quotes and escape what breaks."""
     return '"""' + valor.replace("\\", "\\\\").replace('"""', '\\"\\"\\"').strip() + '"""'
 
 
@@ -472,13 +486,13 @@ def _lista_toml(itens: list[str], recuo: str = "  ") -> str:
 
 
 def adotar(lido: Lido, hoje: str, saida: Path) -> str:
-    """Um agente escrito à mão → a spec dele, com um `?` em cada buraco.
+    """A hand-written agent → its spec, with a `?` in every hole.
 
-    Este é o ponto em que a ferramenta deixa de ser alarme. A anotação é a SAÍDA
-    da primeira rodada, nunca o pedágio dela: ninguém com doze agentes vai
-    escrever doze specs na fé para descobrir se valia a pena.
+    This is the point where the tool stops being an alarm. The annotation is
+    the OUTPUT of the first run, never its toll: nobody with twelve agents is
+    going to write twelve specs on faith to find out whether it was worth it.
     """
-    faltando = "? — escreva aqui; a forja não compila enquanto este `?` estiver de pé"
+    faltando = "? — write here; the forge does not compile while this `?` stands"
     nunca = [] if _contem(lido, DIZ_QUE_NAO_FAZ) else [faltando]
     quando = [] if _contem(lido, DIZ_QUANDO_USAR) else [faltando]
     partes = [
@@ -488,17 +502,17 @@ def adotar(lido: Lido, hoje: str, saida: Path) -> str:
         f'slug = "{lido.slug}"',
         f"nome = {_t(lido.slug.replace('-', ' ').capitalize())}",
         f"uma_frase = {_t(lido.descricao or faltando)}",
-        f"usar_quando = {_lista_toml(quando or ['(lido do arquivo original — confira e reescreva)'])}",
-        f"nunca_usar = {_lista_toml(nunca or ['(lido do arquivo original — confira e reescreva)'])}",
+        f"usar_quando = {_lista_toml(quando or ['(read from the original file — check and rewrite)'])}",
+        f"nunca_usar = {_lista_toml(nunca or ['(read from the original file — check and rewrite)'])}",
         "",
         "[fronteira]",
         f"ferramentas = {json.dumps(lido.ferramentas, ensure_ascii=False)}"
-        + ("  # ⚠️ `tools:` estava AUSENTE: o agente herdava TODAS" if lido.tools_ausente else ""),
+        + ("  # ⚠️ `tools:` was ABSENT: the agent inherited ALL" if lido.tools_ausente else ""),
     ]
     if lido.usa_rede:
-        partes.append(f'dominios_permitidos = ["?"]  # ["nenhum"] barra sempre')
+        partes.append(f'dominios_permitidos = ["?"]  # ["nenhum"] blocks always')
     if lido.usa_escrita:
-        partes.append(f'saida_cercada = ["?"]  # o prefixo de caminho onde ele pode escrever')
+        partes.append(f'saida_cercada = ["?"]  # the path prefix where it may write')
     partes += [
         "toca_alvo = false",
         "",
@@ -508,7 +522,7 @@ def adotar(lido: Lido, hoje: str, saida: Path) -> str:
         "[[prova.golden]]",
         f"pergunta = {_t('?')}",
         f"esperado = {_t('?')}",
-        f"derivado_de = {_t('? — e NUNCA da saída deste agente: os dois lados saindo da mesma fonte passam verde travando o defeito')}",
+        f"derivado_de = {_t('? — and NEVER from this agent output: both sides coming from the same source pass green while locking the defect in')}",
         "",
     ]
     return "\n".join(partes)

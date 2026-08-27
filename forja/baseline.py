@@ -1,19 +1,20 @@
-"""`--baseline`: o achado de hoje vira "o que MUDOU desde a última vez".
+"""`--baseline`: today's finding becomes "what CHANGED since last time".
 
-nature: fix — sem baseline gravado, a ferramenta RECUSA (não inventa
-"nada mudou" comparando com o vazio); com baseline, ela nunca esconde um item
-novo atrás dos que já eram conhecidos.
+nature: fix — with no baseline recorded, the tool REFUSES (it does not
+invent "nothing changed" by comparing against the void); with a baseline, it
+never hides a new item behind the ones already known.
 
-Por que isto existe: numa vistoria com centenas de agentes (86,7% de
-declarações ausentes, medido em 2026-08-24 contra os cinco catálogos mais
-populares do GitHub), a lista inteira a cada rodada é ruído depois da primeira
-leitura — ninguém relê 300 linhas iguais toda vez só para achar as 4 novas.
+Why this exists: in a survey with hundreds of agents (86.7% of declarations
+missing, measured on 2026-08-24 against the five most popular GitHub catalogs),
+the whole list on every run is noise after the first read — nobody re-reads 300
+identical lines every time just to find the 4 new ones.
 
-    python -m forja . --baseline --gravar   # ESCREVE .loadline-baseline.json
-    python -m forja . --baseline            # mostra só o que mudou desde lá
+    python -m forja . --baseline --gravar   # WRITES .loadline-baseline.json
+    python -m forja . --baseline            # shows only what changed since then
 
-O arquivo é local do usuário — não pertence a este pacote, e cada repositório
-que adota `loadline` tem o seu. Comitá-lo ou não é escolha de quem adota.
+The file is the user's local file — it does not belong to this package, and
+every repository that adopts `loadline` has its own. Committing it or not is the
+adopter's choice.
 """
 
 from __future__ import annotations
@@ -34,7 +35,7 @@ class Baseline:
 
 
 def _chaves(achados: list[Achado]) -> list[str]:
-    """Cada achado vira `REGRA: item` — a mesma chave nos dois lados do diff."""
+    """Each finding becomes `RULE: item` — the same key on both sides of the diff."""
     return sorted(f"{a.regra}: {item}" for a in achados for item in a.itens)
 
 
@@ -44,14 +45,15 @@ def gravar(caminho: Path, achados: list[Achado], hoje: str) -> None:
 
 
 def ler(caminho: Path) -> Baseline | None:
-    """`None` quando o arquivo não existe — RECUSA é do chamador, não daqui."""
+    """`None` when the file does not exist — the REFUSAL is the caller's, not here."""
     if not caminho.is_file():
         return None
     try:
         dados = json.loads(caminho.read_text(encoding="utf-8"))
     except (ValueError, OSError):
-        # Baseline corrompido é a MESMA leitura de baseline ausente: o chamador
-        # recusa e manda gravar de novo, em vez de fingir que não há defeito.
+        # A corrupt baseline is the SAME reading as an absent one: the caller
+        # refuses and asks for it to be written again, instead of pretending
+        # there is no defect.
         return None
     if not isinstance(dados, dict) or "itens" not in dados:
         return None
@@ -62,7 +64,7 @@ def ler(caminho: Path) -> Baseline | None:
 
 
 def diff(baseline: Baseline, achados: list[Achado]) -> tuple[list[str], list[str]]:
-    """`(novos, resolvidos)` — o que apareceu, e o que sumiu, desde o baseline."""
+    """`(new, resolved)` — what appeared, and what disappeared, since the baseline."""
     atual = frozenset(_chaves(achados))
     novos = sorted(atual - baseline.itens)
     resolvidos = sorted(baseline.itens - atual)

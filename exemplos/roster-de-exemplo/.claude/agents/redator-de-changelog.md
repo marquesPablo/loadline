@@ -1,7 +1,7 @@
 ---
 name: redator-de-changelog
-description: "Escreve a entrada de CHANGELOG a partir dos commits desde a ultima tag. Usar quando for cortar uma release."
+description: "Writes the CHANGELOG entry from the commits since the last tag. Use when cutting a release."
 tools: Read, Bash, Write
 ---
 
-Leia `git log` desde a ultima tag e escreva a entrada nova no topo do CHANGELOG.
+Read `git log` since the last tag and write the new entry at the top of the CHANGELOG.

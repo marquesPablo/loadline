@@ -1,12 +1,12 @@
-"""Modo comparação: `forja repoA repoB repoC` — vários repositórios, UMA tabela.
+"""Comparison mode: `forja repoA repoB repoC` — several repositories, ONE table.
 
-nature: fix — a saída sempre lista TODO alvo pedido, inclusive o que não
-tem pasta de agentes; um alvo que desapareceu da tabela em silêncio é o mesmo
-defeito que a vistoria de um repositório só já recusa há muito tempo.
+nature: fix — the output always lists EVERY target asked for, including the
+one with no agents folder; a target that vanished from the table silently is
+the same defect that the single-repository survey has refused for a long time.
 
-Formaliza o que a auditoria de 2026-08-24 (cinco catálogos de agentes do
-GitHub, 567 agentes, 86,7% de declarações ausentes) precisou fazer à mão com
-um script descartável — este módulo é esse script, mantido.
+Formalizes what the 2026-08-24 audit (five GitHub agent catalogs, 567 agents,
+86.7% of declarations missing) had to do by hand with a throwaway script — this
+module is that script, kept.
 """
 
 from __future__ import annotations
@@ -32,11 +32,11 @@ def comparar(alvos: list[Path]) -> list[Comparado]:
     for alvo in alvos:
         pasta = achar_pasta(alvo)
         if pasta is None:
-            resultados.append(Comparado(alvo, erro="sem pasta de agentes"))
+            resultados.append(Comparado(alvo, erro="no agents folder"))
             continue
         roster = ler_roster(pasta)
         if not roster:
-            resultados.append(Comparado(alvo, erro="pasta vazia"))
+            resultados.append(Comparado(alvo, erro="empty folder"))
             continue
         achados = vistoriar(roster)
         possiveis = len(roster) * 6
@@ -50,14 +50,14 @@ def _pct(ausentes: int, possiveis: int) -> str:
 
 
 def codigo_de_saida(resultados: list[Comparado]) -> int:
-    """0 só quando TODO alvo foi lido e nenhum tem declaração ausente.
+    """0 only when EVERY target was read and none has a missing declaration.
 
-    Um alvo sem pasta de agentes não é *defeito* do repositório dele — é
-    *não medido*, a mesma leitura que a vistoria de alvo único já dá (RECUSA,
-    nunca verde). Por isso ele nunca deixa a comparação sair 0, mesmo quando
-    todo alvo LIDO está limpo: dizer "PASSA" aqui esconderia que uma fração da
-    tabela não foi medida, e é exatamente esse encobrimento que este projeto
-    inteiro existe para proibir.
+    A target with no agents folder is not a *defect* of that repository — it is
+    *not measured*, the same reading the single-target survey already gives
+    (REFUSAL, never green). That is why it never lets the comparison exit 0,
+    even when every target READ is clean: saying "PASS" here would hide that a
+    fraction of the table was not measured, and that cover-up is exactly what
+    this whole project exists to forbid.
     """
     validos = [r for r in resultados if r.erro is None]
     invalidos = [r for r in resultados if r.erro is not None]
@@ -71,10 +71,10 @@ def codigo_de_saida(resultados: list[Comparado]) -> int:
 
 
 def relatorio(resultados: list[Comparado], hoje: str) -> list[str]:
-    linhas = [f"forja · comparação de {len(resultados)} repositório(s) · em {hoje}", "=" * LARGURA, ""]
+    linhas = [f"forja · comparison of {len(resultados)} repository(ies) · on {hoje}", "=" * LARGURA, ""]
 
     col_alvo = max(11, max((len(str(r.alvo)) for r in resultados), default=0))
-    cabeca = f"{'repositório':<{col_alvo}}  {'agentes':>8}  {'ausentes':>16}  {'% ausente':>10}"
+    cabeca = f"{'repository':<{col_alvo}}  {'agents':>8}  {'missing':>16}  {'% missing':>10}"
     linhas.append(cabeca)
     linhas.append("-" * len(cabeca))
 
@@ -99,14 +99,14 @@ def relatorio(resultados: list[Comparado], hoje: str) -> list[str]:
     codigo = codigo_de_saida(resultados)
     invalidos = [r for r in resultados if r.erro is not None]
     if codigo == 2 and not any(r.erro is None for r in resultados):
-        linhas.append("RECUSADO — nenhum dos alvos tinha pasta de agentes para ler.        (exit 2)")
+        linhas.append("REFUSED — none of the targets had an agents folder to read.        (exit 2)")
     elif codigo == 1:
-        linhas.append("REPROVA — pelo menos um repositório tem declaração ausente.        (exit 1)")
+        linhas.append("FAIL — at least one repository has a missing declaration.          (exit 1)")
     elif codigo == 2:
         linhas.append(
-            f"RECUSADO — {len(invalidos)} de {len(resultados)} alvo(s) sem pasta de agentes; "
-            "o resto está limpo, mas parte não foi medida.       (exit 2)"
+            f"REFUSED — {len(invalidos)} of {len(resultados)} target(s) with no agents folder; "
+            "the rest is clean, but part was not measured.       (exit 2)"
         )
     else:
-        linhas.append("PASSA — todo agente, em todo repositório, declara as seis coisas.  (exit 0)")
+        linhas.append("PASS — every agent, in every repository, declares the six things.  (exit 0)")
     return linhas

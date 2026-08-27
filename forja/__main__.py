@@ -1,19 +1,19 @@
-"""CLI da forja: `python -m forja <spec.toml> [--saida DIR] [--conferir]`.
+"""forge CLI: `python -m forja <spec.toml> [--saida DIR] [--conferir]`.
 
-nature: fix — a saída é sempre impressa por inteiro, inclusive quando a
-forja RECUSA. Uma recusa que não diz o conserto é um erro; uma recusa que diz o
-conserto é a metade útil de um compilador.
+nature: fix — the output is always printed in full, including when the forge
+REFUSES. A refusal that does not name the fix is an error; a refusal that names
+the fix is the useful half of a compiler.
 
-    python -m forja                          # vistoria: lê os agentes que você JÁ tem
-    python -m forja --adotar                 # ESCREVE: uma spec por agente lido
+    python -m forja                          # survey: reads the agents you ALREADY have
+    python -m forja --adotar                 # WRITES: one spec per agent read
     python -m forja exemplos/revisor-de-licenca.toml
     python -m forja exemplos/*.toml --saida build/
-    python -m forja spec.toml --conferir     # não escreve; sai 1 se estiver stale
-    python -m forja . --html relatorio.html  # ESCREVE, além do terminal: página autocontida
-    python -m forja . --baseline             # diff contra .loadline-baseline.json
-    python -m forja . --baseline --gravar    # ESCREVE o baseline com o estado de agora
-    python -m forja --explain V3             # explica um achado, citando LACUNAS.md ao vivo
-    python -m forja repoA repoB repoC        # comparação: uma tabela só, vários repositórios
+    python -m forja spec.toml --conferir     # does not write; exits 1 if stale
+    python -m forja . --html report.html     # WRITES, on top of the terminal: self-contained page
+    python -m forja . --baseline             # diff against .loadline-baseline.json
+    python -m forja . --baseline --gravar    # WRITES the baseline with the current state
+    python -m forja --explain V3             # explains a finding, citing LACUNAS.md live
+    python -m forja repoA repoB repoC        # comparison: one table, several repositories
 """
 
 from __future__ import annotations
@@ -40,7 +40,7 @@ def _console_em_utf8() -> None:
 
 
 def compilar(spec: Spec, hoje: date | None = None) -> dict[str, str]:
-    """spec → {caminho relativo: conteúdo}. Determinístico: mesma spec, mesmos bytes."""
+    """spec → {relative path: content}. Deterministic: same spec, same bytes."""
     saida: dict[str, str] = {}
     for emitir in alvos.TODOS:
         caminho, conteudo = emitir(spec)
@@ -62,9 +62,9 @@ def _stale(raiz: Path, artefatos: dict[str, str]) -> list[str]:
     for relativo, conteudo in sorted(artefatos.items()):
         alvo = raiz / relativo
         if not alvo.exists():
-            fora.append(f"{relativo}: não existe")
+            fora.append(f"{relativo}: does not exist")
         elif alvo.read_text(encoding="utf-8") != conteudo:
-            fora.append(f"{relativo}: diverge da spec")
+            fora.append(f"{relativo}: diverges from the spec")
     return fora
 
 
@@ -78,7 +78,7 @@ def _vistoria(
     baseline: bool = False,
     baseline_gravar: bool = False,
 ) -> int:
-    """`python -m forja` sem argumento: lê os agentes que já existem."""
+    """`python -m forja` with no argument: reads the agents that already exist."""
     hoje = date.today().isoformat()
     pasta = vistoria.achar_pasta(raiz)
     linhas: list[str] = []
@@ -90,29 +90,29 @@ def _vistoria(
     def fechar(codigo: int) -> int:
         if html is not None:
             html.write_text(evidencia.pagina("forja", str(raiz), hoje, linhas, codigo), encoding="utf-8")
-            emitir(f"\nrelatório HTML autocontido escrito em {html}")
+            emitir(f"\nself-contained HTML report written to {html}")
         return codigo
 
-    # ⚠️ Pasta que não existe é RECUSA, e nunca verde. Um erro de digitação no
-    # caminho não pode deixar um gate aprovando para sempre — é *não medido*
-    # virando *zero*, no ponto de entrada.
+    # ⚠️ A folder that does not exist is a REFUSAL, and never green. A typo in
+    # the path must not leave a gate approving forever — it is *not measured*
+    # turning into *zero*, at the entry point.
     if pasta is None:
-        emitir(f"vistoria · {raiz} · em {hoje}")
+        emitir(f"survey · {raiz} · on {hoje}")
         emitir("=" * vistoria.LARGURA)
-        emitir("Não achei pasta de agentes aqui. Procurei, nesta ordem:")
+        emitir("Did not find an agents folder here. Looked, in this order:")
         for relativo in vistoria.PASTAS:
             emitir(f"     {raiz / relativo}")
         emitir()
-        emitir("RECUSADO — não li nada, e não vou devolver verde por isso.      (exit 2)")
+        emitir("REFUSED — I read nothing, and I will not return green for that.      (exit 2)")
         return fechar(2)
 
     roster = vistoria.ler_roster(pasta)
     if not roster:
-        emitir(f"vistoria · {pasta} · em {hoje}")
+        emitir(f"survey · {pasta} · on {hoje}")
         emitir("=" * vistoria.LARGURA)
-        emitir("A pasta existe e não há nenhum agente dentro dela.")
+        emitir("The folder exists and there is no agent inside it.")
         emitir()
-        emitir("RECUSADO — zero agente lido não é zero defeito.                 (exit 2)")
+        emitir("REFUSED — zero agents read is not zero defects.                 (exit 2)")
         return fechar(2)
 
     achados = vistoria.vistoriar(roster)
@@ -125,64 +125,64 @@ def _vistoria(
         if baseline_gravar:
             gravar(arquivo_baseline, achados, hoje)
             emitir()
-            emitir(f"gravei o baseline em {arquivo_baseline} — {sum(len(a.itens) for a in achados)} item(ns).")
-            emitir("A próxima rodada com `--baseline` (sem `--gravar`) mostra só o que MUDOU.")
+            emitir(f"wrote the baseline to {arquivo_baseline} — {sum(len(a.itens) for a in achados)} item(s).")
+            emitir("The next run with `--baseline` (no `--gravar`) shows only what CHANGED.")
             return fechar(0)
 
         anterior = ler_baseline(arquivo_baseline)
         if anterior is None:
             emitir()
-            emitir(f"RECUSADO — não há baseline em {arquivo_baseline}.            (exit 2)")
-            emitir(f"  Grave um com `python -m forja {raiz} --baseline --gravar`, e rode de novo.")
+            emitir(f"REFUSED — there is no baseline at {arquivo_baseline}.            (exit 2)")
+            emitir(f"  Write one with `python -m forja {raiz} --baseline --gravar`, and run again.")
             return fechar(2)
 
         novos, resolvidos = diff(anterior, achados)
         emitir()
-        emitir(f"baseline de {anterior.gravado_em} · {len(novos)} novo(s) · {len(resolvidos)} resolvido(s)")
+        emitir(f"baseline from {anterior.gravado_em} · {len(novos)} new · {len(resolvidos)} resolved")
         if novos:
-            emitir("⛔ NOVO DESDE O BASELINE")
+            emitir("⛔ NEW SINCE THE BASELINE")
             for item in novos:
                 emitir(f"     {item}")
         if resolvidos:
-            emitir("✅ RESOLVIDO DESDE O BASELINE")
+            emitir("✅ RESOLVED SINCE THE BASELINE")
             for item in resolvidos:
                 emitir(f"     {item}")
         emitir()
         if novos:
-            emitir("REPROVA — há achado novo desde o baseline.                     (exit 1)")
+            emitir("FAIL — there is a new finding since the baseline.             (exit 1)")
             return fechar(1)
-        emitir("PASSA — nada novo desde o baseline.                             (exit 0)")
+        emitir("PASS — nothing new since the baseline.                        (exit 0)")
         return fechar(0)
 
     if adotar:
-        # ⚠️ A spec do leitor nasce ao lado dos AGENTES DELE, e não dentro do
-        # clone desta ferramenta. Escrever relativo ao diretório corrente parece
-        # inofensivo até alguém rodar `forja /caminho/do/projeto --adotar` de
-        # dentro do clone: as specs caem aqui, numa pasta que o `.gitignore`
-        # daqui ignora, e somem sem erro nenhum. `--saida` continua mandando
-        # quando alguém a escreve por extenso.
+        # ⚠️ The reader's spec is born next to THEIR agents, and not inside the
+        # clone of this tool. Writing relative to the current directory looks
+        # harmless until someone runs `forja /path/to/project --adotar` from
+        # inside the clone: the specs land here, in a folder this repo's
+        # `.gitignore` ignores, and disappear with no error. `--saida` still
+        # wins when someone writes it out.
         destino = (saida if saida_explicita else vistoria.raiz_do_projeto(pasta) / "build") / "specs"
         destino.mkdir(parents=True, exist_ok=True)
         emitir()
-        emitir(f"escrevi {len(roster)} spec(s) em {destino}/ — uma por agente lido:")
+        emitir(f"wrote {len(roster)} spec(s) in {destino}/ — one per agent read:")
         for lido in roster:
             arquivo = destino / f"{lido.slug}.toml"
             arquivo.write_text(vistoria.adotar(lido, hoje, arquivo), encoding="utf-8")
             emitir(f"  ✓ {arquivo}")
         emitir()
-        emitir("  Cada `?` é um buraco que já existia no agente e que ninguém tinha onde")
-        emitir("  ver. Preencha, e rode `python -m forja " + str(destino) + "/*.toml`.")
+        emitir("  Each `?` is a hole that already existed in the agent and that nobody had")
+        emitir("  anywhere to see. Fill it in, and run `python -m forja " + str(destino) + "/*.toml`.")
 
     emitir()
     if not achados:
-        emitir("PASSA — todo agente lido declara as seis coisas.                (exit 0)")
+        emitir("PASS — every agent read declares the six things.                (exit 0)")
         return fechar(0)
-    emitir("REPROVA                                                        (exit 1)")
+    emitir("FAIL                                                          (exit 1)")
     if not adotar:
         emitir()
-        emitir("  `python -m forja --adotar` escreve a spec de cada um a partir do que já")
-        emitir("  está lá, com um `?` em cada buraco. Aí a forja compila os artefatos que")
-        emitir("  faltam — inclusive o hook que NEGA, que é o único que o runtime lê.")
+        emitir("  `python -m forja --adotar` writes each one's spec from what is already")
+        emitir("  there, with a `?` in every hole. Then the forge compiles the artifacts that")
+        emitir("  are missing — including the hook that DENIES, which is the only one the runtime reads.")
     return fechar(1)
 
 
@@ -223,7 +223,7 @@ def main(argv: list[str] | None = None) -> int:
         i = argv.index("--explain")
         if i + 1 >= len(argv):
             print(_explicar.__doc__.strip().splitlines()[0])
-            print(f"Achados válidos: {', '.join(_explicar.CODIGOS)}")
+            print(f"Valid findings: {', '.join(_explicar.CODIGOS)}")
             return 2
         regra = argv[i + 1]
         del argv[i : i + 2]
@@ -231,32 +231,33 @@ def main(argv: list[str] | None = None) -> int:
             for linha in _explicar.explicar(regra):
                 print(linha)
         except _explicar.RegraDesconhecida as exc:
-            print(f"RECUSADO — {exc}                                          (exit 2)")
+            print(f"REFUSED — {exc}                                          (exit 2)")
             return 2
         return 0
 
     especes = [Path(a) for a in argv if not a.startswith("-")]
 
-    # Sem argumento nenhum, a forja NÃO imprime a ajuda: ela olha o que você já
-    # tem. Ninguém com doze agentes escritos à mão vai escrever doze specs na fé
-    # para descobrir se valia a pena — a anotação é a saída da primeira rodada,
-    # nunca o pedágio dela.
-    # Diretório é sempre vistoria; `.toml` é sempre compilação. O argumento diz
-    # qual das duas direções você quer, e nunca é preciso decorar uma bandeira.
+    # With no argument at all, the forge does NOT print help: it looks at what
+    # you already have. Nobody with twelve hand-written agents is going to write
+    # twelve specs on faith to find out whether it was worth it — the annotation
+    # is the output of the first run, never its toll.
+    # A directory is always a survey; a `.toml` is always a compile. The
+    # argument says which of the two directions you want, and you never have to
+    # remember a flag.
     #
-    # Dois ou mais alvos, NENHUM `.toml`, é o modo COMPARAÇÃO: cada um é
-    # vistoriado, e o resultado sai numa tabela só — nunca mais o comportamento
-    # antigo (e nunca documentado) de vistoriar só o primeiro e ENGOLIR os
-    # demais em silêncio.
+    # Two or more targets, NONE a `.toml`, is COMPARISON mode: each one is
+    # surveyed, and the result comes out in one table — never again the old
+    # (and never documented) behavior of surveying only the first and SWALLOWING
+    # the rest silently.
     if len(especes) >= 2 and all(e.suffix != ".toml" for e in especes):
         faltando = [e for e in especes if not e.exists()]
         if faltando:
-            print(f"forja · comparação de {len(especes)} repositório(s) · em {date.today().isoformat()}")
+            print(f"forja · comparison of {len(especes)} repository(ies) · on {date.today().isoformat()}")
             print("=" * vistoria.LARGURA)
             for e in faltando:
-                print(f"`{e}` não existe.")
+                print(f"`{e}` does not exist.")
             print()
-            print("RECUSADO — não li nada, e não vou devolver verde por isso.      (exit 2)")
+            print("REFUSED — I read nothing, and I will not return green for that.      (exit 2)")
             return 2
 
         resultados = _comparar.comparar(especes)
@@ -267,20 +268,21 @@ def main(argv: list[str] | None = None) -> int:
         if html_arg is not None:
             alvo_html = ", ".join(str(e) for e in especes)
             html_arg.write_text(evidencia.pagina("forja", alvo_html, date.today().isoformat(), linhas, codigo), encoding="utf-8")
-            print(f"\nrelatório HTML autocontido escrito em {html_arg}")
+            print(f"\nself-contained HTML report written to {html_arg}")
         return codigo
 
-    # ⚠️ Alvo que não existe é RECUSA, nunca outra coisa — e este bug nasceu de
-    # novo aqui depois de já ter sido consertado no varredor: sem esta linha,
-    # `forja ./agentez` caía na compilação, morria lendo a spec e devolvia 1.
-    # O `1` diz «a sua spec está errada»; o `2` diz «eu não li nada». Um erro de
-    # digitação no CI encostado no código errado é não-medido virando zero.
+    # ⚠️ A target that does not exist is a REFUSAL, never anything else — and
+    # this bug was born again here after already being fixed in the scanner:
+    # without this line, `forja ./agentez` fell into the compile, died reading
+    # the spec and returned 1. The `1` says «your spec is wrong»; the `2` says
+    # «I read nothing». A CI typo leaning on the wrong code is not-measured
+    # turning into zero.
     if especes and not especes[0].exists():
-        print(f"forja · {especes[0]} · em {date.today().isoformat()}")
+        print(f"forja · {especes[0]} · on {date.today().isoformat()}")
         print("=" * vistoria.LARGURA)
-        print(f"`{especes[0]}` não existe — nem como pasta de agentes, nem como spec.")
+        print(f"`{especes[0]}` does not exist — neither as an agents folder, nor as a spec.")
         print()
-        print("RECUSADO — não li nada, e não vou devolver verde por isso.      (exit 2)")
+        print("REFUSED — I read nothing, and I will not return green for that.      (exit 2)")
         return 2
 
     aponta_pasta = bool(especes) and especes[0].is_dir()
@@ -304,16 +306,16 @@ def main(argv: list[str] | None = None) -> int:
         try:
             spec = ler(caminho)
         except Recusa as recusa:
-            print(f"⛔ RECUSADO  {recusa}")
+            print(f"⛔ REFUSED  {recusa}")
             print()
-            print("   A forja falha fechada. O que ela não consegue decidir, ela não emite —")
-            print("   um compilador de agente que emite mesmo assim entrega o agente sem gate")
-            print("   que ele existia para impedir.")
+            print("   The forge fails closed. What it cannot decide, it does not emit —")
+            print("   an agent compiler that emits anyway ships the ungated agent it")
+            print("   existed to prevent.")
             print()
             problemas += 1
             continue
         except (OSError, ValueError) as exc:
-            print(f"⛔ não deu para ler a spec: {type(exc).__name__}: {exc}")
+            print(f"⛔ could not read the spec: {type(exc).__name__}: {exc}")
             print()
             problemas += 1
             continue
@@ -324,23 +326,23 @@ def main(argv: list[str] | None = None) -> int:
         if conferir:
             fora = _stale(raiz, artefatos)
             if fora:
-                print(f"DESATUALIZADO  {len(fora)} artefato(s) divergem de `{caminho}`:")
+                print(f"STALE  {len(fora)} artifact(s) diverge from `{caminho}`:")
                 for linha in fora:
                     print(f"  {linha}")
                 problemas += 1
             else:
-                print(f"em dia  {len(artefatos)} artefatos batem com a spec")
+                print(f"up to date  {len(artefatos)} artifacts match the spec")
         else:
             _escrever(raiz, artefatos)
             for relativo in sorted(artefatos):
                 print(f"  ✓ {raiz / relativo}")
 
         print()
-        print(f"  fronteira: rede={spec.usa_rede} escrita={spec.usa_escrita} "
-              f"execucao={spec.usa_execucao} toca_alvo={spec.toca_alvo}")
-        print(f"  golden: {len(spec.golden)} caso(s) · lacunas declaradas: {len(spec.lacunas)}")
+        print(f"  boundary: network={spec.usa_rede} write={spec.usa_escrita} "
+              f"execution={spec.usa_execucao} touches_target={spec.toca_alvo}")
+        print(f"  golden: {len(spec.golden)} case(s) · gaps declared: {len(spec.lacunas)}")
         if spec.desconhecidas:
-            print(f"  ⚠️  ferramentas não classificadas pelo guarda: {', '.join(spec.desconhecidas)}")
+            print(f"  ⚠️  tools the guard does not classify: {', '.join(spec.desconhecidas)}")
 
         bloco = conselho.em_markdown(spec.precisa, censo, str(CENSO_PADRAO))
         if bloco:
@@ -349,9 +351,9 @@ def main(argv: list[str] | None = None) -> int:
         print()
 
     if problemas:
-        print(f"REPROVA — {problemas} spec(s) recusadas ou desatualizadas")
+        print(f"FAIL — {problemas} spec(s) refused or stale")
         return 1
-    print("PASSA")
+    print("PASS")
     return 0
 
 

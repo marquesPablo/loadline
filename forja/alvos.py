@@ -1,21 +1,22 @@
-"""Os alvos de emissão — uma spec entra, sete artefatos saem.
+"""The emission targets — a spec goes in, seven artifacts come out.
 
-nature: fix — este módulo só formata texto a partir de uma spec JÁ
-validada. Quem barra é `spec.validar`; aqui, exceção é defeito de formatação e
-aparece por inteiro em vez de virar artefato pela metade.
+nature: fix — this module only formats text from an ALREADY validated spec.
+The one that blocks is `spec.validar`; here, an exception is a formatting
+defect and shows up in full instead of turning into a half-written artifact.
 
-    .claude/agents/<slug>.md   subagente de Claude Code (frontmatter + prompt)
-    AGENTS.md                  o formato agnóstico de harness
-    <slug>.system.md           system prompt cru, para SDK ou harness próprio
-    hooks/cerca_<slug>.py      o guarda PreToolUse, que FALHA FECHADO
-    golden/<slug>.md           o golden set, com a regra de derivação
-    LACUNAS.md                 o que este agente não mede
-    RECEITA.md                 o que foi emitido, de que spec, quando
+    .claude/agents/<slug>.md   Claude Code subagent (frontmatter + prompt)
+    AGENTS.md                  the harness-agnostic format
+    <slug>.system.md           raw system prompt, for an SDK or a custom harness
+    hooks/cerca_<slug>.py      the PreToolUse guard, which FAILS CLOSED
+    golden/<slug>.md           the golden set, with the derivation rule
+    LACUNAS.md                 what this agent does not measure
+    RECEITA.md                 what was emitted, from which spec, when
 
-O que separa isto de um gerador de prompt: **três dos sete não são texto para o
-modelo ler.** O hook é código que roda antes da ferramenta e nega; o golden set
-é a pergunta que confere a RESPOSTA; as lacunas são a ausência com dono. Prompt
-bonito sem esses três é um agente sem gate com uma descrição melhor.
+What sets this apart from a prompt generator: **three of the seven are not text
+for the model to read.** The hook is code that runs before the tool and denies;
+the golden set is the question that checks the ANSWER; the gaps are the absence
+with an owner. A nice prompt without those three is an ungated agent with a
+better description.
 """
 
 from __future__ import annotations
@@ -29,11 +30,11 @@ from .spec import ESCRITA, EXECUCAO, REDE, Spec
 
 
 def _lista_md(itens: list[str], marca: str = "-") -> str:
-    return "\n".join(f"{marca} {x}" for x in itens) if itens else "_(nenhum)_"
+    return "\n".join(f"{marca} {x}" for x in itens) if itens else "_(none)_"
 
 
 def _data_da_spec(spec: Spec) -> date:
-    """A data da última escrita da spec. Estável enquanto a spec não mudar."""
+    """The spec's last-write date. Stable while the spec does not change."""
     try:
         return date.fromtimestamp(Path(spec.origem).stat().st_mtime)
     except (OSError, ValueError):
@@ -46,97 +47,97 @@ def _fronteira_em_prosa(spec: Spec) -> list[str]:
         alvos = ", ".join(f"`{d}`" for d in (spec.dominios_permitidos or []))
         if spec.dominios_permitidos == ["nenhum"]:
             L.append(
-                "- **Rede: BARRADA sempre.** Esta spec declara `nenhum`, e o guarda nega "
-                "toda saída, sem exceção."
+                "- **Network: BLOCKED always.** This spec declares `nenhum`, and the guard denies "
+                "every outbound call, no exception."
             )
         else:
             L.append(
-                f"- **Rede: só {alvos}.** Qualquer outro domínio é negado pelo guarda antes "
-                "de a chamada sair — inclusive um subdomínio que pareça óbvio."
+                f"- **Network: {alvos} only.** Any other domain is denied by the guard before "
+                "the call goes out — including a subdomain that looks obvious."
             )
     if spec.usa_escrita:
         alvos = ", ".join(f"`{c}`" for c in (spec.saida_cercada or []))
         L.append(
-            f"- **Escrita: só sob {alvos}.** O guarda compara o caminho REAL (resolvendo "
-            "link e junction) — escrever fora disso é negado, não avisado."
+            f"- **Write: only under {alvos}.** The guard compares the REAL path (resolving "
+            "link and junction) — writing outside that is denied, not warned."
         )
     if spec.usa_execucao:
         L.append(
-            "- **Execução:** esta spec pede shell. Todo comando fica no registro da corrida, "
-            "com o argv exato."
+            "- **Execution:** this spec asks for a shell. Every command goes into the run log, "
+            "with the exact argv."
         )
     if spec.toca_alvo:
         L.append(
-            f"- **Toca alvo externo.** Exige autorização válida em `{spec.autorizacao}`, com "
-            "alvo, escopo, autorização e validade. **Um comando fora do alvo autorizado é "
-            "incidente, não achado.**"
+            f"- **Touches an external target.** Requires valid authorization in `{spec.autorizacao}`, with "
+            "target, scope, authorization and validity. **A command outside the authorized target is "
+            "an incident, not a finding.**"
         )
     if spec.desconhecidas:
         L.append(
-            "- ⚠️ **Ferramentas fora do vocabulário conhecido:** "
+            "- ⚠️ **Tools outside the known vocabulary:** "
             + ", ".join(f"`{f}`" for f in spec.desconhecidas)
-            + ". O guarda **não sabe classificá-las** e por isso não as cerca. Isto está "
-            "escrito aqui em vez de ficar calado."
+            + ". The guard **cannot classify them** and so does not fence them. This is "
+            "written here instead of staying silent."
         )
     if not L:
-        L.append("- Só leitura. Esta spec não pede rede, escrita nem shell.")
+        L.append("- Read-only. This spec asks for no network, write or shell.")
     return L
 
 
 # ---------------------------------------------------------------- prompt ----
 def corpo_do_prompt(spec: Spec) -> str:
-    """O miolo que todo alvo compartilha — o que o modelo lê."""
+    """The core every target shares — what the model reads."""
     return f"""# {spec.nome}
 
 {spec.uma_frase}
 
-## Use este agente quando
+## Use this agent when
 
 {_lista_md(spec.usar_quando)}
 
-## NUNCA use este agente para
+## NEVER use this agent for
 
 {_lista_md(spec.nunca_usar)}
 
-> A anti-descrição não é educação, é mecanismo. Um orquestrador que só lê o que o
-> agente FAZ despacha por semelhança de tema, e o agente errado responde com
-> confiança sobre o que não é dele.
+> The anti-description is not politeness, it is mechanism. An orchestrator that
+> only reads what the agent DOES dispatches by topic similarity, and the wrong
+> agent answers with confidence about what is not its job.
 
-## A sua fronteira
+## Your boundary
 
 {chr(10).join(_fronteira_em_prosa(spec))}
 
-**A fronteira acima não depende de você obedecer.** Ela está implementada em
-`hooks/cerca_{spec.slug.replace("-", "_")}.py`, que roda ANTES da ferramenta e nega.
-Se você tentar sair dela, a chamada não acontece — e a recusa traz o conserto escrito.
+**The boundary above does not depend on you obeying it.** It is implemented in
+`hooks/cerca_{spec.slug.replace("-", "_")}.py`, which runs BEFORE the tool and denies.
+If you try to step outside it, the call does not happen — and the refusal carries the fix written out.
 
-## O que você NÃO mede
+## What you do NOT measure
 
 {_lista_md(spec.lacunas)}
 
-Quando a pergunta cair numa dessas, **diga que não mede** e diga quem mede. Preencher
-lacuna com plausibilidade é o defeito que esta seção existe para impedir.
+When a question falls into one of these, **say you do not measure it** and say who does.
+Filling a gap with plausibility is the defect this section exists to prevent.
 
-## Como você responde
+## How you answer
 
-- **Verifique antes de afirmar.** Rode, leia o arquivo, cheque a saída. Se não
-  verificou, diga que não verificou. Se não achou, escreva **"não encontrei"**.
-- **Declare o denominador.** Toda vez que você contar alguma coisa, diga de quantos
-  contou. Um filtro que pula em silêncio devolve resposta plausível e vazia.
-- **Datas absolutas** (`AAAA-MM-DD`), nunca "semana passada" — o leitor da sua resposta
-  não sabe quando você a escreveu.
-- Cite `caminho:linha` para tudo que você afirmar sobre o disco.
+- **Verify before you assert.** Run it, read the file, check the output. If you
+  did not verify, say you did not verify. If you did not find it, write **"not found"**.
+- **Declare the denominator.** Every time you count something, say out of how many.
+  A filter that skips silently returns a plausible, empty answer.
+- **Absolute dates** (`YYYY-MM-DD`), never "last week" — the reader of your answer
+  does not know when you wrote it.
+- Cite `path:line` for everything you assert about the disk.
 
 {vacina.paragrafo(spec.idioma)}"""
 
 
-# --------------------------------------------------------------- alvos ------
+# --------------------------------------------------------------- targets ------
 def claude_code(spec: Spec) -> tuple[str, str]:
-    """Subagente de Claude Code: frontmatter + prompt no corpo."""
+    """Claude Code subagent: frontmatter + prompt in the body."""
     descricao = (
         f"{spec.uma_frase} "
-        + (f"Usar quando: {'; '.join(spec.usar_quando)}. " if spec.usar_quando else "")
-        + f"NUNCA usar para: {'; '.join(spec.nunca_usar)}."
+        + (f"Use when: {'; '.join(spec.usar_quando)}. " if spec.usar_quando else "")
+        + f"NEVER use for: {'; '.join(spec.nunca_usar)}."
     ).replace("\n", " ")
     frontmatter = "\n".join(
         [
@@ -152,23 +153,23 @@ def claude_code(spec: Spec) -> tuple[str, str]:
 
 
 def agents_md(spec: Spec) -> tuple[str, str]:
-    """`AGENTS.md` — o formato que harness nenhum é dono."""
+    """`AGENTS.md` — the format no harness owns."""
     return "AGENTS.md", (
         f"# AGENTS.md — {spec.nome}\n\n"
-        "> Este arquivo é lido por harnesses que não são o Claude Code. Ele diz a mesma\n"
-        "> coisa que `.claude/agents/`, de propósito: um agente cuja fronteira muda de\n"
-        "> harness para harness não tem fronteira, tem sorte.\n\n"
+        "> This file is read by harnesses that are not Claude Code. It says the same\n"
+        "> thing as `.claude/agents/`, on purpose: an agent whose boundary changes from\n"
+        "> harness to harness has no boundary, it has luck.\n\n"
         + corpo_do_prompt(spec)
     )
 
 
 def system_prompt(spec: Spec) -> tuple[str, str]:
-    """System prompt cru, para SDK ou harness próprio."""
+    """Raw system prompt, for an SDK or a custom harness."""
     return f"{spec.slug}.system.md", corpo_do_prompt(spec)
 
 
 def hook(spec: Spec) -> tuple[str, str]:
-    """O guarda `PreToolUse`, gerado da fronteira declarada. Falha FECHADO."""
+    """The `PreToolUse` guard, generated from the declared boundary. Fails CLOSED."""
     sub = spec.slug.replace("-", "_")
     config = json.dumps(
         {
@@ -181,19 +182,19 @@ def hook(spec: Spec) -> tuple[str, str]:
         ensure_ascii=False,
         indent=4,
     )
-    corpo = '''"""Guarda PreToolUse de `%(slug)s` — GERADO pela forja, não editar à mão.
+    corpo = '''"""PreToolUse guard for `%(slug)s` — GENERATED by the forge, do not edit by hand.
 
-nature: security — toda exceção BARRA. O que este guarda não consegue
-decidir, ele nega: um guarda que libera quando quebra não é guarda, e a hora em
-que ele quebra é exatamente a hora em que alguém está tentando passar.
+nature: security — every exception BLOCKS. What this guard cannot decide, it
+denies: a guard that opens up when it breaks is not a guard, and the moment it
+breaks is exactly the moment someone is trying to get through.
 
-Instale-o como `PreToolUse` no settings do harness. Ele lê o evento em JSON no
-stdin e responde no formato de decisão de permissão.
+Install it as `PreToolUse` in the harness settings. It reads the event as JSON
+on stdin and answers in the permission-decision format.
 
-⚠️ **Jurisdição estreita, e ela é declarada.** Este guarda só age quando
-consegue identificar o agente — pelo `agent_type` do evento ou pela variável de
-ambiente `FORJA_AGENTE`. Sessão principal sem subagente segue sob o que o
-harness já fazia. Isso NÃO é falha aberta: é o guarda dizendo de quem ele é.
+⚠️ **Narrow jurisdiction, and it is declared.** This guard only acts when it
+can identify the agent — by the event's `agent_type` or by the `FORJA_AGENTE`
+environment variable. A main session with no subagent stays under whatever the
+harness already did. This is NOT fail-open: it is the guard saying whose it is.
 """
 
 from __future__ import annotations
@@ -214,7 +215,7 @@ def _negar(motivo: str, conserto: str) -> None:
                 "hookSpecificOutput": {
                     "hookEventName": "PreToolUse",
                     "permissionDecision": "deny",
-                    "permissionDecisionReason": f"{motivo}\\n\\nConserto: {conserto}",
+                    "permissionDecisionReason": f"{motivo}\\n\\nFix: {conserto}",
                 }
             }
         )
@@ -228,10 +229,10 @@ def _sou_eu(evento: dict) -> bool:
 
 
 def _cobre(host: str, permitido: str) -> bool:
-    """`api.github.com` cai sob `github.com`; `github.com.mau.site` NÃO cai.
+    """`api.github.com` falls under `github.com`; `github.com.mau.site` does NOT.
 
-    A comparação é por rótulo de domínio, nunca por `endswith` de string —
-    `endswith` deixa passar exatamente o sufixo forjado que o atacante escolhe.
+    The comparison is by domain label, never by string `endswith` —
+    `endswith` lets through exactly the forged suffix the attacker chooses.
     """
     host, permitido = host.lower().strip("."), permitido.lower().strip(".")
     return host == permitido or host.endswith("." + permitido)
@@ -242,8 +243,8 @@ def main() -> int:
         evento = json.load(sys.stdin)
     except Exception:
         _negar(
-            "o evento do hook não pôde ser lido",
-            "isto é falha fechada de propósito — um guarda que não entende o pedido nega",
+            "the hook event could not be read",
+            "this is fail-closed on purpose — a guard that does not understand the request denies",
         )
         return 0
 
@@ -257,35 +258,35 @@ def main() -> int:
         permitidos = CONFIG["dominios_permitidos"]
         if not permitidos or permitidos == ["nenhum"]:
             _negar(
-                f"`{CONFIG['slug']}` não tem domínio permitido nenhum; a saída de rede é barrada.",
-                'declare `dominios_permitidos` na spec e recompile com `python -m forja`',
+                f"`{CONFIG['slug']}` has no allowed domain at all; network output is blocked.",
+                'declare `dominios_permitidos` in the spec and recompile with `python -m forja`',
             )
         alvo = entrada.get("url") or ""
         hosts = [urlparse(alvo).hostname or ""] if alvo else list(entrada.get("allowed_domains") or [])
         if not hosts or not any(h for h in hosts):
             _negar(
-                f"não deu para extrair domínio de `{ferramenta}`.",
-                "chamada de rede sem alvo legível é negada — o guarda não adivinha destino",
+                f"could not extract a domain from `{ferramenta}`.",
+                "a network call with no readable target is denied — the guard does not guess a destination",
             )
         for h in hosts:
             if not any(_cobre(h, d) for d in permitidos):
                 _negar(
-                    f"`{h}` está fora de `dominios_permitidos` de `{CONFIG['slug']}`: {permitidos}",
-                    "acrescente o domínio na spec e recompile, ou use outra fonte",
+                    f"`{h}` is outside `dominios_permitidos` for `{CONFIG['slug']}`: {permitidos}",
+                    "add the domain to the spec and recompile, or use another source",
                 )
 
     if ferramenta in CONFIG["escrita"]:
         cercas = CONFIG["saida_cercada"]
         if not cercas:
             _negar(
-                f"`{CONFIG['slug']}` não declara `saida_cercada`; toda escrita é barrada.",
-                "declare `saida_cercada` na spec e recompile",
+                f"`{CONFIG['slug']}` does not declare `saida_cercada`; every write is blocked.",
+                "declare `saida_cercada` in the spec and recompile",
             )
         alvo = entrada.get("file_path") or entrada.get("notebook_path") or ""
         if not alvo:
             _negar(
-                f"`{ferramenta}` sem caminho legível.",
-                "escrita sem destino legível é negada — o guarda não adivinha caminho",
+                f"`{ferramenta}` with no readable path.",
+                "a write with no readable destination is denied — the guard does not guess a path",
             )
         try:
             real = Path(alvo).resolve()
@@ -296,8 +297,8 @@ def main() -> int:
             permitido = False
         if not permitido:
             _negar(
-                f"`{alvo}` está fora de `saida_cercada` de `{CONFIG['slug']}`: {cercas}",
-                "escreva sob um dos caminhos declarados, ou mude a spec e recompile",
+                f"`{alvo}` is outside `saida_cercada` for `{CONFIG['slug']}`: {cercas}",
+                "write under one of the declared paths, or change the spec and recompile",
             )
 
     return 0
@@ -310,88 +311,89 @@ if __name__ == "__main__":
 
 
 def golden(spec: Spec) -> tuple[str, str]:
-    """O golden set — a única superfície que pergunta se a RESPOSTA está certa."""
+    """The golden set — the only surface that asks whether the ANSWER is right."""
     L = [
         f"# Golden set — `{spec.slug}`",
         "",
-        "> Cada resposta esperada aqui foi escrita **à mão, lendo o disco**. Se ela sair de",
-        "> uma chamada ao próprio agente, o caso é check espelho: os dois lados vêm da mesma",
-        "> fonte, o par passa verde e **trava** o defeito em vez de achá-lo.",
+        "> Every expected answer here was written **by hand, reading the disk**. If it comes",
+        "> from a call to the agent itself, the case is a mirror check: both sides come from",
+        "> the same source, the pair passes green and **locks** the defect in instead of finding it.",
         "",
-        f"**{len(spec.golden)} caso(s).** Cobertura não é gateada de propósito: gate de",
-        "cobertura empurra para caso fraco, e caso fraco é pior que caso ausente.",
+        f"**{len(spec.golden)} case(s).** Coverage is not gated on purpose: a coverage gate",
+        "pushes toward a weak case, and a weak case is worse than a missing one.",
         "",
     ]
     for i, caso in enumerate(spec.golden, start=1):
         L += [
             f"## G{i:02d}",
             "",
-            f"**Pergunta:** {caso.pergunta}",
+            f"**Question:** {caso.pergunta}",
             "",
-            f"**Resposta esperada:** {caso.esperado}",
+            f"**Expected answer:** {caso.esperado}",
             "",
-            f"**Derivado de:** `{caso.derivado_de}` — fora da saída do agente.",
+            f"**Derived from:** `{caso.derivado_de}` — outside the agent's output.",
             "",
         ]
     return f"golden/{spec.slug}.md", "\n".join(L)
 
 
 def lacunas(spec: Spec) -> tuple[str, str]:
-    """O que o agente não mede — ausência com dono, não silêncio."""
+    """What the agent does not measure — absence with an owner, not silence."""
     return "LACUNAS.md", (
-        f"# O que `{spec.slug}` NÃO mede\n\n"
-        "> Ausência não deixa rastro. Uma pergunta que o agente não responde não produz\n"
-        "> objeto nenhum para alguém inspecionar — ela só produz uma resposta plausível.\n"
-        "> Por isso ela é escrita aqui, e por isso a forja se recusa a compilar sem esta lista.\n\n"
+        f"# What `{spec.slug}` does NOT measure\n\n"
+        "> An absence leaves no trace. A question the agent does not answer produces\n"
+        "> no object for anyone to inspect — it only produces a plausible answer.\n"
+        "> That is why it is written here, and why the forge refuses to compile without this list.\n\n"
         f"{_lista_md(spec.lacunas)}\n\n"
-        "## Como fechar uma destas\n\n"
-        "Não apague a linha. Escreva ao lado dela **quem** passou a medir e **onde** —\n"
-        "um check, outro agente, um humano com nome. Lacuna que some sem dono volta calada.\n"
+        "## How to close one of these\n\n"
+        "Do not delete the line. Write next to it **who** started measuring it and **where** —\n"
+        "a check, another agent, a human with a name. A gap that disappears with no owner comes back silent.\n"
     )
 
 
 def receita(spec: Spec, emitidos: list[str], hoje: date | None = None) -> tuple[str, str]:
-    """A receita da corrida — de que spec saiu o quê, e quando.
+    """The run's recipe — from which spec came what, and when.
 
-    ⚠️ A data é a da SPEC, não a de hoje. Carimbar hoje faria o artefato mudar
-    sozinho à meia-noite e o `--conferir` acusaria "desatualizado" sem ninguém
-    ter tocado em nada — um alarme que só sabe disparar por passagem do tempo é
-    ruído, e ruído treina quem o lê a ignorá-lo.
+    ⚠️ The date is the SPEC's, not today's. Stamping today would make the
+    artifact change by itself at midnight and `--conferir` would flag it as
+    "stale" with nobody having touched anything — an alarm that only knows how
+    to fire by the passage of time is noise, and noise trains whoever reads it
+    to ignore it.
     """
     hoje = hoje or _data_da_spec(spec)
     L = [
-        f"# Receita — `{spec.slug}`",
+        f"# Recipe — `{spec.slug}`",
         "",
         f"<!-- measured: forja.artefatos={len(emitidos)} nature=count "
         f"on={hoje.isoformat()} expires=never source={spec.origem} -->",
         "",
-        f"- **Spec de origem:** `{spec.origem}`",
-        f"- **Emitido em:** {hoje.isoformat()}",
-        f"- **Ferramentas concedidas:** {', '.join(spec.ferramentas) or '_(nenhuma)_'}",
-        f"- **Vacina de vírus de ideia:** presente em todo artefato de prompt — `{vacina.FONTE}`",
+        f"- **Source spec:** `{spec.origem}`",
+        f"- **Emitted on:** {hoje.isoformat()}",
+        f"- **Tools granted:** {', '.join(spec.ferramentas) or '_(none)_'}",
+        f"- **Idea-virus vaccine:** present in every prompt artifact — `{vacina.FONTE}`",
         "",
-        "## Artefatos emitidos",
+        "## Artifacts emitted",
         "",
         *(f"- `{caminho}`" for caminho in emitidos),
         "",
-        "## O que esta receita NÃO prova",
+        "## What this recipe does NOT prove",
         "",
-        "- **Que o agente é bom.** A forja verifica que a fronteira existe, é executável e",
-        "  falha fechada. Se o agente responde bem é o golden set que diz, e ele foi",
-        "  escrito por quem escreveu a spec.",
-        "- **Que a lista de lacunas está completa.** Ela está declarada, não medida.",
-        "- **Que o hook está instalado.** Emitir o guarda e registrá-lo no harness são duas",
-        "  coisas, e a segunda é sua — está escrito em `RECEITA.md` para não sumir.",
+        "- **That the agent is good.** The forge verifies that the boundary exists, is",
+        "  executable and fails closed. Whether the agent answers well is what the golden set",
+        "  says, and it was written by whoever wrote the spec.",
+        "- **That the gap list is complete.** It is declared, not measured.",
+        "- **That the hook is installed.** Emitting the guard and registering it in the harness",
+        "  are two things, and the second is yours — it is written in `RECEITA.md` so it does not disappear.",
         "",
     ]
     if spec.desconhecidas:
         L += [
-            "## ⚠️ Ferramentas que o guarda não classifica",
+            "## ⚠️ Tools the guard does not classify",
             "",
             *(f"- `{f}`" for f in spec.desconhecidas),
             "",
-            "Elas foram concedidas e **não são cercadas** — o guarda não sabe se são de rede,",
-            "de escrita ou de leitura. Isto está impresso em vez de calado.",
+            "They were granted and are **not fenced** — the guard does not know whether they are",
+            "network, write or read. This is printed instead of staying silent.",
             "",
         ]
     return "RECEITA.md", "\n".join(L)

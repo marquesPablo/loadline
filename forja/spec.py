@@ -1,27 +1,31 @@
-"""A spec de um agente, e as oito recusas que impedem de compilar uma ruim.
+"""An agent's spec, and the eight refusals that stop a bad one from compiling.
 
-nature: security — toda decisão deste módulo é uma RECUSA, e ela falha
-fechada. O que a forja não consegue decidir, ela se recusa a emitir; ela nunca
-emite "no melhor esforço" com um campo faltando. Um compilador de agente que
-falha aberto entrega exatamente o agente sem gate que ele existia para evitar.
+nature: security — every decision in this module is a REFUSAL, and it fails
+closed. What the forge cannot decide, it refuses to emit; it never emits
+"best effort" with a field missing. An agent compiler that fails open ships
+exactly the ungated agent it existed to prevent.
 
-A spec é TOML porque `tomllib` é stdlib desde o Python 3.11 — o projeto inteiro
-continua com zero dependências. E é declarativa porque um campo com código a
-executar seria injeção com convite escrito.
+The spec is TOML because `tomllib` is stdlib since Python 3.11 — the whole
+project stays at zero dependencies. And it is declarative because a field with
+code to execute would be injection with a written invitation.
 
-## As oito recusas
+## The eight refusals
 
-    R1  ferramenta de REDE sem `dominios_permitidos`
-    R2  ferramenta de ESCRITA sem `saida_cercada`
-    R3  `nunca_usar` vazio            — sem anti-descrição, o orquestrador chuta
-    R4  `lacunas` vazio               — nada declara o que o agente não mede
-    R5  zero caso de golden set       — nenhuma resposta foi conferida
-    R6  golden derivado de dentro     — check espelho: os dois lados, a mesma fonte
-    R7  `toca_alvo` sem autorização   — recon sem escopo é incidente, não achado
-    R8  slug inválido                 — o slug vira nome de arquivo em 4 harnesses
+    R1  a NETWORK tool with no `dominios_permitidos`
+    R2  a WRITE tool with no `saida_cercada`
+    R3  `nunca_usar` empty           — with no anti-description, the orchestrator guesses
+    R4  `lacunas` empty              — nothing declares what the agent does not measure
+    R5  zero golden-set cases        — no answer has been checked
+    R6  golden derived from inside   — mirror check: both sides, the same source
+    R7  `toca_alvo` with no authorization  — recon with no scope is an incident, not a finding
+    R8  invalid slug                 — the slug becomes a filename in 4 harnesses
 
-Cada uma existe porque o campo AUSENTE é indistinguível, para um hook, do campo
-vazio: ausente-ou-vazio BARRA, e é a única leitura que não vira porta dos fundos.
+(The spec's TOML keys are still Portuguese — that translation is its own step,
+like the seal vocabulary was; the prose around them here is English.)
+
+Each exists because an ABSENT field is indistinguishable, to a hook, from an
+empty one: absent-or-empty BLOCKS, and it is the only reading that does not
+become a back door.
 """
 
 from __future__ import annotations
@@ -31,9 +35,9 @@ import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 
-# Ferramentas que saem da máquina, e as que escrevem no disco. A lista é fechada
-# e cobre os nomes usados pelos harnesses de hoje; nome desconhecido NÃO é
-# tratado como inofensivo — ver `_desconhecidas`.
+# Tools that leave the machine, and the ones that write to disk. The list is
+# closed and covers the names today's harnesses use; an unknown name is NOT
+# treated as harmless — see `desconhecidas`.
 REDE = frozenset({"WebFetch", "WebSearch", "Fetch", "Browser", "http", "curl"})
 ESCRITA = frozenset({"Write", "Edit", "NotebookEdit", "MultiEdit", "apply_patch"})
 EXECUCAO = frozenset({"Bash", "PowerShell", "Shell", "Terminal", "Execute"})
@@ -45,16 +49,16 @@ SLUG = re.compile(r"^[a-z][a-z0-9]*(-[a-z0-9]+)*$")
 
 
 class Recusa(ValueError):
-    """A forja se recusou a compilar. Sempre com o código da regra e o conserto."""
+    """The forge refused to compile. Always with the rule code and the fix."""
 
     def __init__(self, regra: str, motivo: str, conserto: str) -> None:
         self.regra, self.motivo, self.conserto = regra, motivo, conserto
-        super().__init__(f"{regra}: {motivo}\n      conserto: {conserto}")
+        super().__init__(f"{regra}: {motivo}\n      fix: {conserto}")
 
 
 @dataclass(frozen=True)
 class Caso:
-    """Um caso do golden set. `derivado_de` é o que o torna verificação."""
+    """A golden-set case. `derived_from` is what makes it a verification."""
 
     pergunta: str
     esperado: str
@@ -76,10 +80,10 @@ class Spec:
     lacunas: list[str] = field(default_factory=list)
     golden: list[Caso] = field(default_factory=list)
     precisa: list[str] = field(default_factory=list)
-    idioma: str = "pt"
+    idioma: str = "en"
     origem: str = ""
 
-    # ---- as classes de ferramenta que esta spec pediu ---------------------
+    # ---- the tool classes this spec asked for ----------------------------
     @property
     def usa_rede(self) -> bool:
         return bool(REDE & set(self.ferramentas))
@@ -94,11 +98,11 @@ class Spec:
 
     @property
     def desconhecidas(self) -> list[str]:
-        """Ferramenta fora do vocabulário conhecido.
+        """A tool outside the known vocabulary.
 
-        Não é erro — harness novo traz nome novo. Mas ela é EXIBIDA na receita,
-        porque tratar nome desconhecido como inofensivo é como uma cerca de
-        rede deixa de cercar sem ninguém ver.
+        Not an error — a new harness brings a new name. But it is SHOWN in the
+        recipe, because treating an unknown name as harmless is how a network
+        fence stops fencing without anyone seeing.
         """
         return sorted(set(self.ferramentas) - CONHECIDAS)
 
@@ -112,77 +116,77 @@ def _lista(bruto: object) -> list[str]:
 
 
 def validar(spec: Spec) -> None:
-    """Roda as oito recusas. Não devolve nada — ou passa, ou levanta `Recusa`."""
+    """Runs the eight refusals. Returns nothing — it either passes or raises `Recusa`."""
     if not SLUG.match(spec.slug):
         raise Recusa(
             "R8",
-            f"`{spec.slug}` não é um slug válido",
-            "use minúsculas, números e hífen — ele vira nome de arquivo em 4 harnesses",
+            f"`{spec.slug}` is not a valid slug",
+            "use lowercase, digits and hyphen — it becomes a filename in 4 harnesses",
         )
     if spec.usa_rede and not spec.dominios_permitidos:
         raise Recusa(
             "R1",
-            f"pede ferramenta de rede ({', '.join(sorted(REDE & set(spec.ferramentas)))}) "
-            "e não declara `dominios_permitidos`",
-            'declare `dominios_permitidos = ["exemplo.com"]`, ou `["nenhum"]` para barrar '
-            "sempre — ausente e vazio significam a mesma coisa e as duas BARRAM",
+            f"asks for a network tool ({', '.join(sorted(REDE & set(spec.ferramentas)))}) "
+            "and does not declare `dominios_permitidos`",
+            'declare `dominios_permitidos = ["example.com"]`, or `["nenhum"]` to block '
+            "always — absent and empty mean the same thing and both BLOCK",
         )
     if spec.usa_escrita and not spec.saida_cercada:
         raise Recusa(
             "R2",
-            f"pede ferramenta de escrita ({', '.join(sorted(ESCRITA & set(spec.ferramentas)))}) "
-            "e não declara `saida_cercada`",
-            'declare `saida_cercada = ["relatorios/"]` — "escrevo num caminho só" escrito '
-            "em prosa não é cerca, é intenção",
+            f"asks for a write tool ({', '.join(sorted(ESCRITA & set(spec.ferramentas)))}) "
+            "and does not declare `saida_cercada`",
+            'declare `saida_cercada = ["reports/"]` — "I only write in one path" written '
+            "in prose is not a fence, it is intent",
         )
     if not spec.nunca_usar:
         raise Recusa(
             "R3",
-            "não declara `nunca_usar`",
-            "escreva pelo menos um caso em que este agente é a escolha ERRADA — sem "
-            "anti-descrição o orquestrador despacha por semelhança de tema",
+            "does not declare `nunca_usar`",
+            "write at least one case where this agent is the WRONG choice — with no "
+            "anti-description the orchestrator dispatches by topic similarity",
         )
     if not spec.lacunas:
         raise Recusa(
             "R4",
-            "não declara `lacunas`",
-            "escreva o que este agente NÃO mede — ausência sem dono envelhece calada, "
-            "e um agente que não declara limite é lido como se não tivesse nenhum",
+            "does not declare `lacunas`",
+            "write what this agent does NOT measure — an absence with no owner ages "
+            "silently, and an agent that declares no limit is read as if it had none",
         )
     if not spec.golden:
         raise Recusa(
             "R5",
-            "não tem nenhum caso de golden set",
-            "escreva um caso com a resposta conferida À MÃO no disco — sem isso nada "
-            "pergunta se a RESPOSTA está certa, só se o código obedece à spec",
+            "has no golden-set case",
+            "write a case with the answer checked BY HAND on disk — without it nothing "
+            "asks whether the ANSWER is right, only whether the code obeys the spec",
         )
     for caso in spec.golden:
         if not caso.derivado_de.strip():
             raise Recusa(
                 "R6",
-                f"o caso «{caso.pergunta[:40]}…» não declara `derivado_de`",
-                "aponte a fonte, em `caminho:linha` ou URL, de onde a resposta esperada "
-                "foi lida à mão",
+                f"the case «{caso.pergunta[:40]}…» does not declare `derived_from`",
+                "point to the source, as `path:line` or a URL, where the expected "
+                "answer was read by hand",
             )
         if caso.derivado_de.strip().startswith(tuple(spec.saida_cercada or ())):
             raise Recusa(
                 "R6",
-                f"o caso «{caso.pergunta[:40]}…» deriva de `{caso.derivado_de}`, que está "
-                "DENTRO da saída do próprio agente",
-                "derive de uma fonte que o agente não escreve — os dois lados saindo do "
-                "mesmo lugar é check espelho, e ele passa verde travando o defeito",
+                f"the case «{caso.pergunta[:40]}…» derives from `{caso.derivado_de}`, which is "
+                "INSIDE the agent's own output",
+                "derive from a source the agent does not write — both sides coming from "
+                "the same place is a mirror check, and it passes green while locking the defect in",
             )
     if spec.toca_alvo and not spec.autorizacao:
         raise Recusa(
             "R7",
-            "declara `toca_alvo = true` e não declara onde está a autorização de engajamento",
-            'declare `autorizacao = "escopo/alvo.md"` com alvo, escopo, autorização e '
-            "validade — um comando fora do alvo autorizado é incidente, não achado",
+            "declares `toca_alvo = true` and does not declare where the engagement authorization is",
+            'declare `autorizacao = "scope/target.md"` with target, scope, authorization and '
+            "validity — a command outside the authorized target is an incident, not a finding",
         )
 
 
 def ler(caminho: str | Path) -> Spec:
-    """Lê e valida uma spec. Erro de campo é `Recusa`, nunca `KeyError` cru."""
+    """Reads and validates a spec. A field error is a `Recusa`, never a raw `KeyError`."""
     caminho = Path(caminho)
     dados = tomllib.loads(caminho.read_text(encoding="utf-8"))
     a = dados.get("agente") or {}
@@ -194,8 +198,8 @@ def ler(caminho: str | Path) -> Spec:
         if not a.get(campo):
             raise Recusa(
                 "R0",
-                f"a spec não declara `agente.{campo}`",
-                f"acrescente `{campo} = \"...\"` na seção `[agente]`",
+                f"the spec does not declare `agente.{campo}`",
+                f'add `{campo} = "..."` in the `[agente]` section',
             )
 
     spec = Spec(
@@ -219,7 +223,7 @@ def ler(caminho: str | Path) -> Spec:
             for g in (p.get("golden") or [])
         ],
         precisa=_lista(c.get("precisa")),
-        idioma=str(a.get("idioma", "pt")),
+        idioma=str(a.get("idioma", "en")),
         origem=str(caminho),
     )
     validar(spec)

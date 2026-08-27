@@ -1,33 +1,33 @@
-# Um roster de exemplo, e ele é ruim de propósito
+# An example roster, and it is bad on purpose
 
-Quatro agentes escritos à mão, do jeito que quase todo mundo escreve o primeiro: uma descrição
-boa, um prompt razoável, e nenhuma declaração que um runtime consiga ler.
+Four hand-written agents, the way almost everyone writes the first one: a good description, a
+reasonable prompt, and no declaration a runtime can read.
 
 ```console
 $ python -m forja exemplos/roster-de-exemplo
 ```
 
-**Os quatro aparecem no relatório, e não aparecem igual** — que é o ponto. O `tradutor.md` é o
-mais bem escrito dos quatro e sai com dois achados; o `revisor-de-pr.md` sai com sete. Se a
-vistoria acusasse os quatro do mesmo jeito, ela não estaria medindo nada.
+**All four show up in the report, and they do not show up the same** — which is the point. `tradutor.md`
+is the best written of the four and comes out with two findings; `revisor-de-pr.md` comes out with
+seven. If the survey flagged all four the same way, it would not be measuring anything.
 
-| Arquivo | O que está errado nele | Achados |
+| File | What is wrong with it | Findings |
 |---|---|---:|
-| `revisor-de-pr.md` | sem `tools:` (herda tudo), sem anti-descrição, sem gatilho, e confunde-se com o auditor | 7 |
-| `auditor-de-seguranca.md` | pede rede sem dizer com quem fala, sem gatilho, e confunde-se com o revisor | 6 |
-| `redator-de-changelog.md` | pede escrita e `Bash` sem dizer onde escreve; não diz o que nunca faz | 4 |
-| `tradutor.md` | diz `Escreva só em docs/en/` **na prosa** — e prosa nenhum runtime lê; e nada confere a resposta dele | 2 |
+| `revisor-de-pr.md` | no `tools:` (inherits all), no anti-description, no trigger, and gets confused with the auditor | 7 |
+| `auditor-de-seguranca.md` | asks for network without saying who it talks to, no trigger, and gets confused with the reviewer | 6 |
+| `redator-de-changelog.md` | asks for write and `Bash` without saying where it writes; does not say what it never does | 4 |
+| `tradutor.md` | says `Write only in docs/en/` **in the prose** — and no runtime reads prose; and nothing checks its answer | 2 |
 
-O caso do `tradutor` é o mais instrutivo dos quatro: ele **de fato** declara onde escreve, em
-português claro, no corpo do prompt. E é acusado mesmo assim, de propósito. A frase governa quem
-lê o arquivo; ela não governa o processo que executa a ferramenta.
+The `tradutor` case is the most instructive of the four: it **does** declare where it writes, in
+clear English, in the body of the prompt. And it is flagged anyway, on purpose. The sentence governs
+whoever reads the file; it does not govern the process that runs the tool.
 
-Os dois primeiros são o caso que só existe a partir do segundo agente: as descrições disputam o
-mesmo despacho, e **nenhum dos dois nomeia o outro**. O orquestrador vai chutar, e vai chutar de
-um jeito diferente a cada dia.
+The first two are the case that only exists from the second agent on: the descriptions fight over the
+same dispatch, and **neither one names the other**. The orchestrator will guess, and it will guess a
+different way every day.
 
-Depois de olhar o relatório, experimente o segundo passo — ele escreve, e não sobrescreve nada
-do que está aqui:
+After looking at the report, try the second step — it writes, and it does not overwrite anything
+that is here:
 
 ```console
 $ python -m forja exemplos/roster-de-exemplo --adotar

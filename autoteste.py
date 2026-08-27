@@ -68,8 +68,8 @@ def check(letra: str, o_que: str):
             _falhas.append(f"{letra} — {o_que}\n     {exc}")
             print(f"  ✗ {letra}  {o_que}\n      {exc}")
         except Exception as exc:  # noqa: BLE001
-            _falhas.append(f"{letra} — {o_que}\n     estourou: {type(exc).__name__}: {exc}")
-            print(f"  ✗ {letra}  {o_que}\n      estourou: {type(exc).__name__}: {exc}")
+            _falhas.append(f"{letra} — {o_que}\n     raised: {type(exc).__name__}: {exc}")
+            print(f"  ✗ {letra}  {o_que}\n      raised: {type(exc).__name__}: {exc}")
         else:
             _passes += 1
             print(f"  ✓ {letra}  {o_que}")
@@ -408,8 +408,8 @@ def _x():
         d["fronteira"].pop("dominios_permitidos", None)
         d["prova"]["golden"] = [
             {
-                "pergunta": "quantas licenças OSI?",
-                "esperado": "sete",
+                "pergunta": "how many OSI licenses?",
+                "esperado": "seven",
                 "derivado_de": "relatorios/ultima-rodada.md",
             }
         ]
@@ -478,7 +478,7 @@ def _aa():
         f"o guarda deixou passar domínio fora da cerca: {r} — declarar a fronteira em prosa "
         "e não implementá-la é o defeito exato que a forja existe para fechar"
     )
-    assert "conserto" in r["hookSpecificOutput"]["permissionDecisionReason"].lower(), (
+    assert "fix" in r["hookSpecificOutput"]["permissionDecisionReason"].lower(), (
         "negou sem dizer o conserto — recusa sem saída treina quem a lê a contorná-la"
     )
 
@@ -596,8 +596,8 @@ def _ag():
     ausente = _conselho.carregar(Path(tempfile.mkdtemp()) / "nao-existe.json")
     assert ausente is None, "censo ausente virou dicionário — 'não consultei' viraria '0 peças'"
     texto = _conselho.em_markdown(["memoria"], ausente, "x.json")
-    assert "não consultado" in texto.lower(), texto
-    assert "0" not in texto.split("Censo não consultado")[0], (
+    assert "not consulted" in texto.lower(), texto
+    assert "0" not in texto.split("Census not consulted")[0], (
         "o bloco de censo ausente afirmou uma contagem — não medido nunca é zero"
     )
 
@@ -612,7 +612,7 @@ def _ah():
     spec = ler(caminho)
     assert spec.desconhecidas == ["TelepathyMCP__enviar"], spec.desconhecidas
     _, receita = _alvos.receita(spec, ["a"])
-    assert "não classifica" in receita, (
+    assert "does not classify" in receita, (
         "a receita não avisou da ferramenta desconhecida — é assim que uma cerca de rede "
         "deixa de cercar sem ninguém ver"
     )
@@ -717,11 +717,16 @@ def _am():
     """
     registro.limpar()
     sonda("x.y")(lambda: 1)
+    sonda("vistoria.achados")(lambda: 7)
     fonte = """Um registro do ecossistema, e os dois lados saem da mesma fonte.
 <!-- measured: x.y=1 nature=count on=2026-08-16 expires=never -->
 
 Prosa inteira que descreve o mecanismo e não afirma quantidade.
 <!-- measured: x.y=1 nature=count on=2026-08-16 expires=never -->
+
+The first five are about one agent. The last two only exist because there is
+more than one, and they are the reason this exists.
+<!-- measured: vistoria.achados=7 nature=count on=2026-08-16 expires=never -->
 """
     with tempfile.TemporaryDirectory() as tmp:
         (Path(tmp) / "leia.md").write_text(fonte, encoding="utf-8")
@@ -729,8 +734,9 @@ Prosa inteira que descreve o mecanismo e não afirma quantidade.
 
     mudos = [a for a in r.achados if a.veredito == PROSE_DRIFT]
     assert not mudos, (
-        "`Um registro` é artigo e `os dois lados` é pronome — nenhum dos dois "
-        f"afirma quantidade. Falsos positivos: {[str(a) for a in mudos]}"
+        "`Um registro`/`os dois lados` são artigo e pronome em português; `The first "
+        "five`/`The last two` são a mesma coisa em inglês — nenhum afirma quantidade. "
+        f"Falsos positivos: {[str(a) for a in mudos]}"
     )
 
 
@@ -1607,9 +1613,9 @@ from evidencia import pagina as _pagina  # noqa: E402
 
 @check("BO", "`evidencia.pagina` é autocontida — nenhuma tag que busca recurso externo, e a cor segue o código")
 def _bo():
-    ok = _pagina("teste", "alvo", "2026-08-24", ["✅ PASSA"], 0)
-    reprova = _pagina("teste", "alvo", "2026-08-24", ["⛔ REPROVA"], 1)
-    recusa = _pagina("teste", "alvo", "2026-08-24", ["RECUSADO"], 2)
+    ok = _pagina("teste", "alvo", "2026-08-24", ["✅ PASS"], 0)
+    reprova = _pagina("teste", "alvo", "2026-08-24", ["⛔ FAIL"], 1)
+    recusa = _pagina("teste", "alvo", "2026-08-24", ["REFUSED"], 2)
 
     for pg in (ok, reprova, recusa):
         assert "<script" not in pg, "uma página autocontida não pode carregar script externo"
@@ -1621,9 +1627,9 @@ def _bo():
     assert 'class="veredito ok"' in ok, "código 0 tinha de virar veredito verde"
     assert 'class="veredito grave"' in reprova, "código 1 tinha de virar veredito grave"
     assert 'class="veredito grave"' in recusa, (
-        "código 2 (RECUSADO) também é grave — não é neutro, e não é o mesmo texto que REPROVA"
+        "código 2 (REFUSED) também é grave — não é neutro, e não é o mesmo texto que FAIL"
     )
-    assert "REPROVA" in reprova and "RECUSADO" in recusa and "PASSA" in ok
+    assert "FAIL" in reprova and "REFUSED" in recusa and "PASS" in ok
 
     # O controle negativo: se a classificação de linha (`_classe`) parasse de
     # reconhecer ⛔/⚠️/✅, toda linha cairia no CSS neutro e o relatório deixaria
@@ -1644,7 +1650,7 @@ def _bp():
         assert codigo == 0, "o roster de fixture (AGENTE_COMPLETO) não tem achado — tinha de passar"
         assert alvo_html.is_file(), "`--html` foi pedido e o arquivo não foi escrito"
         conteudo = alvo_html.read_text(encoding="utf-8")
-        assert "PASSA" in conteudo and 'class="veredito ok"' in conteudo
+        assert "PASS" in conteudo and 'class="veredito ok"' in conteudo
 
 
 # ------------------------------------------------------- forja: --baseline ---
@@ -1730,9 +1736,9 @@ def _bt():
     for regra in _explicar_mod.CODIGOS:
         linhas = _explicar_mod.explicar(regra)
         texto = "\n".join(linhas)
-        assert "O que ele acha:" in texto, f"{regra}: não achou a linha da tabela do README"
-        assert f"citado ao vivo de {_explicar_mod.README.name}" in texto
-        assert "⚠️ não consegui ler" not in texto, f"{regra}: README mudou de forma e a citação quebrou"
+        assert "What it finds:" in texto, f"{regra}: não achou a linha da tabela do README"
+        assert f"cited live from {_explicar_mod.README.name}" in texto
+        assert "⚠️ could not read" not in texto, f"{regra}: README mudou de forma e a citação quebrou"
 
 
 @check("BU", "`--explain` de código fora do vocabulário fechado é RECUSADO, e lista os sete válidos")
@@ -1752,9 +1758,9 @@ def _bu():
 def _bv():
     original = _explicar_mod.README.read_text(encoding="utf-8")
     try:
-        marca = "TEXTO-DE-TESTE-QUE-NAO-EXISTE-NA-DOUTRINA-REAL"
+        marca = "TEST-TEXT-THAT-DOES-NOT-EXIST-IN-THE-REAL-DOCTRINE"
         alterado = original.replace(
-            "não diz o que **nunca** faz", f"não diz o que **nunca** faz ({marca})", 1
+            "does not say what it **never** does", f"does not say what it **never** does ({marca})", 1
         )
         assert alterado != original, "a linha de V1 na tabela do README mudou de texto — ajuste o fixture"
         _explicar_mod.README.write_text(alterado, encoding="utf-8")
@@ -1991,28 +1997,28 @@ def _ce():
 
 
 def main() -> int:
-    print("autoteste do loadline — cada check reintroduz o defeito que ele pega\n")
+    print("loadline autoteste — each check reintroduces the defect it catches\n")
     ordem = sorted(
         (nome for nome in globals() if nome.startswith("_") and len(nome) == 2),
         key=lambda n: n[1],
     )
-    del ordem  # os checks já rodaram na importação, por decoração
+    del ordem  # the checks already ran on import, by decoration
 
     executados = _passes + len(_falhas)
     print()
     print(
-        f"{executados + len(FORA)} checks declarados · {executados} executados"
-        f" · {len(FORA)} fora do denominador"
+        f"{executados + len(FORA)} checks declared · {executados} run"
+        f" · {len(FORA)} outside the denominator"
     )
     for letra, motivo in FORA:
-        print(f"  fora: {letra} — {motivo}")
-    print(f"{_passes} passaram · {len(_falhas)} reprovaram")
+        print(f"  outside: {letra} — {motivo}")
+    print(f"{_passes} passed · {len(_falhas)} failed")
     if _falhas:
-        print("\nREPROVOU:")
+        print("\nFAILED:")
         for f in _falhas:
             print(f"  {f}")
         return 1
-    print("\nPASSOU")
+    print("\nPASSED")
     return 0
 
 

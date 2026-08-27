@@ -103,14 +103,18 @@ POR_EXTENSO = {
 _DIGITO = re.compile(r"(?<![\w.,])(\d+)(?![\w])")
 
 #: A numeral preceded by a DEFINITE article is a pronoun, not a claim: *"os dois
-#: lados"* and *"as três formas"* refer back to things already said, they count
-#: nothing new. Without this rule, all well-written prose turns into a false
-#: positive — and a detector that shouts on the right text is switched off in
-#: the first week, which is the most expensive way for a check to fail.
-#: ⚠️ Portuguese-only: English *"the two"* is not stripped. Declared in `LACUNAS.md`.
+#: lados"* / *"the two sides"* and *"as três formas"* / *"the three ways"* refer
+#: back to things already said, they count nothing new. Without this rule, all
+#: well-written prose turns into a false positive — and a detector that shouts
+#: on the right text is switched off in the first week, which is the most
+#: expensive way for a check to fail.
+_NUMERAL = "dois|duas|tr[êe]s|tres|quatro|cinco|seis|sete|oito|nove|dez|doze|quinze|vinte"
+_NUMERAL_EN = "two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|twenty"
 _PRONOMINAL = re.compile(
-    r"\b(?:os|as|nos|nas|dos|das|aos|às|pelos|pelas)\s+"
-    r"(?:dois|duas|tr[êe]s|quatro|cinco|seis|sete|oito|nove|dez|doze|quinze|vinte)\b",
+    r"\b(?:"
+    rf"(?:os|as|nos|nas|dos|das|aos|às|pelos|pelas)\s+(?:{_NUMERAL})"
+    rf"|(?:the|both|these|those|all)\s+(?:first\s+|last\s+|other\s+|only\s+|same\s+)?(?:{_NUMERAL_EN})"
+    r")\b",
     re.IGNORECASE,
 )
 _PALAVRA = re.compile(r"[a-zà-ÿ]+", re.IGNORECASE)

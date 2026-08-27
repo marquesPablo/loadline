@@ -1,20 +1,22 @@
-"""O conselho do Censo — a forja não inventa peça, ela consulta o registro.
+"""The Census's advice — the forge does not invent a component, it consults the register.
 
-nature: fix — censo ausente ou ilegível vira aviso escrito no relatório,
-nunca uma recomendação inventada. A forja compila do mesmo jeito; ela só perde
-a capacidade de dizer o que já existe, e diz que perdeu.
+nature: fix — an absent or unreadable census becomes a written warning in the
+report, never an invented recommendation. The forge compiles the same way; it
+just loses the ability to say what already exists, and it says it lost it.
 
-## Por que isto está aqui
+## Why this is here
 
-Um compilador de agente que responde *"para memória, use X"* sem olhar nada é o
-sétimo AgentGuard esperando para nascer. Quando a spec declara
-`precisa = ["memoria"]`, a forja abre o censo e devolve **as peças reais** —
-com licença, com veredito de OSI, e com o aviso de colisão quando o nome que a
-pessoa vai buscar identifica seis projetos diferentes.
+An agent compiler that answers *"for memory, use X"* without looking at anything
+is the seventh AgentGuard waiting to be born. When the spec declares
+`needs = ["memory"]`, the forge opens the census and returns **the real
+components** — with the license, with the OSI verdict, and with the collision
+warning when the name the person is about to search for identifies six
+different projects.
 
-É a parte do produto que serve a régua do caderno: *"tanto o bilionário quanto a
-tia da limpeza possam ler, entender e aplicar"*. A tia da limpeza não precisa do
-sétimo framework. Ela precisa saber **qual dos seis** e **se ainda vale**.
+It is the part of the product that serves the notebook's rule: *"both the
+billionaire and the cleaner can read, understand and apply it"*. The cleaner
+does not need the seventh framework. They need to know **which of the six** and
+**whether it still holds**.
 """
 
 from __future__ import annotations
@@ -23,19 +25,19 @@ import json
 from pathlib import Path
 
 ROTULO = {
-    "osi": "✅ OSI — pode ser vendorizada",
-    "osi_copyleft_forte": "⚠️ OSI, copyleft forte — a escolha precisa ser deliberada",
-    "nao_osi": "⛔ NÃO é open source — rodar sim, copiar para dentro não",
-    "nao_verificado": "◻️ licença não verificada — confira antes de usar",
+    "osi": "✅ OSI — can be vendored",
+    "osi_copyleft_forte": "⚠️ OSI, strong copyleft — the choice must be deliberate",
+    "nao_osi": "⛔ NOT open source — running it yes, copying it in no",
+    "nao_verificado": "◻️ license not verified — check before using",
 }
 
 
 def carregar(caminho: str | Path) -> dict | None:
-    """Lê o censo. Ausente ou ilegível devolve `None` — nunca um censo vazio.
+    """Reads the census. Absent or unreadable returns `None` — never an empty census.
 
-    Devolver `{}` faria a forja dizer *"nenhuma peça existe para memória"*, que
-    é uma afirmação falsa vestida de resposta. `None` obriga quem chama a
-    tratar o caso como *não consultado*, que é o que de fato aconteceu.
+    Returning `{}` would make the forge say *"no component exists for memory"*,
+    which is a false claim dressed as an answer. `None` forces the caller to
+    treat the case as *not consulted*, which is what actually happened.
     """
     caminho = Path(caminho)
     if not caminho.exists():
@@ -53,17 +55,17 @@ def para(estagio: str, censo: dict | None) -> list[dict]:
 
 
 def em_markdown(precisa: list[str], censo: dict | None, caminho_do_censo: str) -> str:
-    """O bloco de conselho, pronto para entrar no relatório da corrida."""
+    """The advice block, ready to drop into the run's report."""
     if not precisa:
         return ""
-    L = ["## O que já existe para o que esta spec pediu", ""]
+    L = ["## What already exists for what this spec asked for", ""]
     if censo is None:
         L += [
-            f"⚠️ **Censo não consultado.** `{caminho_do_censo}` não existe ou não pôde ser lido.",
+            f"⚠️ **Census not consulted.** `{caminho_do_censo}` does not exist or could not be read.",
             "",
-            "A forja compilou assim mesmo — o censo aconselha, não gateia. Mas o que segue",
-            "**não** é uma lista vazia de peças disponíveis: é a ausência da consulta, e as",
-            "duas coisas dizem coisas opostas.",
+            "The forge compiled anyway — the census advises, it does not gate. But what follows",
+            "is **not** an empty list of available components: it is the absence of the lookup, and",
+            "the two say opposite things.",
             "",
         ]
         return "\n".join(L)
@@ -74,34 +76,34 @@ def em_markdown(precisa: list[str], censo: dict | None, caminho_do_censo: str) -
         L.append("")
         if not peças:
             L += [
-                f"O censo tem **0** entradas no estágio `{estagio}`.",
+                f"The census has **0** entries at stage `{estagio}`.",
                 "",
-                "Isso quer dizer *ninguém catalogou ainda*, e **não** quer dizer *não existe*.",
-                "Antes de escrever a sua, abra uma busca — e depois acrescente a entrada ao",
-                "censo, porque a próxima pessoa vai fazer a mesma pergunta.",
+                "That means *nobody has catalogued one yet*, and does **not** mean *it does not exist*.",
+                "Before you write your own, open a search — and then add the entry to the",
+                "census, because the next person will ask the same question.",
                 "",
             ]
             continue
         for p in sorted(peças, key=lambda x: x["nome"].lower()):
-            alvo = p.get("repo") or (p.get("paper") and f"`{p['paper']}`") or "⛔ sem canônico"
+            alvo = p.get("repo") or (p.get("paper") and f"`{p['paper']}`") or "⛔ no canonical"
             L.append(f"- **{p['nome']}** — {alvo}")
             L.append(f"  - {ROTULO.get(p.get('veredito_licenca', ''), '◻️')} (`{p.get('licenca', '—')}`)")
             L.append(f"  - {p['faz']}")
             if p.get("custa_dinheiro"):
-                L.append("  - 💸 **custa dinheiro** — chave de API ou serviço pago")
+                L.append("  - 💸 **costs money** — an API key or a paid service")
             if p.get("colide_com"):
                 quantos = len(p["colide_com"]) + (1 if p.get("repo") else 0)
                 L.append(
-                    f"  - ⚠️ **`{p['nome']}` identifica {quantos} projetos independentes.** "
-                    "Instalar pelo nome é loteria — use a URL, não o nome."
+                    f"  - ⚠️ **`{p['nome']}` identifies {quantos} independent projects.** "
+                    "Installing by name is a lottery — use the URL, not the name."
                 )
-            L.append(f"  - lido em `{p.get('lido_em', '—')}`")
+            L.append(f"  - read on `{p.get('lido_em', '—')}`")
         L.append("")
 
     L += [
-        "> **Este conselho vence.** Cada linha saiu de uma página aberta na data ao lado, e",
-        "> nenhuma sonda offline sabe o que mudou lá fora desde então. Rode `python -m loadline`",
-        "> no censo antes de apoiar decisão nele.",
+        "> **This advice expires.** Every line came from a page opened on the date next to it, and",
+        "> no offline probe knows what changed out there since. Run `python -m loadline` on the",
+        "> census before you lean on a decision from it.",
         "",
     ]
     return "\n".join(L)

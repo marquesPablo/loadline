@@ -1,142 +1,148 @@
-# O que este projeto NÃO mede
+# What this project does NOT measure
 
-> **A terceira lista.** Toda ferramenta publica o que passou e o que falhou. Quase nenhuma publica
-> **o que ela nunca olhou** — e é essa terceira lista que decide se um verde significa alguma coisa.
+> **The third list.** Every tool publishes what passed and what failed. Almost none publishes
+> **what it never looked at** — and it is that third list that decides whether a green means anything.
 >
-> Este arquivo é o denominador do projeto inteiro, no mesmo espírito da `LACUNAS.md` que a `forja`
-> emite para cada agente que compila. Ele existe para que ninguém precise descobrir um limite
-> **usando** a ferramenta e sendo surpreendido por ele.
+> This file is the denominator of the whole project, in the same spirit as the `LACUNAS.md` that
+> `forja` emits for every agent it compiles. It exists so that nobody has to discover a limit
+> **by using** the tool and being surprised by it.
 
-## 1 · A sonda prova coerência interna, nunca a verdade do mundo
+## 1 · The probe proves internal coherence, never the truth of the world
 
-A sonda recomputa o número de uma fonte no disco. Se essa fonte estiver errada, o par passa verde
-com os dois lados errados juntos. **Um JSON coerente não é um fato verdadeiro.**
+The probe recomputes the number from a source on disk. If that source is wrong, the pair passes
+green with both sides wrong together. **A coherent JSON is not a true fact.**
 
-É para isso que serve o `vence=`: ele é o único mecanismo aqui que obriga alguém a sair da máquina.
-Nenhum verde deste projeto significa *"isto é verdade lá fora"*.
+That is what `expires=` is for: it is the only mechanism here that forces someone to leave the
+machine. No green in this project means *"this is true out there"*.
 
-## 2 · O confronto prosa × selo morde numa direção só
+## 2 · The prose-vs-seal cross-check bites in one direction only
 
-O `PROSA_MUDA` acusa **número na frase que nenhum selo do bloco cobre**. A direção contrária — *a
-frase afirma uma GRANDEZA que o selo não nomeia*, sem escrever número — exige um registro fechado de
-grandezas e o julgamento do que conta como afirmação. **Não está implementada.**
+`PROSE_DRIFT` flags **a number in the sentence that no seal in the block covers**. The other
+direction — *the sentence claims a QUANTITY the seal does not name*, without writing a number —
+needs a closed register of quantities and a judgment about what counts as a claim. **It is not
+implemented.**
 
-Consequência prática: *"a suíte está verde"* e *"o repositório está sincronizado"* são asserções, e
-passam sem cobrança nenhuma aqui.
+Practical consequence: *"the suite is green"* and *"the repository is in sync"* are claims, and they
+pass with no charge at all here.
 
-## 3 · `um` e `uma` não são lidos como numeral
+## 3 · `um` and `uma` are not read as a numeral
 
-Em português são artigo indefinido antes de serem número, e *"Um registro do ecossistema"* não
-afirma quantidade. Separar os dois usos exige análise sintática que este projeto não faz.
+In Portuguese they are an indefinite article before they are a number, and *"Um registro do
+ecossistema"* claims no quantity. Telling the two uses apart needs syntactic analysis this project
+does not do.
 
-**O custo:** uma frase que afirme de verdade *"um projeto não tem canônico"* passa sem cobrança. A
-saída para quem precisa é escrever o dígito.
+**The cost:** a sentence that really does claim *"one project has no canonical"* passes with no
+charge. The way out for whoever needs it is to write the digit.
 
-## 4 · Percentual não é confrontado
+## 4 · A percentage is not cross-checked
 
-Percentual é derivado, e cobrá-lo exigiria conhecer o denominador — que é justamente o que o texto
-costuma omitir. Ele é retirado antes do confronto, junto com data, versão e identificador.
+A percentage is derived, and checking it would need the denominator — which is exactly what the text
+usually omits. It is removed before the cross-check, along with dates, versions and identifiers.
 
-## 5 · O confronto só olha prosa, não código
+## 5 · The cross-check only looks at prose, not code
 
-Em `.py`, o que está ao redor de um selo é código, e cobrar eco de número ali acusaria todo literal
-vizinho. Selo em comentário de código é julgado pelo valor, nunca pela frase.
+In a `.py`, what surrounds a seal is code, and demanding a prose echo of a number there would flag
+every neighboring literal. A seal in a code comment is judged by its value, never by the sentence.
 
-## 6 · Nada aqui mede a QUALIDADE do que foi escrito
+## 6 · Nothing here measures the QUALITY of what was written
 
-O projeto responde *"este número ainda bate?"* e *"esta frase o repete certo?"*. Ele não responde se
-a métrica era a certa, se a sonda mede o que diz medir, ou se a afirmação importava. Isso é
-julgamento, e ele continua sendo de quem escreve.
+The project answers *"does this number still match?"* and *"does this sentence repeat it right?"*. It
+does not answer whether the metric was the right one, whether the probe measures what it claims to
+measure, or whether the claim mattered. That is judgment, and it stays with whoever writes.
 
-## 7 · O denominador dos vizinhos é de uma data, não de sempre
+## 7 · The neighbors' denominator is from one date, not from always
 
-A comparação com `drift`, `Provena` e `freshprobe` no `README.md` foi feita em **2026-08-20**, lendo
-página pública. Nenhum dos três foi clonado, instalado ou executado. Eles podem ter mudado desde
-então, e nada aqui reconfere isso sozinho — é a lacuna nº 1 aplicada a este próprio argumento.
+The comparison with `agents-lint`, `agent-pd` and `agent-audit` in `README.md` was done on
+**2026-08-20**, reading the public page. None of the three was cloned, installed or run. They may
+have changed since then, and nothing here re-checks that by itself — it is gap nº 1 applied to this
+very argument.
 
-## 8 · O nome da métrica que o `--selar` escreve é um CHUTE
+## 8 · The metric name that `--selar` writes is a GUESS
 
-Ele sai da palavra logo depois do número na frase — *"12 endpoints"* vira `endpoints=12`. É a mesma
-leitura que um humano faz, e erra pelos mesmos motivos: ordem inversa (*"endpoints: 12"*), a palavra
-seguinte ser preposição, ou o número não ter substantivo nenhum ao lado. Nesses casos sai
-`SUA_METRICA`, e nomes repetidos no mesmo arquivo ganham sufixo.
+It comes from the word right after the number in the sentence — *"12 endpoints"* becomes
+`endpoints=12`. It is the same reading a human does, and it gets it wrong for the same reasons:
+reversed order (*"endpoints: 12"*), the next word being a preposition, or the number having no noun
+next to it at all. In those cases it writes `YOUR_METRIC`, and repeated names in the same file get a
+suffix.
 
-**Isto é sugestão para renomear, nunca afirmação de que a ferramenta entendeu o que o número
-significa** — e a diferença entre as duas está escrita na saída de toda rodada que escreve.
+**This is a suggestion to rename, never a claim that the tool understood what the number means** —
+and the difference between the two is written in the output of every run that writes.
 
-## 9 · A vistoria acusa a AUSÊNCIA da declaração, nunca a qualidade dela
+## 9 · The survey flags the ABSENCE of the declaration, never its quality
 
-Ela responde *"existe aqui alguma coisa legível por máquina dizendo o que este agente nunca faz?"*.
-Ela não responde se a anti-descrição estava certa, se a fronteira declarada era a fronteira boa, ou
-se o caso do golden set pergunta o que importa. **Um agente excelente com a fronteira escrita em
-prosa aparece na lista, e deve aparecer** — mas a recíproca não vale: declarar não é acertar.
+It answers *"is there anything machine-readable here saying what this agent never does?"*. It does
+not answer whether the anti-description was right, whether the declared boundary was the good
+boundary, or whether the golden-set case asks what matters. **An excellent agent with its boundary
+written in prose shows up on the list, and it should** — but the converse does not hold: declaring
+is not getting it right.
 
-## 10 · Frontmatter multi-linha não é lido
+## 10 · Multi-line frontmatter is not read
 
-O leitor pega `chave: valor` de uma linha, que é o que os harnesses de hoje escrevem. Uma
-`description` quebrada em várias linhas, ou um bloco YAML aninhado, é lido pela metade — e a
-metade que faltou vira ausência, que é justamente o erro que este arquivo existe para nomear.
+The reader takes one-line `key: value`, which is what today's harnesses write. A `description`
+broken across several lines, or a nested YAML block, is read half-way — and the half that was
+missing becomes an absence, which is exactly the error this file exists to name.
 
-**O custo:** um agente bem declarado em YAML multi-linha pode ser acusado à toa.
+**The cost:** an agent well declared in multi-line YAML can be flagged for nothing.
 
-## 11 · O limiar do `V6` é ESCOLHIDO, e não medido
+## 11 · The `V6` threshold is CHOSEN, not measured
 
-Trinta por cento de palavras em comum. Ninguém mediu que 30% é onde dois agentes passam a disputar
-o mesmo despacho — o número foi escolhido olhando rosters reais, e está no código com o motivo ao
-lado em vez de enterrado numa condição. Ele erra nos dois sentidos, e a saída dele é **lista de
-leitura, nunca veredito**: `V6` sozinho não deve reprovar o CI de ninguém.
+Thirty percent of words in common. Nobody measured that 30% is where two agents start fighting over
+the same dispatch — the number was chosen looking at real rosters, and it is in the code with the
+reason next to it instead of buried in a condition. It gets it wrong both ways, and its output is a
+**reading list, never a verdict**: `V6` alone should not fail anyone's CI.
 
-## 12 · Nada aqui roda o agente
+## 12 · Nothing here runs the agent
 
-A vistoria lê arquivo parado. Ela não despacha, não observa o orquestrador escolhendo, e não sabe
-se o seu agente responde bem. Ela sabe se existe, no repositório, **alguma coisa capaz de dizer que
-ele respondeu mal** — que é uma pergunta menor, e é a única que dá para responder offline e sem
-modelo.
+The survey reads a file at rest. It does not dispatch, does not watch the orchestrator choosing, and
+does not know whether your agent answers well. It knows whether there is, in the repository,
+**something capable of saying it answered badly** — which is a smaller question, and the only one
+that can be answered offline and without a model.
 
-## 13 · O `V6` compara PALAVRAS, e não sentido
+## 13 · `V6` compares WORDS, not meaning
 
-Ele acha `revisor` × `auditor` quando as duas descrições dizem *"procurando problema de qualidade,
-segurança e arquitetura"* — palavras iguais, 67% em comum. Ele **não acha**
-`pesquisador` × `investigador` quando uma diz *"pesquisa na web e resume o que achou sobre um
-tema"* e a outra *"investiga na web e resume o que encontrou sobre um assunto"*. São a mesma vaga,
-escritas com sinônimos: 17% de palavras em comum, abaixo do limiar, e passam verdes.
+It finds `revisor` × `auditor` when both descriptions say *"looking for quality, security and
+architecture problems"* — same words, ~64% in common. It **does not find**
+`pesquisador` × `investigador` when one says *"searches the web and summarizes what it found about a
+topic"* and the other *"investigates on the web and summarizes what it turned up about a subject"*.
+They are the same role, written with synonyms: 17% of words in common, below the threshold, and they
+pass green.
 
-Achar sinônimo exigiria um modelo, e um verificador que depende de um modelo não é um verificador —
-é uma segunda opinião, e ela não roda offline nem no CI de quem mais precisa dela.
+Finding a synonym would need a model, and a verifier that depends on a model is not a verifier —
+it is a second opinion, and it does not run offline or in the CI of whoever needs it most.
 
-**O custo, dito por extenso:** o `V6` acha colisão de VOCABULÁRIO. Ele é um piso, nunca um teto —
-silêncio dele não é prova de que o seu roster não se confunde. A pergunta que ele não faz, e que
-continua sendo sua: *se eu escondesse os nomes, eu saberia qual dos dois despachar?*
+**The cost, spelled out:** `V6` finds a VOCABULARY collision. It is a floor, never a ceiling —
+its silence is not proof that your roster does not get confused. The question it does not ask, and
+that stays yours: *if I hid the names, would I know which of the two to dispatch?*
 
-## 14 · `--baseline` identifica achado por TEXTO, não por identidade estável
+## 14 · `--baseline` identifies a finding by TEXT, not by a stable identity
 
-A chave de cada item é `"REGRA: texto do item"` (`forja/baseline.py`) — o mesmo texto que aparece
-na tela. Renomear um agente (`tradutor.md` → `traducao.md`) faz o item antigo sumir e um item novo
-com cara idêntica aparecer: `--baseline` relata isso como **1 resolvido + 1 novo**, não como
-**0 mudanças**. Rastrear identidade de verdade exigiria uma chave que sobrevive ao rename — nome
-de arquivo é a única coisa disponível, e ela é exatamente o que muda no rename.
+Each item's key is `"RULE: item text"` (`forja/baseline.py`) — the same text that shows on screen.
+Renaming an agent (`tradutor.md` → `traducao.md`) makes the old item vanish and a new one with an
+identical look appear: `--baseline` reports that as **1 resolved + 1 new**, not as **0 changes**.
+Tracking a real identity would need a key that survives the rename — the filename is the only thing
+available, and it is exactly what changes on the rename.
 
-**O custo:** um repositório que só renomeia arquivos, sem tocar em nenhuma declaração, vê
-`--baseline` acusar barulho. É falso positivo de RUÍDO, nunca falso negativo de defeito real —
-o item "novo" existe de fato, só não é novo no sentido que a pessoa lendo o diff esperava.
+**The cost:** a repository that only renames files, without touching any declaration, sees
+`--baseline` flag noise. It is a false positive of NOISE, never a false negative of a real defect —
+the "new" item does exist, it is just not new in the sense the person reading the diff expected.
 
-## 15 · `action.yml` nunca rodou de verdade num runner do GitHub
+## 15 · `action.yml` has never actually run on a GitHub runner
 
-O `acao/gate.py` — a única parte com ramificação real — tem controle negativo no `autoteste.py`
-(`CA`–`CD`). O `action.yml` em si (a composição de steps, `${{ github.action_path }}`,
-`actions/upload-artifact@v4`) só foi conferido por leitura e por rodar os mesmos comandos
-manualmente com `PYTHONPATH` simulando o que `github.action_path` resolveria. **Não existe teste
-automatizado que suba um workflow real e confirme que o YAML compõe como este arquivo promete** —
-isso exigiria um repositório público com Actions habilitado, que é exatamente o gate que o
-`ADR-104`/`ADR-119` reservam para o Pablo.
+`acao/gate.py` — the only part with real branching — has a negative control in `autoteste.py`
+(`CA`–`CD`). `action.yml` itself (the step composition, `${{ github.action_path }}`,
+`actions/upload-artifact@v4`) was only checked by reading it and by running the same commands
+manually with `PYTHONPATH` simulating what `github.action_path` would resolve to. **There is no
+automated test that stands up a real workflow and confirms the YAML composes as this file
+promises** — that would need a public repository with Actions enabled, which is exactly the gate the
+launch decision reserves for the owner.
 
-## Fechadas
+## Closed
 
-Uma lacuna sai desta lista quando o mecanismo que a fechava passa a existir e a ter controle
-negativo. O registro fica, porque a lista encolher em silêncio seria a mesma família de defeito que
-este arquivo existe para impedir.
+A gap leaves this list when the mechanism that closed it starts to exist and to have a negative
+control. The record stays, because the list shrinking silently would be the same family of defect
+this file exists to prevent.
 
-- **`Não há marca para o número que foi ESCOLHIDO, e não medido`** — fechada em 2026-08-20 pela
-  marca `arbitrado:`, que exige o dono (`por=`) e vence como qualquer outro selo. Era descrita aqui
-  como *"a lacuna mais funda da lista, e a próxima coisa a nascer"*. Controles negativos: três
-  checks do autoteste, cada um reintroduzindo o defeito.
+- **`There is no mark for a number that was CHOSEN, not measured`** — closed on 2026-08-20 by the
+  `arbitrated:` mark, which requires the owner (`by=`) and expires like any other seal. It was
+  described here as *"the deepest gap on the list, and the next thing to be born"*. Negative
+  controls: three autoteste checks, each reintroducing the defect.
