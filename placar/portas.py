@@ -1,28 +1,29 @@
-"""As sete portas — deterministicamente, sem chamar modelo.
+"""The seven gates — deterministically, without calling a model.
 
-O vocabulário (`OBJECTIVE` .. `CONTAINMENT`) vem de fora desta casa: é a lista
-de "Would you ship this AI agent?" que circula no ecossistema. `placar` não
-inventa a régua; ele confere, uma a uma, se há EVIDÊNCIA no disco para cada
-pergunta — nunca opinião.
+The vocabulary (`OBJECTIVE` .. `CONTAINMENT`) comes from outside this project:
+it is the "Would you ship this AI agent?" list that circulates in the
+ecosystem. `placar` does not invent the rule; it checks, one by one, whether
+there is EVIDENCE on disk for each question — never opinion.
 
-O contrato de ausência é o mesmo da `forja` (`forja/spec.py`, `R1`-`R8`):
-**ausente e vazio significam a mesma coisa, e as duas barram.** Uma porta sem
-declaração nenhuma não fica "sem dado" — fica REPROVA, porque a pergunta que
-ela responde é sempre binária: *dá para provar que sim?* Silêncio não prova.
+The absence contract is the same as `forja`'s (`forja/spec.py`, `R1`-`R8`):
+**absent and empty mean the same thing, and both block.** A gate with no
+declaration at all is not "no data" — it is FAIL, because the question it
+answers is always binary: *can you prove it is a yes?* Silence proves nothing.
 
-A única exceção é o alvo inteiro: se não há harness de agente nenhum para ler
-(nenhum `CLAUDE.md`, `AGENTS.md` ou pasta `.claude/`), `avaliar` devolve
-`None` — placar não é a ferramenta certa para um repositório sem harness, e
-dizer "REPROVA" aí seria medir a coisa errada, a mesma família de defeito que
-o `C2`/`D4` desta casa já pagou (cravar fato do mundo em vez de comportamento).
+The only exception is the whole target: if there is no agent harness at all
+(no `CLAUDE.md`, `AGENTS.md` or `.claude/` folder), `avaliar` returns `None` —
+`placar` is not the right tool for a repository with no harness, and saying
+"FAIL" there would be measuring the wrong thing, the same family of defect
+this project has paid for once (nailing down a fact of the world instead of a
+behavior).
 
-⚠️ **A varredura de arquivo (Portas 2, 6, 7) PODA junction e symlink de
-diretório — nunca desce por dentro.** É a mesma fronteira que o `blind` desta
-casa mede: `os.walk` sem cuidado atravessa reparse point do Windows de
-qualquer forma, e um `placar` que lesse por engano o que está atrás de uma
-junction devolveria evidência de uma árvore que o alvo declarado nem sabe que
-tem. A poda é silenciosa só até o limite do resumo de cada porta: quando ela
-acontece, o relatório nomeia quantas fronteiras foram puladas.
+⚠️ **The file scan (Gates 2, 6, 7) PRUNES a junction and a directory symlink —
+it never descends through them.** It is the same boundary `blind` measures:
+a careless `os.walk` crosses a Windows reparse point anyway, and a `placar`
+that read by mistake what is behind a junction would return evidence about a
+tree the declared target does not even know it has. The pruning is silent only
+up to each gate's summary: when it happens, the report names how many
+boundaries were skipped.
 """
 
 from __future__ import annotations
@@ -46,7 +47,7 @@ EXCLUIDAS = frozenset(
 
 HARNESS_RAIZ = ("CLAUDE.md", "AGENTS.md", ".claude")
 
-# --------------------------------------------------------------- achado -----
+# --------------------------------------------------------------- finding -----
 
 
 @dataclass
@@ -58,8 +59,8 @@ class Porta:
     resumo: str
     itens: list[str] = field(default_factory=list)
     conserto: str = ""
-    #: Reprovar esta porta força NO-GO (regra do próprio placar da proposta):
-    #: só IDENTITY, AUTHORITY e CONTAINMENT carregam isto como True.
+    #: Failing this gate forces NO-GO (rule from the proposal's own scoreboard):
+    #: only IDENTITY, AUTHORITY and CONTAINMENT carry this as True.
     forca_no_go: bool = False
 
 
@@ -81,7 +82,7 @@ class Placar:
         return any(p.grave and p.forca_no_go for p in self.portas)
 
 
-# ------------------------------------------------------------- utilidades ---
+# ------------------------------------------------------------- utilities ---
 
 
 def _sem_acento(texto: str) -> str:
@@ -101,16 +102,16 @@ def _nota_puladas(puladas: list[str]) -> str:
     if not puladas:
         return ""
     return (
-        f" — ⚠️ {len(puladas)} fronteira(s) (junction/symlink) NÃO atravessada(s); "
-        "rode `python -m blind` para ver o que está atrás"
+        f" — ⚠️ {len(puladas)} boundary(ies) (junction/symlink) NOT crossed; "
+        "run `python -m blind` to see what is behind them"
     )
 
 
 def _e_fronteira(caminho: Path) -> bool:
-    """Junction do Windows ou symlink de diretório — a mesma checagem do `blind`.
+    """A Windows junction or a directory symlink — the same check as `blind`.
 
-    `os.path.islink` devolve `False` para junction; quem acerta é
-    `os.path.isjunction` (Python ≥ 3.12) ou o reparse tag lido direto.
+    `os.path.islink` returns `False` for a junction; what gets it right is
+    `os.path.isjunction` (Python ≥ 3.12) or the reparse tag read directly.
     """
     try:
         if os.path.islink(caminho):
@@ -125,14 +126,14 @@ def _e_fronteira(caminho: Path) -> bool:
 def _arquivos_de_texto(
     raiz: Path, sufixos: set[str] | None = None, teto: int = 4000
 ) -> tuple[list[Path], bool, list[str]]:
-    """Varre `raiz`, podando pasta de vendor/build — nunca `node_modules` inteiro
-    — E podando junction/symlink de diretório, sem descer por dentro.
+    """Scans `raiz`, pruning vendor/build folders — never a whole `node_modules`
+    — AND pruning a junction / directory symlink, without descending through it.
 
-    `teto` é o limite de arquivos por rodada: um repositório gigante não pode
-    fazer `placar` travar. Devolve `(arquivos, truncado, fronteiras_puladas)` —
-    quem chama é obrigado a decidir o que fazer com os dois últimos, porque
-    silêncio sobre o corte OU sobre a fronteira pulada seria a mesma armadilha
-    do `rg` sem `-L` que esta casa já mediu.
+    `teto` is the per-run file limit: a giant repository must not make `placar`
+    hang. Returns `(files, truncated, skipped_boundaries)` — the caller is
+    required to decide what to do with the last two, because silence about the
+    cut OR about the skipped boundary would be the same `rg`-without-`-L` trap
+    this project has already measured.
     """
     achados: list[Path] = []
     puladas: list[str] = []
@@ -159,7 +160,7 @@ def _arquivos_de_texto(
 def tem_harness(alvo: Path) -> bool:
     if any((alvo / nome).exists() for nome in HARNESS_RAIZ):
         return True
-    # um nível abaixo — monorepo com o harness dentro de um pacote
+    # one level down — a monorepo with the harness inside a package
     if alvo.is_dir():
         for filho in alvo.iterdir():
             if filho.is_dir() and filho.name not in EXCLUIDAS and not filho.name.startswith("."):
@@ -176,7 +177,7 @@ def _roster(alvo: Path) -> list[Lido]:
 
 
 def _manifesto_raiz(alvo: Path) -> str:
-    """Quando não há roster, o `CLAUDE.md`/`AGENTS.md` da raiz é o manifesto único."""
+    """When there is no roster, the root `CLAUDE.md`/`AGENTS.md` is the single manifest."""
     for nome in ("CLAUDE.md", "AGENTS.md"):
         caminho = alvo / nome
         if caminho.exists():
@@ -188,11 +189,11 @@ def _manifesto_raiz(alvo: Path) -> str:
 
 
 def _ler_settings(alvo: Path) -> dict:
-    """`.claude/settings.json` + `.claude/settings.local.json`, mesclados.
+    """`.claude/settings.json` + `.claude/settings.local.json`, merged.
 
-    `hooks` fundido por evento (`PreToolUse`, `PostToolUse`, …): a lista de um
-    lado soma à do outro, porque é assim que o Claude Code os aplica — os dois
-    arquivos coexistem, e um não substitui o outro.
+    `hooks` merged per event (`PreToolUse`, `PostToolUse`, …): one side's list
+    adds to the other's, because that is how Claude Code applies them — the two
+    files coexist, and one does not replace the other.
     """
     fundido: dict = {"hooks": {}}
     for nome in ("settings.json", "settings.local.json"):
@@ -212,7 +213,7 @@ _PREFIXO_COMANDO = re.compile(r"^(python3?|node|bash|sh|npx?)\s+", re.IGNORECASE
 
 
 def _scripts_do_evento(settings: dict, alvo: Path, evento: str) -> list[Path]:
-    """Os arquivos de script que um evento (`PreToolUse`…) de fato invoca."""
+    """The script files an event (`PreToolUse`…) actually invokes."""
     caminhos: list[Path] = []
     for entrada in settings.get("hooks", {}).get(evento, []):
         for h in entrada.get("hooks", []):
@@ -238,7 +239,7 @@ def _matcher_cobre(settings: dict, alvo: Path, evento: str, ferramentas: frozens
     return False
 
 
-# ------------------------------------------------------------- Porta 1 ------
+# ------------------------------------------------------------- Gate 1 ------
 
 MARCAS_OBJECTIVE = (
     "kill_criteria", "condição de parada", "condicao de parada", "quando parar",
@@ -251,23 +252,23 @@ def _porta_objective(alvo: Path, roster: list[Lido]) -> Porta:
     if roster:
         sem = [a.nome_curto for a in roster if not _contem_marca(a.descricao + "\n" + a.corpo, MARCAS_OBJECTIVE)]
         grave = bool(sem)
-        resumo = f"{len(roster) - len(sem)} de {len(roster)} agente(s) declaram condição de parada ou orçamento"
+        resumo = f"{len(roster) - len(sem)} of {len(roster)} agent(s) declare a stop condition or a budget"
         itens = sem
     else:
         texto = _manifesto_raiz(alvo)
         grave = not _contem_marca(texto, MARCAS_OBJECTIVE)
-        resumo = "o manifesto da raiz não declara condição de parada nem orçamento" if grave else "o manifesto da raiz declara condição de parada ou orçamento"
+        resumo = "the root manifest declares no stop condition and no budget" if grave else "the root manifest declares a stop condition or a budget"
         itens = ["CLAUDE.md / AGENTS.md"] if grave else []
     return Porta(
-        1, "OBJECTIVE", "o que deve realizar, e quando parar?", grave, resumo, itens,
-        conserto="declare `kill_criteria`, orçamento ou condição de parada no manifesto do agente.",
+        1, "OBJECTIVE", "what must it achieve, and when to stop?", grave, resumo, itens,
+        conserto="declare `kill_criteria`, a budget or a stop condition in the agent manifest.",
     )
 
 
-# ------------------------------------------------------------- Porta 2 ------
-# Nome, padrão, e o porquê de não ser genérico demais — cada entrada é um
-# formato REAL e conhecido de credencial, não um `senha=...` que casaria com
-# metade dos arquivos de exemplo do mundo.
+# ------------------------------------------------------------- Gate 2 ------
+# A name, a pattern, and why it is not too generic — each entry is a REAL,
+# known credential format, not a `password=...` that would match half the
+# example files in the world.
 _SEGREDOS = (
     ("AWS Access Key ID", re.compile(r"\bAKIA[0-9A-Z]{16}\b")),
     ("GitHub token", re.compile(r"\bgh[pousr]_[A-Za-z0-9]{36,}\b")),
@@ -275,7 +276,7 @@ _SEGREDOS = (
     ("Anthropic API key", re.compile(r"\bsk-ant-[A-Za-z0-9_-]{20,}\b")),
     ("OpenAI API key", re.compile(r"\bsk-[A-Za-z0-9]{32,}\b")),
     ("Google API key", re.compile(r"\bAIza[0-9A-Za-z_-]{35}\b")),
-    ("chave privada", re.compile(r"-----BEGIN (RSA |EC |OPENSSH |DSA |PGP )?PRIVATE KEY-----")),
+    ("private key", re.compile(r"-----BEGIN (RSA |EC |OPENSSH |DSA |PGP )?PRIVATE KEY-----")),
 )
 _PLACEHOLDER = re.compile(
     r"(xxx|your[_-]|changeme|<[a-z_-]+>|\$\{|process\.env|os\.environ|os\.getenv|example|placeholder|fake|dummy)",
@@ -301,21 +302,21 @@ def _porta_identity(alvo: Path) -> Porta:
             for nome, padrao in _SEGREDOS:
                 if padrao.search(linha):
                     rel = caminho.relative_to(alvo)
-                    achados.append(f"{rel}:{numero}  {nome}, em claro")
+                    achados.append(f"{rel}:{numero}  {nome}, in the clear")
                     break
     grave = bool(achados)
-    resumo = f"{len(achados)} segredo(s) em claro encontrado(s)" if grave else "nenhum segredo em claro encontrado"
+    resumo = f"{len(achados)} secret(s) in the clear found" if grave else "no secret in the clear found"
     if truncado:
-        resumo += f" — ⚠️ varredura parou em {len(arquivos)} arquivos, pode haver mais fora da janela"
+        resumo += f" — ⚠️ scan stopped at {len(arquivos)} files, there may be more outside the window"
     resumo += _nota_puladas(puladas)
     return Porta(
-        2, "IDENTITY", "de quem é a identidade que usa?", grave, resumo,
+        2, "IDENTITY", "whose identity does it use?", grave, resumo,
         achados,
-        conserto="mova para variável de ambiente; revogue a chave exposta — ela já vazou para o histórico do git.",
+        conserto="move it to an environment variable; revoke the exposed key — it has already leaked into the git history.",
     )
 
 
-# ------------------------------------------------------------- Porta 3 ------
+# ------------------------------------------------------------- Gate 3 ------
 
 
 def _porta_authority(alvo: Path, roster: list[Lido], settings: dict) -> Porta:
@@ -325,35 +326,36 @@ def _porta_authority(alvo: Path, roster: list[Lido], settings: dict) -> Porta:
         agentes = sorted({nome for a in graves for nome in a.agentes})
         grave = bool(graves)
         resumo = (
-            f"{len(agentes)} de {len(roster)} agente(s) sem fronteira de escrita/rede declarada, "
-            "ou herdando toda ferramenta"
+            f"{len(agentes)} of {len(roster)} agent(s) with no declared write/network boundary, "
+            "or inheriting every tool"
             if grave
-            else f"{len(roster)} agente(s), todos com fronteira declarada"
+            else f"{len(roster)} agent(s), all with a declared boundary"
         )
         return Porta(
-            3, "AUTHORITY", "o que pode ler, escrever, executar?", grave, resumo, agentes,
-            conserto="declare `tools:` e a cerca de escrita/rede em cada agente — vazio herda tudo, e isso é o oposto de menor privilégio.",
+            3, "AUTHORITY", "what can it read, write, execute?", grave, resumo, agentes,
+            conserto="declare `tools:` and the write/network fence in each agent — empty inherits everything, and that is the opposite of least privilege.",
         )
     cobre_escrita = _matcher_cobre(settings, alvo, "PreToolUse", ESCRITA)
     cobre_rede = _matcher_cobre(settings, alvo, "PreToolUse", REDE | EXECUCAO)
-    faltando = [n for n, ok in (("escrita", cobre_escrita), ("rede/execução", cobre_rede)) if not ok]
+    faltando = [n for n, ok in (("write", cobre_escrita), ("network/execution", cobre_rede)) if not ok]
     grave = bool(faltando)
     resumo = (
-        f"sem roster de agente — harness não tem `PreToolUse` cobrindo {', '.join(faltando)}"
+        f"no agent roster — the harness has no `PreToolUse` covering {', '.join(faltando)}"
         if grave
-        else "sem roster de agente — harness cobre escrita e rede/execução com `PreToolUse`"
+        else "no agent roster — the harness covers write and network/execution with `PreToolUse`"
     )
     return Porta(
-        3, "AUTHORITY", "o que pode ler, escrever, executar?", grave, resumo, faltando,
-        conserto="registre um `PreToolUse` em `.claude/settings.json` para as ferramentas de escrita e as de rede/execução.",
+        3, "AUTHORITY", "what can it read, write, execute?", grave, resumo, faltando,
+        conserto="register a `PreToolUse` in `.claude/settings.json` for the write tools and the network/execution ones.",
     )
 
 
-# ------------------------------------------------------------- Porta 4 ------
+# ------------------------------------------------------------- Gate 4 ------
 
 MARCAS_FAILURE = (
     "retry", "fallback", "tenta novamente", "nova tentativa", "circuit breaker",
     "em caso de falha", "se a ferramenta falhar", "on_error", "degrada",
+    "on failure", "if the tool fails", "degrade",
 )
 
 
@@ -372,17 +374,17 @@ def _porta_failure(alvo: Path, roster: list[Lido], settings: dict) -> Porta:
     grave = not (tem_timeout or tem_palavra)
     partes = []
     if tem_timeout:
-        partes.append("hook com `timeout` declarado")
+        partes.append("a hook with a declared `timeout`")
     if tem_palavra:
-        partes.append("manifesto menciona retry/fallback")
-    resumo = " · ".join(partes) if partes else "nenhum hook declara `timeout`, e nenhum manifesto menciona retry/fallback"
+        partes.append("the manifest mentions retry/fallback")
+    resumo = " · ".join(partes) if partes else "no hook declares a `timeout`, and no manifest mentions retry/fallback"
     return Porta(
-        4, "FAILURE", "e se a ferramenta falhar ou mentir?", grave, resumo, [] if not grave else ["nenhuma evidência"],
-        conserto="declare `timeout` nos hooks, e retry/fallback explícito para a ferramenta que pode falhar ou mentir.",
+        4, "FAILURE", "what if the tool fails or lies?", grave, resumo, [] if not grave else ["no evidence"],
+        conserto="declare `timeout` on the hooks, and an explicit retry/fallback for the tool that can fail or lie.",
     )
 
 
-# ------------------------------------------------------------- Porta 5 ------
+# ------------------------------------------------------------- Gate 5 ------
 
 _MARCA_DENY = (
     ('"permissiondecision"', '"deny"'),
@@ -405,26 +407,26 @@ def _porta_approval(alvo: Path, settings: dict) -> Porta:
     scripts = _scripts_do_evento(settings, alvo, "PreToolUse")
     if not scripts:
         return Porta(
-            5, "APPROVAL", "quais ações exigem humano?", True,
-            "nenhum `PreToolUse` configurado em `.claude/settings.json`", [],
-            conserto="registre ao menos um hook `PreToolUse` que negue (`permissionDecision: deny` ou exit 2) sob alguma condição.",
+            5, "APPROVAL", "which actions need a human?", True,
+            "no `PreToolUse` configured in `.claude/settings.json`", [],
+            conserto="register at least one `PreToolUse` hook that denies (`permissionDecision: deny` or exit 2) under some condition.",
         )
     falha_fechado = [s for s in scripts if s.exists() and _script_falha_fechado(s)]
     grave = not falha_fechado
     existentes = [s for s in scripts if s.exists()]
     resumo = (
-        f"{len(falha_fechado)} de {len(existentes)} script(s) de `PreToolUse` mostram decisão de negar"
+        f"{len(falha_fechado)} of {len(existentes)} `PreToolUse` script(s) show a deny decision"
         if existentes
-        else "`PreToolUse` configurado, mas nenhum script referenciado foi encontrado no disco"
+        else "`PreToolUse` configured, but none of the referenced scripts was found on disk"
     )
     return Porta(
-        5, "APPROVAL", "quais ações exigem humano?", grave, resumo,
+        5, "APPROVAL", "which actions need a human?", grave, resumo,
         [str(s.relative_to(alvo)) if s.is_relative_to(alvo) else str(s) for s in scripts],
-        conserto="o hook precisa emitir `permissionDecision: deny` (ou sair com código 2) sob alguma condição — um hook que só observa não é aprovação.",
+        conserto="the hook must emit `permissionDecision: deny` (or exit with code 2) under some condition — a hook that only observes is not approval.",
     )
 
 
-# ------------------------------------------------------------- Porta 6 ------
+# ------------------------------------------------------------- Gate 6 ------
 
 PASTAS_DECISAO = ("decisoes", "decisions", "adr", "decision-records", "docs/adr", "docs/decisions", "doc/adr")
 _NOME_DECISAO = re.compile(r"^(ADR|adr)[-_]?\d+|^\d{4}-\d{2}-\d{2}")
@@ -453,30 +455,30 @@ def _porta_traceability(alvo: Path, settings: dict) -> Porta:
     tem_post = bool(settings.get("hooks", {}).get("PostToolUse"))
 
     if not arquivos and not tem_post:
-        resumo = "nenhum registro de decisão encontrado, e nenhum `PostToolUse` de auditoria configurado"
+        resumo = "no decision record found, and no auditing `PostToolUse` configured"
         if truncado:
-            resumo += " — ⚠️ varredura de `.md` parou em 2000 arquivos"
+            resumo += " — ⚠️ `.md` scan stopped at 2000 files"
         resumo += _nota_puladas(puladas)
         return Porta(
-            6, "TRACEABILITY", "dá para reconstruir toda decisão?", True,
+            6, "TRACEABILITY", "can every decision be reconstructed?", True,
             resumo, [],
-            conserto="crie um registro de decisão datado (ADR ou similar), ou um `PostToolUse` que grave cada ação tomada.",
+            conserto="create a dated decision record (ADR or similar), or a `PostToolUse` that logs every action taken.",
         )
     datados = sum(1 for a in arquivos if _DATA_ISO.search(a.name) or _DATA_ISO.search(_ler_inicio(a)))
     grave = bool(arquivos) and datados == 0 and not tem_post
     partes = []
     if arquivos:
-        partes.append(f"{datados} de {len(arquivos)} registro(s) de decisão datados")
+        partes.append(f"{datados} of {len(arquivos)} decision record(s) dated")
     if tem_post:
-        partes.append("`PostToolUse` de auditoria configurado")
+        partes.append("an auditing `PostToolUse` configured")
     if truncado:
-        partes.append("⚠️ varredura de `.md` parou em 2000 arquivos")
+        partes.append("⚠️ `.md` scan stopped at 2000 files")
     if puladas:
-        partes.append(f"⚠️ {len(puladas)} fronteira(s) não atravessada(s)")
+        partes.append(f"⚠️ {len(puladas)} boundary(ies) not crossed")
     return Porta(
-        6, "TRACEABILITY", "dá para reconstruir toda decisão?", grave, " · ".join(partes),
+        6, "TRACEABILITY", "can every decision be reconstructed?", grave, " · ".join(partes),
         [] if not grave else [a.name for a in arquivos],
-        conserto="date cada registro de decisão (`data:` no frontmatter, ou no nome do arquivo).",
+        conserto="date every decision record (`data:` in the frontmatter, or in the filename).",
     )
 
 
@@ -487,10 +489,10 @@ def _ler_inicio(caminho: Path, teto: int = 800) -> str:
         return ""
 
 
-# ------------------------------------------------------------- Porta 7 ------
+# ------------------------------------------------------------- Gate 7 ------
 
 _TOKEN_R = re.compile(r"\bR[0-4]\b")
-_MARCA_REVERS = ("revers", "irrevers", "rollback", "revert", "desfaz", "catálogo fechado", "catalogo fechado")
+_MARCA_REVERS = ("revers", "irrevers", "rollback", "revert", "desfaz", "catálogo fechado", "catalogo fechado", "undo", "closed catalog")
 
 
 def _porta_containment(alvo: Path) -> Porta:
@@ -507,20 +509,20 @@ def _porta_containment(alvo: Path) -> Porta:
             achados.append(str(caminho.relative_to(alvo)))
     grave = not achados
     resumo = (
-        "nenhuma classificação de reversibilidade (R0–R4 ou equivalente) encontrada"
+        "no reversibility classification (R0–R4 or equivalent) found"
         if grave
-        else f"classificação de reversibilidade encontrada em {len(achados)} arquivo(s)"
+        else f"a reversibility classification found in {len(achados)} file(s)"
     )
     if truncado:
-        resumo += f" — ⚠️ varredura parou em {len(arquivos)} arquivos"
+        resumo += f" — ⚠️ scan stopped at {len(arquivos)} files"
     resumo += _nota_puladas(puladas)
     return Porta(
-        7, "CONTAINMENT", "dá para parar e reverter?", grave, resumo, achados,
-        conserto="classifique ações por reversibilidade (ex.: R0–R4) e gate as menos reversíveis atrás de aprovação.",
+        7, "CONTAINMENT", "can it be stopped and reverted?", grave, resumo, achados,
+        conserto="classify actions by reversibility (e.g. R0–R4) and gate the less reversible ones behind approval.",
     )
 
 
-# --------------------------------------------------------------- rodada -----
+# --------------------------------------------------------------- run -----
 
 NO_GO = frozenset({"IDENTITY", "AUTHORITY", "CONTAINMENT"})
 

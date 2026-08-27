@@ -1,19 +1,21 @@
-"""As sondas deste projeto — de onde cada número do README é recomputado.
+"""This project's probes — where each number in the README is recomputed from.
 
-nature: fix — sonda que estoura vira `SEM_PROVA` no relatório, com o
-erro por extenso. Ela nunca devolve um palpite.
+nature: fix — a probe that blows up becomes `UNPROVEN` in the report, with
+the error written out. It never returns a guess.
 
-⚠️ **A regra que faz o par valer alguma coisa:** o número do README é escrito
-à mão, em prosa. A sonda o recomputa do `censo/ecossistema.json`, que é dado.
-São dois artefatos independentes — mexer num sem mexer no outro reprova, que é
-exatamente o ponto. Se a sonda lesse o próprio README, o par passaria verde
-travando o defeito: é check espelho, e ele não verifica nada.
+⚠️ **The rule that makes the pair worth anything:** the README number is
+written by hand, in prose. The probe recomputes it from `censo/ecossistema.json`,
+which is data. They are two independent artifacts — touching one without
+touching the other fails, which is exactly the point. If the probe read the
+README itself, the pair would pass green while locking the defect in: it is a
+mirror check, and it verifies nothing.
 
-⚠️ **E há um limite honesto, declarado de propósito:** a verdade última das
-entradas do censo está *na web*, e nenhuma sonda offline a alcança. Por isso
-todo selo do censo carrega `vence=`. A sonda prova a **coerência interna**; o
-`vence` é o que obriga alguém a sair da máquina e reconferir o mundo lá fora.
-Confundir as duas coisas seria dizer que um JSON coerente é um fato verdadeiro.
+⚠️ **And there is an honest limit, declared on purpose:** the ultimate truth of
+the census entries is *on the web*, and no offline probe reaches it. That is
+why every census seal carries `expires=`. The probe proves **internal
+coherence**; the `expires` is what forces someone to leave the machine and
+re-check the world out there. Confusing the two would be saying a coherent JSON
+is a true fact.
 """
 
 from __future__ import annotations
@@ -31,57 +33,57 @@ def _censo() -> dict:
     return json.loads(CENSO.read_text(encoding="utf-8"))
 
 
-@sonda("censo.projetos", origem="len(projetos) em censo/ecossistema.json")
+@sonda("censo.projetos", origem="len(projetos) in censo/ecossistema.json")
 def total_de_projetos() -> int:
     return len(_censo()["projetos"])
 
 
-@sonda("censo.com_repo_canonico", origem="projetos com campo `repo` não-nulo")
+@sonda("censo.com_repo_canonico", origem="projects with a non-null `repo` field")
 def com_repo() -> int:
     return sum(1 for p in _censo()["projetos"] if p.get("repo"))
 
 
-@sonda("censo.sem_repo_canonico", origem="projetos sem `repo` e sem `paper`")
+@sonda("censo.sem_repo_canonico", origem="projects with no `repo` and no `paper`")
 def sem_repo() -> int:
     return sum(1 for p in _censo()["projetos"] if not p.get("repo") and not p.get("paper"))
 
 
-@sonda("censo.licenca.*", origem="contagem por `veredito_licenca` em censo/ecossistema.json")
+@sonda("censo.licenca.*", origem="count by `veredito_licenca` in censo/ecossistema.json")
 def por_veredito_de_licenca(metrica: str, _selo) -> int:
     alvo = metrica.rsplit(".", 1)[-1]
     return sum(1 for p in _censo()["projetos"] if p.get("veredito_licenca") == alvo)
 
 
-@sonda("censo.sem_llm", origem="projetos com `sem_llm: true`")
+@sonda("censo.sem_llm", origem="projects with `sem_llm: true`")
 def sem_llm() -> int:
     return sum(1 for p in _censo()["projetos"] if p.get("sem_llm") is True)
 
 
-@sonda("censo.clonados_ou_executados", origem="denominador declarado no censo")
+@sonda("censo.clonados_ou_executados", origem="the declared denominator in the census")
 def clonados() -> int:
     return _censo()["denominador"]["clonados_ou_executados"]
 
 
-@sonda("colisao.nomes", origem="projetos com `colide_com` não-vazio")
+@sonda("colisao.nomes", origem="projects with a non-empty `colide_com`")
 def nomes_em_colisao() -> int:
     return sum(1 for p in _censo()["projetos"] if p.get("colide_com"))
 
 
-@sonda("colisao.*", origem="len(colide_com) + 1 se houver repo canônico, por nome")
+@sonda("colisao.*", origem="len(colide_com) + 1 if there is a canonical repo, by name")
 def tamanho_do_cacho(metrica: str, _selo) -> int:
     alvo = metrica.rsplit(".", 1)[-1].lower()
     for projeto in _censo()["projetos"]:
         if projeto["nome"].lower().replace(" ", "-") == alvo:
             return len(projeto.get("colide_com", [])) + (1 if projeto.get("repo") else 0)
-    raise LookupError(f"`{alvo}` não é um nome do censo")
+    raise LookupError(f"`{alvo}` is not a name in the census")
 
 
-@sonda("nucleo.modulos", origem="arquivos .py em loadline/")
+@sonda("nucleo.modulos", origem=".py files in loadline/")
 def modulos_do_nucleo() -> int:
     return len(list((RAIZ / "loadline").glob("*.py")))
 
 
-@sonda("nucleo.dependencias", origem="linhas não-vazias de requisitos.txt (ausente = 0)")
+@sonda("nucleo.dependencias", origem="non-empty lines of requisitos.txt (absent = 0)")
 def dependencias() -> int:
     arquivo = RAIZ / "requisitos.txt"
     if not arquivo.exists():
@@ -93,24 +95,25 @@ def dependencias() -> int:
     )
 
 
-@sonda("nucleo.vereditos", origem="len(ORDEM) em loadline/__main__.py")
+@sonda("nucleo.vereditos", origem="len(ORDEM) in loadline/__main__.py")
 def vereditos() -> int:
     from loadline import __main__ as cli
 
     return len(cli.ORDEM)
 
 
-@sonda("nucleo.checks", origem="ocorrências de `@check(` em autoteste.py")
+@sonda("nucleo.checks", origem="occurrences of `@check(` in autoteste.py")
 def checks_do_autoteste() -> int:
     return (RAIZ / "autoteste.py").read_text(encoding="utf-8").count("@check(")
 
 
-@sonda("nucleo.lacunas", origem="seções `## N ·` de LACUNAS.md")
+@sonda("nucleo.lacunas", origem="`## N ·` sections of LACUNAS.md")
 def lacunas_declaradas() -> int:
-    """O número mora no README; a fonte é o LACUNAS.md. Dois artefatos.
+    """The number lives in the README; the source is LACUNAS.md. Two artifacts.
 
-    Selar a contagem DENTRO do próprio LACUNAS.md seria check espelho: os dois
-    lados sairiam do mesmo arquivo, e o par passaria verde travando o defeito.
+    Sealing the count INSIDE LACUNAS.md itself would be a mirror check: both
+    sides would come from the same file, and the pair would pass green while
+    locking the defect in.
     """
     import re
 
@@ -118,12 +121,13 @@ def lacunas_declaradas() -> int:
     return len(re.findall(r"^## \d+ ·", texto, re.MULTILINE))
 
 
-@sonda("nucleo.fora", origem="len(FORA) lido por `ast` em autoteste.py, sem executar")
+@sonda("nucleo.fora", origem="len(FORA) read by `ast` in autoteste.py, without running it")
 def checks_fora_do_denominador() -> int:
-    """Quantos checks EXISTEM e não rodam. Zero hoje, e declarado mesmo assim.
+    """How many checks EXIST and do not run. Zero today, and declared anyway.
 
-    ⚠️ Lido por `ast`, nunca importando o módulo: importar `autoteste` roda a
-    suíte inteira, e uma sonda que executa o que ela mede é lenta e circular.
+    ⚠️ Read by `ast`, never by importing the module: importing `autoteste`
+    runs the whole suite, and a probe that runs what it measures is slow and
+    circular.
     """
     import ast
 
@@ -136,24 +140,25 @@ def checks_fora_do_denominador() -> int:
             alvo = no.targets[0].id
         if alvo == "FORA" and isinstance(no.value, (ast.List, ast.Tuple)):
             return len(no.value.elts)
-    raise LookupError("`FORA` não é uma lista literal no topo de autoteste.py")
+    raise LookupError("`FORA` is not a literal list at the top of autoteste.py")
 
 
-# --------------------------------------------------------------- o censo ----
+# --------------------------------------------------------------- the census ----
 
 
 @sonda(
     "censo.gerado_em_dia",
-    origem="1 se censo/CENSO.md == censo/gerar.py:gerar(), senão 0",
+    origem="1 if censo/CENSO.md == censo/gerar.py:gerar(), else 0",
 )
 def censo_em_dia() -> int:
-    """A ÚNICA pergunta legítima sobre um artefato gerado.
+    """The ONLY legitimate question about a generated artifact.
 
-    Selar cada número do CENSO.md seria check espelho: os dois lados sairiam do
-    mesmo JSON. A pergunta certa não é *"o número está certo?"* — é *"este
-    publicado ainda corresponde à fonte?"*, e essa é de RELAÇÃO: ela não anda
-    quando alguém escreve no censo, só anda se alguém editou o publicado à mão
-    ou mexeu na fonte sem regerar. Divergir ali manda parar, não resselar.
+    Sealing every number in CENSO.md would be a mirror check: both sides would
+    come from the same JSON. The right question is not *"is the number right?"*
+    — it is *"does this published one still match the source?"*, and that is a
+    RELATION: it does not move when someone writes to the census, it only moves
+    if someone edited the published one by hand or touched the source without
+    regenerating. Diverging there means stop, not re-seal.
     """
     import sys
 
@@ -163,24 +168,24 @@ def censo_em_dia() -> int:
     return int(g.PUBLICADO.exists() and g.PUBLICADO.read_text(encoding="utf-8") == g.gerar())
 
 
-# ---------------------------------------------------------------- a forja ---
+# ---------------------------------------------------------------- the forge ---
 
 
-@sonda("forja.modulos", origem="arquivos .py em forja/")
+@sonda("forja.modulos", origem=".py files in forja/")
 def modulos_da_forja() -> int:
     return len(list((RAIZ / "forja").glob("*.py")))
 
 
-@sonda("forja.recusas", origem="regras R distintas levantadas em forja/spec.py")
+@sonda("forja.recusas", origem="distinct R rules raised in forja/spec.py")
 def recusas() -> int:
     import re
 
     fonte = (RAIZ / "forja" / "spec.py").read_text(encoding="utf-8")
-    # `R0` é a falta de campo obrigatório e não é uma das oito regras de fronteira.
+    # `R0` is a missing required field and is not one of the eight boundary rules.
     return len({m for m in re.findall(r'raise Recusa\(\s*"(R\d)"', fonte)} - {"R0"})
 
 
-@sonda("forja.artefatos", origem="len(compilar(spec)) sobre a spec de exemplo")
+@sonda("forja.artefatos", origem="len(compilar(spec)) over the example spec")
 def artefatos() -> int:
     import sys
 
@@ -191,11 +196,12 @@ def artefatos() -> int:
     return len(compilar(ler(RAIZ / "forja" / "exemplos" / "revisor-de-licenca.toml")))
 
 
-# ------------------------------------------------------------ a prateleira ---
-# As operações prontas medem o repositório de quem adota. Estas medem a
-# prateleira em si — porque um índice que afirma "quatro operações" e nunca é
-# recomputado é exatamente o defeito que este projeto existe para pegar, e
-# publicá-lo sem selo seria a versão mais literal possível de casa de ferreiro.
+# ------------------------------------------------------------ the shelf ---
+# The ready-made operations measure the adopter's repository. These measure the
+# shelf itself — because an index that claims "four operations" and is never
+# recomputed is exactly the defect this project exists to catch, and publishing
+# it without a seal would be the most literal possible version of the
+# cobbler's-children-have-no-shoes.
 
 
 def _operacoes() -> list["Path"]:
@@ -205,30 +211,30 @@ def _operacoes() -> list["Path"]:
     return sorted(p for p in pasta.iterdir() if p.is_dir() and (p / "RECEITA.md").is_file())
 
 
-#: Os cinco arquivos que toda operação tem, sempre com o mesmo nome. A lista é
-#: fechada: se você aprendeu uma operação, aprendeu todas.
+#: The five files every operation has, always with the same name. The list is
+#: closed: if you learned one operation, you learned them all.
 ANATOMIA = ("RECEITA.md", "sondas.py", "agente.toml", "selos.md", "ci.yml")
 
 
-@sonda("operacoes.total", origem="subpastas de operacoes/ que contêm RECEITA.md")
+@sonda("operacoes.total", origem="subfolders of operacoes/ that contain a RECEITA.md")
 def operacoes_prontas() -> int:
     return len(_operacoes())
 
 
 @sonda(
     "operacoes.arquivos_por_operacao",
-    origem="tamanho de ANATOMIA, se e somente se TODA operação tiver os cinco",
+    origem="the size of ANATOMIA, if and only if EVERY operation has all five",
 )
 def anatomia_completa() -> int:
-    """De RELAÇÃO: ela não anda quando alguém escreve uma operação nova.
+    """A RELATION: it does not move when someone writes a new operation.
 
-    Ela só anda se alguma operação ficou incompleta — e aí a resposta certa é
-    parar e completá-la, nunca resselar o número para baixo. Uma prateleira em
-    que cada gaveta tem uma forma diferente é uma prateleira que ninguém aprende.
+    It only moves if some operation ended up incomplete — and then the right
+    answer is to stop and complete it, never to re-seal the number down. A
+    shelf where every drawer has a different shape is a shelf nobody learns.
     """
     operacoes = _operacoes()
     if not operacoes:
-        raise LookupError("nenhuma operação em operacoes/ — a prateleira não existe neste clone")
+        raise LookupError("no operation in operacoes/ — the shelf does not exist in this clone")
     faltando = [
         f"{op.name}/{arquivo}"
         for op in operacoes
@@ -236,27 +242,28 @@ def anatomia_completa() -> int:
         if not (op / arquivo).is_file()
     ]
     if faltando:
-        raise LookupError(f"operação incompleta: {', '.join(faltando)}")
+        raise LookupError(f"incomplete operation: {', '.join(faltando)}")
     return len(ANATOMIA)
 
 
-@sonda("operacao.*.sondas", origem="chamadas de @sonda( no sondas.py da operação nomeada")
+@sonda("operacao.*.sondas", origem="@sonda( calls in the named operation's sondas.py")
 def sondas_de_uma_operacao(metrica: str, _selo) -> int:
     alvo = metrica.split(".")[1]
     for operacao in _operacoes():
         if operacao.name.startswith(alvo):
             return (operacao / "sondas.py").read_text(encoding="utf-8").count("@sonda(")
-    raise LookupError(f"`{alvo}` não é o começo do nome de nenhuma operação em operacoes/")
+    raise LookupError(f"`{alvo}` is not the start of any operation name in operacoes/")
 
 
-@sonda("vistoria.achados", origem="regras `V<n>` distintas passadas a marcar() em forja/vistoria.py")
+@sonda("vistoria.achados", origem="distinct `V<n>` rules passed to marcar() in forja/vistoria.py")
 def achados_da_vistoria() -> int:
-    """Quantos defeitos a vistoria sabe achar.
+    """How many defects the survey knows how to find.
 
-    Lido do CÓDIGO que os emite, nunca do README que os narra — os dois lados
-    saindo do mesmo texto passariam verde travando o defeito em vez de achá-lo.
-    É de RELAÇÃO: o vocabulário é fechado de propósito e só anda quando alguém
-    DECIDE que ele ande, o que manda parar e investigar antes de resselar.
+    Read from the CODE that emits them, never from the README that narrates
+    them — both sides coming from the same text would pass green while locking
+    the defect in instead of finding it. It is a RELATION: the vocabulary is
+    closed on purpose and only moves when someone DECIDES it should, which
+    means stop and investigate before re-sealing.
     """
     import re
 
@@ -264,35 +271,36 @@ def achados_da_vistoria() -> int:
     return len(set(re.findall(r'^\s+"(V\d+)",$', texto, re.MULTILINE)))
 
 
-# ----------------------------------------------------------------- o blind ---
-# O `blind` afirma dois números na própria `blind/LACUNAS.md` e nenhum tinha
-# sonda — era uma das quatro `UNPROVEN` que faziam `python -m loadline .`
-# reprovar o próprio repositório. Os dois lados são independentes: o número
-# mora em prosa na `LACUNAS.md`, a sonda o recomputa da estrutura de
-# `blind/limites.py`, que é o que o campo `fonte=` do selo já declara.
+# ----------------------------------------------------------------- blind ---
+# `blind` claims two numbers in its own `blind/LACUNAS.md` and neither had a
+# probe — it was one of the four `UNPROVEN` that made `python -m loadline .`
+# fail its own repository. The two sides are independent: the number lives in
+# prose in `LACUNAS.md`, the probe recomputes it from the structure of
+# `blind/limites.py`, which is what the seal's `source=` field already declares.
 
 
-@sonda("blind.causas", origem="parágrafos `**Causa N —` no docstring de blind/limites.py")
+@sonda("blind.causas", origem="`**Cause N —` paragraphs in the blind/limites.py docstring")
 def blind_causas() -> int:
-    """As causas nomeadas de fronteira que uma varredura ingênua não vê —
-    estrutural (reparse point) e política (`.gitignore`).
+    """The named causes of a boundary a naive scan does not see —
+    structural (a reparse point) and policy (`.gitignore`).
 
-    Lida do módulo que as implementa, nunca da `blind/LACUNAS.md` que as
-    narra. É de contagem: sobe quando alguém documenta uma terceira causa.
+    Read from the module that implements them, never from the `blind/LACUNAS.md`
+    that narrates them. It is a count: it goes up when someone documents a
+    third cause.
     """
     import re
 
     texto = (RAIZ / "blind" / "limites.py").read_text(encoding="utf-8")
-    return len(re.findall(r"(?m)^\*\*Causa \d+ ", texto))
+    return len(re.findall(r"(?m)^\*\*Cause \d+ ", texto))
 
 
-@sonda("blind.declaracao", origem="len(ARQUIVOS_DE_DECLARACAO), lido por ast em blind/limites.py")
+@sonda("blind.declaracao", origem="len(ARQUIVOS_DE_DECLARACAO), read by ast in blind/limites.py")
 def blind_declaracao() -> int:
-    """Quantos NOMES DE ARQUIVO o `blind` reconhece como declaração.
+    """How many FILENAMES `blind` recognizes as a declaration.
 
-    ⚠️ Lido por `ast`, sem importar o módulo. A pasta `.claude/` entra à parte
-    (`PASTA_DE_DECLARACAO`) e não conta aqui — o número da `LACUNAS.md` é só o
-    `frozenset` de cinco nomes.
+    ⚠️ Read by `ast`, without importing the module. The `.claude/` folder is
+    handled separately (`PASTA_DE_DECLARACAO`) and does not count here — the
+    number in `LACUNAS.md` is just the `frozenset` of five names.
     """
     import ast
 
@@ -309,20 +317,20 @@ def blind_declaracao() -> int:
         ):
             return len(no.value.args[0].elts)
     raise LookupError(
-        "`ARQUIVOS_DE_DECLARACAO` não é um `frozenset({...})` literal no topo de blind/limites.py"
+        "`ARQUIVOS_DE_DECLARACAO` is not a literal `frozenset({...})` at the top of blind/limites.py"
     )
 
 
-# ---------------------------------------------------------------- o placar ---
+# ---------------------------------------------------------------- placar ---
 
 
-@sonda("placar.portas", origem="tamanho da lista `portas` em placar.portas.avaliar(), lido por ast")
+@sonda("placar.portas", origem="the size of the `portas` list in placar.portas.avaliar(), read by ast")
 def placar_portas() -> int:
-    """As sete portas de "Would you ship this AI agent?".
+    """The seven gates of "Would you ship this AI agent?".
 
-    Lida da lista que `avaliar()` monta — a fonte autoritativa do que roda de
-    verdade —, nunca do README que as anuncia. É de contagem: sobe se uma
-    oitava porta for cabeada.
+    Read from the list `avaliar()` builds — the authoritative source of what
+    actually runs — never from the README that announces them. It is a count:
+    it goes up if an eighth gate is wired in.
     """
     import ast
 
@@ -336,23 +344,23 @@ def placar_portas() -> int:
                     and isinstance(filho.value, (ast.List, ast.Tuple))
                 ):
                     return len(filho.value.elts)
-    raise LookupError("`portas = [...]` não é uma lista literal dentro de placar.portas.avaliar()")
+    raise LookupError("`portas = [...]` is not a literal list inside placar.portas.avaliar()")
 
 
-# ----------------------------------------------------------- o censo datado ---
+# ----------------------------------------------------------- the dated census ---
 
 
-@sonda("censo.edicao", origem="posição 1-based da data deste arquivo entre censo/edicoes/*.json")
+@sonda("censo.edicao", origem="1-based position of this file's date among censo/edicoes/*.json")
 def censo_edicao(metrica: str, selo) -> int:
-    """O número de ordem de uma edição do censo.
+    """The ordinal number of a census edition.
 
-    O `.md` escreve o número em prosa; esta sonda o deriva da lista de
-    snapshots `.json` — o OUTRO arquivo que `censo/edicao.py` grava por
-    edição, e o único que a próxima rodada lê de volta. Contar o `.md` seria
-    check espelho.
+    The `.md` writes the number in prose; this probe derives it from the list
+    of `.json` snapshots — the OTHER file `censo/edicao.py` writes per edition,
+    and the only one the next run reads back. Counting the `.md` would be a
+    mirror check.
     """
     arquivo = Path(selo.arquivo)
     datas = sorted(p.stem for p in arquivo.parent.glob("*.json"))
     if arquivo.stem not in datas:
-        raise LookupError(f"não há snapshot `{arquivo.stem}.json` ao lado de {arquivo.name}")
+        raise LookupError(f"there is no snapshot `{arquivo.stem}.json` next to {arquivo.name}")
     return datas.index(arquivo.stem) + 1

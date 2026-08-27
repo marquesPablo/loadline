@@ -1,12 +1,13 @@
-"""As regras da vitrine — todas aferíveis por parser, nenhuma chama modelo.
+"""The vitrine rules — all parser-checkable, none calls a model.
 
-Cada regra abaixo sai de uma fonte pública, e a fonte está citada na regra. Onde
-a fonte dá um número (1-64 caracteres, 1.024 caracteres, 500 linhas), o número é
-o da fonte, não uma preferência desta casa.
+Each rule below comes from a public source, and the source is cited in the
+rule. Where the source gives a number (1-64 characters, 1,024 characters, 500
+lines), the number is the source's, not this project's preference.
 
-O que NÃO está aqui está na `LACUNAS.md` da operação. Em particular: nada aqui
-julga se a skill FUNCIONA. Uma vitrine impecável sobre um estoque vazio passa
-verde em todas as regras. Medir execução é outro trabalho, e ele exige rodar.
+What is NOT here is in the operation's `LACUNAS.md`. In particular: nothing here
+judges whether the skill WORKS. A flawless vitrine over an empty stockroom
+passes every rule green. Measuring execution is another job, and it requires
+running.
 """
 
 from __future__ import annotations
@@ -17,100 +18,104 @@ import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
 
-# ------------------------------------------------------------- leitura --------
+# ------------------------------------------------------------- reading --------
 
-#: A gramática do `name`, da especificação do formato Agent Skills: de 1 a 64
-#: caracteres, só minúsculas, dígitos e hífen — sem hífen duplo, sem hífen nas
-#: pontas. Underscore e maiúscula NÃO entram.
+#: The `name` grammar, from the Agent Skills format spec: 1 to 64 characters,
+#: only lowercase, digits and hyphen — no double hyphen, no hyphen at the ends.
+#: Underscore and uppercase are NOT allowed.
 NOME_VALIDO = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 
-#: Teto do `description`. Acima disso o campo é truncado, e o corte cai no meio
-#: da frase que decidiria o despacho.
+#: The `description` ceiling. Above it the field is truncated, and the cut lands
+#: in the middle of the sentence that would have decided the dispatch.
 TETO_DESCRICAO = 1024
 
-#: Teto recomendado do corpo. Não é erro de carregamento: é o ponto em que o
-#: `SKILL.md` deixa de ser mapa e vira território.
+#: The recommended body ceiling. It is not a loading error: it is the point
+#: where the `SKILL.md` stops being a map and becomes the territory.
 TETO_LINHAS = 500
 
-#: Gatilho POSITIVO — «quando usar». A régua pede uma CLÁUSULA CONDICIONAL, não
-#: uma frase específica, e é assim que ela é medida aqui.
+#: The POSITIVE trigger — "when to use it". The rule asks for a CONDITIONAL
+#: CLAUSE, not a specific phrase, and that is how it is measured here.
 #:
-#: ⚠️ Esta regra foi reescrita depois de medir. A primeira versão era uma lista
-#: de frases literais («use when», «usar quando»…) e acusou `frontend-design`,
-#: cuja descrição diz *"…when building new UI or reshaping an existing one"* —
-#: cláusula de gatilho perfeita, fora da lista. Lista fechada de frase é frágil
-#: e produz falso positivo, que num linter custa mais caro que a regra que ele
-#: checa. O detector agora é a conjunção condicional, com fronteira de palavra.
+#: ⚠️ This rule was rewritten after measuring. The first version was a list of
+#: literal phrases ("use when", "usar quando"…) and it flagged `frontend-design`,
+#: whose description says *"…when building new UI or reshaping an existing one"* —
+#: a perfect trigger clause, outside the list. A closed list of phrases is
+#: fragile and produces a false positive, which in a linter costs more than the
+#: rule it checks. The detector is now the conditional conjunction, with a word
+#: boundary.
 GATILHO_POSITIVO = re.compile(
     r"\b(when|whenever|if|upon|during|quando|sempre que|caso|ao\s+\w+ar)\b",
     re.IGNORECASE,
 )
 
-#: Formas que dizem «quando usar» sem conjunção condicional. Cada uma entrou por
-#: ter sido vista num arquivo real, nunca por preferência.
+#: Forms that say "when to use it" without a conditional conjunction. Each one
+#: got in for having been seen in a real file, never for a preference.
 GATILHO_POSITIVO_EXTRA = (
     "use for", "use to", "usar para", "use para", "used for",
     "reach for", "invoke for", "ao pedir", "ao solicitar",
 )
 
-#: Marcas de gatilho NEGATIVO — «quando NÃO usar». É o campo que separa duas
-#: skills do mesmo domínio; sem ele, a escolha entre irmãs vira sorteio.
+#: Marks of a NEGATIVE trigger — "when NOT to use it". It is the field that
+#: separates two skills in the same domain; without it, the choice between
+#: siblings becomes a coin toss.
 GATILHO_NEGATIVO = (
     "don't use", "do not use", "never use", "not for", "avoid using",
     "não usar", "nao usar", "nunca usar", "não use", "nao use", "nunca use",
     "não utilize", "nao utilize", "not when", "except when",
 )
 
-#: Primeiras palavras que denunciam vitrine em 1ª ou 2ª pessoa. A descrição é
-#: lida pelo roteador ao lado de dezenas de outras: «Creates React components»
-#: roteia, «I help you with React» não.
+#: First words that give away a vitrine in the 1st or 2nd person. The
+#: description is read by the router next to dozens of others: "Creates React
+#: components" routes, "I help you with React" does not.
 PESSOA_ERRADA = (
     "i ", "i'm ", "i'll ", "i can ", "we ", "we'll ", "we can ", "you ",
     "your ", "eu ", "nós ", "nos ", "você ", "voce ", "seu ", "sua ",
 )
 
-#: Sinais de ponto de entrada num script. Arquivo sem nenhum deles é módulo de
-#: biblioteca, e biblioteca em `scripts/` é contexto que o agente carrega e não
-#: sabe rodar.
+#: Signs of an entry point in a script. A file with none of them is a library
+#: module, and a library in `scripts/` is context the agent loads and does not
+#: know how to run.
 PONTO_DE_ENTRADA = ("__main__", "argparse", "sys.argv", "click.command", "typer")
 
-#: Palavra de 5+ letras, para o mesmo motivo do `forja/vistoria.py`: string curta
-#: (`ui`, `api`, `css`) não distingue nada e infla falso positivo.
+#: A word of 5+ letters, for the same reason as `forja/vistoria.py`: a short
+#: string (`ui`, `api`, `css`) distinguishes nothing and inflates false positives.
 _PALAVRA = re.compile(r"[a-z0-9]{5,}")
 
-#: Palavras que aparecem em toda descrição de skill e não distinguem nada. Sem
-#: esta lista, duas skills quaisquer "se parecem" e o `S11` vira ruído — a
-#: mesma lição que o `V6` da forja já pagou do lado dos agentes.
+#: Words that show up in every skill description and distinguish nothing.
+#: Without this list, any two skills "look alike" and `S11` becomes noise — the
+#: same lesson `forja`'s `V6` already paid on the agent side.
 VAZIAS = frozenset(
     """
     skill skills usar usa used using quando when sempre nunca apenas outro
     outra sobre cada todos todas mesmo mesma porque coisa coisas forma
     partir depois antes ainda tambem projeto arquivo arquivos pasta pastas
+    always never only other about each every after before still also project
+    file files folder folders because thing things
     """.split()
 )
 
-#: Mesmo limiar do `V6` (`forja/vistoria.py`) — 30% de palavras em comum entre
-#: duas `description`. ESCOLHIDO olhando rosters reais, não medido; está aqui
-#: com o motivo ao lado, não enterrado num `if`. Ver `LACUNAS.md` §9.
+#: The same threshold as `V6` (`forja/vistoria.py`) — 30% of words in common
+#: between two `description`s. CHOSEN by looking at real rosters, not measured;
+#: it is here with the reason next to it, not buried in an `if`. See `LACUNAS.md` §9.
 LIMIAR_CONFUSAO = 0.30
 
 
 @dataclass
 class Skill:
-    """Uma skill lida do disco. Nada aqui é inferido: tudo foi lido."""
+    """A skill read from disk. Nothing here is inferred: everything was read."""
 
-    caminho: Path            #: o próprio SKILL.md
-    pasta: Path              #: a pasta que o contém — o `name` tem de bater com ela
+    caminho: Path            #: the SKILL.md itself
+    pasta: Path              #: the folder that contains it — `name` must match it
     nome: str = ""           #: frontmatter `name:`
     descricao: str = ""      #: frontmatter `description:`
-    linhas: int = 0          #: tamanho do corpo, em linhas
+    linhas: int = 0          #: the body size, in lines
     referencias: list[Path] = field(default_factory=list)
     scripts: list[Path] = field(default_factory=list)
-    commits: int | None = None   #: None = não medido (sem git, ou fora de repo)
+    commits: int | None = None   #: None = not measured (no git, or outside a repo)
 
     @property
     def slug(self) -> str:
-        """Como a skill aparece no relatório: o nome da pasta, sempre."""
+        """How the skill shows up in the report: the folder name, always."""
         return self.pasta.name
 
 
@@ -119,32 +124,33 @@ class Achado:
     regra: str
     titulo: str
     conserto: str
-    fonte: str               #: de onde vem a regra — auditável, não opinião
+    fonte: str               #: where the rule comes from — auditable, not opinion
     itens: list[str] = field(default_factory=list)
     grave: bool = True
     skills: set[str] = field(default_factory=set)
 
 
 def _frontmatter(texto: str) -> tuple[dict[str, str], str]:
-    """Frontmatter mínimo, sem dependência: `---` … `---`.
+    """Minimal frontmatter, no dependency: `---` … `---`.
 
-    Não é um parser de YAML e não finge ser — mas LÊ VALOR MULTI-LINHA, porque
-    não ler é pior que não medir: a `description` some, e a ferramenta acusa
-    «sem description» numa skill que tem uma boa. Falso positivo num linter
-    custa mais caro que a regra que ele checa.
+    It is not a YAML parser and does not pretend to be — but it DOES READ A
+    MULTI-LINE VALUE, because not reading it is worse than not measuring: the
+    `description` disappears, and the tool flags "no description" on a skill
+    that has a good one. A false positive in a linter costs more than the rule
+    it checks.
 
-    Cobre as três formas que aparecem no disco:
+    It covers the three forms that show up on disk:
 
-        description: uma linha
-        description: >          (dobrado — junta com espaço)
-          continua aqui
-        description: |          (literal — junta com nova-linha)
-          continua aqui
-        description:            (escalar simples indentado)
-          continua aqui
+        description: one line
+        description: >          (folded — joins with a space)
+          continues here
+        description: |          (literal — joins with a newline)
+          continues here
+        description:            (a plain indented scalar)
+          continues here
 
-    O que NÃO cobre está na LACUNAS da operação: lista, mapa aninhado, âncora,
-    e aspas que abrem numa linha e fecham noutra.
+    What it does NOT cover is in the operation's LACUNAS: a list, a nested map,
+    an anchor, and quotes that open on one line and close on another.
     """
     if not texto.startswith("---"):
         return {}, texto
@@ -154,7 +160,7 @@ def _frontmatter(texto: str) -> tuple[dict[str, str], str]:
 
     campos: dict[str, str] = {}
     chave_aberta: str | None = None
-    literal = False          # `|` junta com nova-linha; `>` e simples, com espaço
+    literal = False          # `|` joins with a newline; `>` and plain, with a space
     pedacos: list[str] = []
 
     def fechar() -> None:
@@ -174,7 +180,7 @@ def _frontmatter(texto: str) -> tuple[dict[str, str], str]:
             pedacos.append(linha.strip())
             continue
         if indentada:
-            continue  # continuação de uma chave que não abrimos — ignorada
+            continue  # continuation of a key we did not open — ignored
 
         fechar()
         if ":" not in linha:
@@ -185,11 +191,11 @@ def _frontmatter(texto: str) -> tuple[dict[str, str], str]:
             chave_aberta, literal = chave, valor.startswith("|")
             campos[chave] = ""
         else:
-            # A chave fica ABERTA mesmo com valor na mesma linha: em YAML um
-            # escalar simples continua nas linhas indentadas seguintes, e é
-            # assim que a maioria das `description` longas é escrita no disco.
-            # Fechar aqui descartava a continuação — e a ferramenta lia metade
-            # da vitrine sem dar erro. Achado pelo controle negativo S4.
+            # The key stays OPEN even with a value on the same line: in YAML a
+            # plain scalar continues on the following indented lines, and that
+            # is how most long `description`s are written on disk. Closing here
+            # discarded the continuation — and the tool read half the vitrine
+            # with no error. Found by the S4 negative control.
             chave_aberta, literal = chave, False
             campos[chave] = valor
 
@@ -198,7 +204,7 @@ def _frontmatter(texto: str) -> tuple[dict[str, str], str]:
 
 
 def _desaspar(valor: str) -> str:
-    """`description:` costuma vir como string JSON. Aspas soltas não são dado."""
+    """`description:` usually comes as a JSON string. Loose quotes are not data."""
     valor = valor.strip()
     if valor[:1] in {'"', "'"}:
         try:
@@ -209,11 +215,11 @@ def _desaspar(valor: str) -> str:
 
 
 def _commits(caminho: Path) -> int | None:
-    """Quantos commits tocaram este arquivo. `None` quando não dá para medir.
+    """How many commits touched this file. `None` when it cannot be measured.
 
-    Devolver `None` em vez de `0` é deliberado: «não medido» e «nunca commitado»
-    são coisas diferentes, e confundir as duas é exatamente o defeito que esta
-    ferramenta existe para cobrar.
+    Returning `None` instead of `0` is deliberate: "not measured" and "never
+    committed" are different things, and confusing the two is exactly the
+    defect this tool exists to demand.
     """
     try:
         saida = subprocess.run(
@@ -232,7 +238,7 @@ def _commits(caminho: Path) -> int | None:
 
 
 def ler_skill(caminho: Path, com_git: bool = True) -> Skill | None:
-    """Lê um `SKILL.md`. Devolve `None` se o arquivo não puder ser lido."""
+    """Reads a `SKILL.md`. Returns `None` if the file cannot be read."""
     try:
         texto = caminho.read_text(encoding="utf-8", errors="replace")
     except OSError:
@@ -264,11 +270,11 @@ def ler_skill(caminho: Path, com_git: bool = True) -> Skill | None:
 
 
 def ler_pasta(raiz: Path, com_git: bool = True) -> list[Skill]:
-    """Acha todo `SKILL.md` sob `raiz`, em qualquer profundidade.
+    """Finds every `SKILL.md` under `raiz`, at any depth.
 
-    ⚠️ `rglob` NÃO atravessa junction do Windows nem symlink de diretório. Se a
-    sua pasta de skills for montada assim, aponte para o alvo real — este é o
-    mesmo defeito silencioso que a `LACUNAS.md` desta operação declara.
+    ⚠️ `rglob` does NOT cross a Windows junction or a directory symlink. If your
+    skills folder is mounted that way, point at the real target — this is the
+    same silent defect the operation's `LACUNAS.md` declares.
     """
     if raiz.is_file() and raiz.name == "SKILL.md":
         lida = ler_skill(raiz, com_git)
@@ -277,7 +283,7 @@ def ler_pasta(raiz: Path, com_git: bool = True) -> list[Skill]:
     return [s for s in achadas if s is not None]
 
 
-# --------------------------------------------------------------- as dez --------
+# --------------------------------------------------------------- the ten --------
 
 
 def _tem(texto: str, marcas: tuple[str, ...]) -> bool:
@@ -286,12 +292,12 @@ def _tem(texto: str, marcas: tuple[str, ...]) -> bool:
 
 
 def _significativas(descricao: str) -> set[str]:
-    """As palavras de uma `description` que de fato a distinguem das outras."""
+    """The words in a `description` that actually set it apart from the others."""
     return {p for p in _PALAVRA.findall(descricao.lower())} - VAZIAS
 
 
 def _confusao(a: Skill, b: Skill) -> float:
-    """Quanto duas `description` disputam o mesmo despacho. Jaccard, sem mistério."""
+    """How much two `description`s fight over the same dispatch. Jaccard, no mystery."""
     pa, pb = _significativas(a.descricao), _significativas(b.descricao)
     if not pa or not pb:
         return 0.0
@@ -299,19 +305,19 @@ def _confusao(a: Skill, b: Skill) -> float:
 
 
 def _um_nomeia_o_outro(a: Skill, b: Skill) -> bool:
-    """Gatilho negativo de verdade é nominal: cita o irmão pelo slug."""
+    """A real negative trigger is nominal: it names the sibling by its slug."""
     return a.slug in b.descricao.lower() or b.slug in a.descricao.lower()
 
 
 def _profundidade(arquivo: Path, pasta_ref: Path) -> int:
-    """Quantos níveis de pasta abaixo de `references/`. Plano = 0."""
+    """How many folder levels below `references/`. Flat = 0."""
     return len(arquivo.relative_to(pasta_ref).parts) - 1
 
 
 def vistoriar(skills: list[Skill]) -> list[Achado]:
-    """As dez regras. Cada uma cita a fonte pública de onde ela sai."""
-    FONTE_SPEC = "spec do formato Agent Skills"
-    FONTE_BP = "best-practices oficial de criação de skill"
+    """The ten rules. Each one cites the public source it comes from."""
+    FONTE_SPEC = "the Agent Skills format spec"
+    FONTE_BP = "the official skill-authoring best practices"
 
     achados: list[Achado] = []
 
@@ -333,51 +339,51 @@ def vistoriar(skills: list[Skill]) -> list[Achado]:
             )
         )
 
-    # S1 — o nome é o endereço, não o título -----------------------------------
+    # S1 — the name is the address, not the title ----------------------------
     registrar(
         "S1",
-        "O NOME NÃO É O DA PASTA",
-        "o `name:` é o ENDEREÇO da skill, não o título dela. Ele tem de ser\n"
-        "       idêntico ao nome da pasta-mãe: `angular-testing/SKILL.md` exige\n"
-        "       `name: angular-testing`. Divergindo, o carregamento é sorte.",
+        "THE NAME IS NOT THE FOLDER'S",
+        "the `name:` is the skill's ADDRESS, not its title. It has to be\n"
+        "       identical to the parent folder's name: `angular-testing/SKILL.md`\n"
+        "       requires `name: angular-testing`. Diverging, the load is luck.",
         FONTE_SPEC,
         [
-            (s.slug, f"declara `{s.nome}`" if s.nome else "não declara `name:`")
+            (s.slug, f"declares `{s.nome}`" if s.nome else "does not declare `name:`")
             for s in skills
             if s.nome != s.pasta.name
         ],
     )
 
-    # S2 — a gramática do nome -------------------------------------------------
+    # S2 — the name grammar --------------------------------------------------
     registrar(
         "S2",
-        "O NOME NÃO CABE NA GRAMÁTICA",
-        "1 a 64 caracteres, só minúsculas, dígitos e hífen simples. Maiúscula,\n"
-        "       espaço, underscore e hífen duplo quebram o carregamento — e\n"
-        "       quebram calados.",
+        "THE NAME DOES NOT FIT THE GRAMMAR",
+        "1 to 64 characters, only lowercase, digits and a single hyphen.\n"
+        "       Uppercase, a space, an underscore and a double hyphen break the\n"
+        "       load — and they break it silently.",
         FONTE_SPEC,
         [
             (
                 s.slug,
-                f"`{s.nome}` tem {len(s.nome)} caracteres"
+                f"`{s.nome}` has {len(s.nome)} characters"
                 if len(s.nome) > 64
-                else f"`{s.nome}` sai da gramática",
+                else f"`{s.nome}` is outside the grammar",
             )
             for s in skills
             if s.nome and not (NOME_VALIDO.match(s.nome) and len(s.nome) <= 64)
         ],
     )
 
-    # S3 — quando usar ---------------------------------------------------------
+    # S3 — when to use it --------------------------------------------------
     registrar(
         "S3",
-        "NÃO DIZ QUANDO USAR",
-        "a `description` é o ÚNICO campo que o roteador lê antes de decidir.\n"
-        "       Sem cláusula de gatilho — «Use when…» / «Usar quando…» — o modelo\n"
-        "       não liga a skill a nenhuma tarefa. Ela não falha: ela é invisível.",
+        "DOES NOT SAY WHEN TO USE IT",
+        "the `description` is the ONLY field the router reads before deciding.\n"
+        "       With no trigger clause — \"Use when…\" — the model does not link the\n"
+        "       skill to any task. It does not fail: it is invisible.",
         FONTE_BP,
         [
-            (s.slug, "descrição sem cláusula de gatilho" if s.descricao else "sem `description:`")
+            (s.slug, "description with no trigger clause" if s.descricao else "no `description:`")
             for s in skills
             if not (
                 GATILHO_POSITIVO.search(s.descricao) or _tem(s.descricao, GATILHO_POSITIVO_EXTRA)
@@ -385,40 +391,40 @@ def vistoriar(skills: list[Skill]) -> list[Achado]:
         ],
     )
 
-    # S4 — quando NÃO usar -----------------------------------------------------
+    # S4 — when NOT to use it ---------------------------------------------
     registrar(
         "S4",
-        "NÃO DIZ QUANDO **NÃO** USAR",
-        "sem gatilho negativo, duas skills do mesmo domínio disputam o mesmo\n"
-        "       despacho e a escolha vira sorteio. Nomeie o irmão por extenso:\n"
-        "       «Don't use it for Vue, Svelte, or vanilla CSS.»",
+        "DOES NOT SAY WHEN **NOT** TO USE IT",
+        "with no negative trigger, two skills in the same domain fight over the\n"
+        "       same dispatch and the choice becomes a coin toss. Name the sibling\n"
+        "       out loud: \"Don't use it for Vue, Svelte, or vanilla CSS.\"",
         FONTE_BP,
-        [(s.slug, "descrição sem gatilho negativo") for s in skills if not _tem(s.descricao, GATILHO_NEGATIVO)],
+        [(s.slug, "description with no negative trigger") for s in skills if not _tem(s.descricao, GATILHO_NEGATIVO)],
     )
 
-    # S5 — a vitrine não cabe na janela ----------------------------------------
+    # S5 — the vitrine does not fit the window --------------------------------
     registrar(
         "S5",
-        "A VITRINE NÃO CABE NA JANELA",
-        f"acima de {TETO_DESCRICAO} caracteres a `description` é truncada, e o corte cai\n"
-        "       no meio da frase que decidiria o despacho.",
+        "THE VITRINE DOES NOT FIT THE WINDOW",
+        f"above {TETO_DESCRICAO} characters the `description` is truncated, and the cut\n"
+        "       lands in the middle of the sentence that would have decided the dispatch.",
         FONTE_SPEC,
-        [(s.slug, f"{len(s.descricao)} caracteres") for s in skills if len(s.descricao) > TETO_DESCRICAO],
+        [(s.slug, f"{len(s.descricao)} characters") for s in skills if len(s.descricao) > TETO_DESCRICAO],
     )
 
-    # S6 — o corpo estourou o teto ---------------------------------------------
+    # S6 — the body blew past the ceiling -----------------------------------
     registrar(
         "S6",
-        "O CORPO ESTOUROU O TETO",
-        f"acima de {TETO_LINHAS} linhas o `SKILL.md` deixa de ser o mapa e vira o\n"
-        "       território. Mova o detalhe para `references/`, que só é lido\n"
-        "       depois que a skill já foi escolhida.",
+        "THE BODY BLEW PAST THE CEILING",
+        f"above {TETO_LINHAS} lines the `SKILL.md` stops being the map and becomes the\n"
+        "       territory. Move the detail to `references/`, which is only read\n"
+        "       after the skill has already been chosen.",
         FONTE_BP,
-        [(s.slug, f"{s.linhas} linhas") for s in skills if s.linhas > TETO_LINHAS],
+        [(s.slug, f"{s.linhas} lines") for s in skills if s.linhas > TETO_LINHAS],
         grave=False,
     )
 
-    # S7 — references fundo demais ---------------------------------------------
+    # S7 — references too deep -------------------------------------------
     fundos: list[tuple[str, str]] = []
     for s in skills:
         pasta_ref = s.pasta / "references"
@@ -427,15 +433,15 @@ def vistoriar(skills: list[Skill]) -> list[Achado]:
                 fundos.append((s.slug, f"references/{arq.relative_to(pasta_ref).as_posix()}"))
     registrar(
         "S7",
-        "`references/` FUNDO DEMAIS",
-        "`references/` é plano por contrato: `references/schema.md`, nunca\n"
-        "       `references/db/v1/schema.md`. O carregamento progressivo desce\n"
-        "       exatamente um nível — o que estiver abaixo não é alcançado.",
+        "`references/` TOO DEEP",
+        "`references/` is flat by contract: `references/schema.md`, never\n"
+        "       `references/db/v1/schema.md`. Progressive loading descends exactly\n"
+        "       one level — what is below that is not reached.",
         FONTE_BP,
         fundos,
     )
 
-    # S8 — script que é biblioteca ---------------------------------------------
+    # S8 — a script that is a library -------------------------------------
     bibliotecas: list[tuple[str, str]] = []
     for s in skills:
         for arq in s.scripts:
@@ -447,61 +453,61 @@ def vistoriar(skills: list[Skill]) -> list[Achado]:
                 bibliotecas.append((s.slug, f"scripts/{arq.relative_to(s.pasta / 'scripts').as_posix()}"))
     registrar(
         "S8",
-        "SCRIPT QUE É BIBLIOTECA",
-        "`scripts/` é para CLI minúsculo, um trabalho por arquivo. Módulo sem\n"
-        "       ponto de entrada é biblioteca — e biblioteca ali é contexto que o\n"
-        "       agente carrega e não sabe rodar.",
+        "A SCRIPT THAT IS A LIBRARY",
+        "`scripts/` is for a tiny CLI, one job per file. A module with no entry\n"
+        "       point is a library — and a library there is context the agent\n"
+        "       loads and does not know how to run.",
         FONTE_BP,
         bibliotecas,
         grave=False,
     )
 
-    # S9 — vitrine na pessoa errada --------------------------------------------
+    # S9 — a vitrine in the wrong person -----------------------------------
     registrar(
         "S9",
-        "A VITRINE FALA NA PESSOA ERRADA",
-        "a descrição é lida pelo roteador em terceira pessoa, ao lado de dezenas\n"
-        "       de outras. «Creates React components» roteia; «I help you with\n"
-        "       React» descreve um relacionamento, e não casa com tarefa nenhuma.",
+        "THE VITRINE SPEAKS IN THE WRONG PERSON",
+        "the description is read by the router in the third person, next to\n"
+        "       dozens of others. \"Creates React components\" routes; \"I help you\n"
+        "       with React\" describes a relationship, and matches no task.",
         FONTE_BP,
         [
-            (s.slug, f"começa em «{s.descricao.split()[0]}»")
+            (s.slug, f"starts with \"{s.descricao.split()[0]}\"")
             for s in skills
             if s.descricao and s.descricao.lower().startswith(PESSOA_ERRADA)
         ],
         grave=False,
     )
 
-    # S10 — nunca corrigida depois do primeiro erro ----------------------------
+    # S10 — never fixed after the first error ------------------------------
     registrar(
         "S10",
-        "NASCEU PRONTA E NUNCA FOI CORRIGIDA",
-        "skill com um commit só nunca passou por um erro real. O caminho é\n"
-        "       escrever a versão que funciona em dez minutos e corrigir no\n"
-        "       primeiro erro do agente — cada erro é uma melhoria da skill.",
+        "BORN READY AND NEVER FIXED",
+        "a skill with a single commit has never been through a real error. The\n"
+        "       way is to write the version that works in ten minutes and fix it\n"
+        "       on the agent's first mistake — every error is an improvement to the skill.",
         FONTE_BP,
         [(s.slug, "1 commit") for s in skills if s.commits == 1],
         grave=False,
     )
 
-    # S11 — duas skills se confundem --------------------------------------------
+    # S11 — two skills get confused ----------------------------------------
     pares = [
-        (f"{a.slug} × {b.slug}", f"{round(_confusao(a, b) * 100)}% das palavras em comum")
+        (f"{a.slug} × {b.slug}", f"{round(_confusao(a, b) * 100)}% of the words in common")
         for i, a in enumerate(skills)
         for b in skills[i + 1 :]
         if _confusao(a, b) >= LIMIAR_CONFUSAO and not _um_nomeia_o_outro(a, b)
     ]
     registrar(
         "S11",
-        "DUAS SKILLS SE CONFUNDEM",
-        "descrições disputando o mesmo despacho, e nenhuma nomeia a outra. O\n"
-        "       conserto é nominal: cada `description` cita a irmã no que NUNCA\n"
-        "       faz — é o mesmo gatilho negativo que o `S4` já cobra, só que\n"
-        "       apontado para um nome, não em aberto.",
+        "TWO SKILLS GET CONFUSED",
+        "descriptions fighting over the same dispatch, and neither names the\n"
+        "       other. The fix is nominal: each `description` cites the sibling in\n"
+        "       what it NEVER does — the same negative trigger `S4` already asks\n"
+        "       for, only pointed at a name instead of left open.",
         FONTE_BP,
         pares,
     )
     if pares:
-        achados[-1].skills = set()  # um par não é uma skill; não entra no denominador
+        achados[-1].skills = set()  # a pair is not a skill; it does not enter the denominator
 
     return achados

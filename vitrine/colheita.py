@@ -1,30 +1,30 @@
-"""A colheita — vira o que funcionou numa `SKILL.md` nova, e recusa duplicar.
+"""The harvest — turns what worked into a new `SKILL.md`, and refuses to duplicate.
 
-    $ python -m vitrine --colher nome-da-skill --diz "uma frase do que ela faz"
-    $ python -m vitrine --colher nome-da-skill --diz "..." --pasta .claude/skills
+    $ python -m vitrine --harvest skill-name --says "one sentence about what it does"
+    $ python -m vitrine --harvest skill-name --says "..." --folder .claude/skills
 
-nature: security — a colheita é uma recusa antes de ser uma escrita: slug
-fora da gramática, slug já ocupado e descrição que colide com uma skill que
-já existe NUNCA viram arquivo. Uma ferramenta que "faz o melhor esforço" e
-escreve mesmo assim produz a skill nº2 brigando pelo mesmo despacho — o
-mesmo defeito que a regra `S11` audita DEPOIS do fato. Aqui ele é pego ANTES.
+nature: security — the harvest is a refusal before it is a write: a slug
+outside the grammar, a slug already taken, and a description that collides with
+a skill that already exists NEVER become a file. A tool that does its "best
+effort" and writes anyway produces skill nº2 fighting over the same dispatch —
+the same defect the `S11` rule audits AFTER the fact. Here it is caught BEFORE.
 
-## As quatro recusas
+## The four refusals
 
-    H1  slug fora da gramática do formato Agent Skills (mesma régua do S2)
-    H2  já existe uma pasta com este slug no destino — nunca sobrescreve
-    H3  a descrição colide com uma skill que já existe ali (mesma régua do S11)
-    H4  nenhuma descrição foi passada — nada para checar colisão nenhuma
+    H1  slug outside the Agent Skills format grammar (the same rule as S2)
+    H2  a folder with this slug already exists in the target — never overwrites
+    H3  the description collides with a skill that already exists there (same rule as S11)
+    H4  no description was passed — nothing to check any collision against
 
-## Isto não é "Skill Forge" com um modelo escrevendo por trás
+## This is not "Skill Forge" with a model writing behind it
 
-Não tem LLM aqui, e não vai ter — mesmo invariante do resto do projeto (README:
-"um verificador que depende de um modelo não é um verificador"). O que ela
-escreve é a metade que NÃO precisa de modelo: um `SKILL.md` que já nasce
-compilando limpo nas regras estruturais (`S1`, `S2`, `S6`…), com um `?`
-exatamente nos dois campos que só quem viveu o trabalho sabe preencher — e a
-certeza, checada ANTES de escrever, de que ninguém no destino já ocupa esse
-despacho. Ver `LACUNAS.md` §10 para o que ela NÃO cobre.
+There is no LLM here, and there will not be — the same invariant as the rest of
+the project (README: "a verifier that depends on a model is not a verifier").
+What it writes is the half that does NOT need a model: a `SKILL.md` that is born
+compiling clean against the structural rules (`S1`, `S2`, `S6`…), with a `?`
+exactly in the two fields only someone who lived the work can fill in — and the
+certainty, checked BEFORE writing, that nobody in the target already occupies
+that dispatch. See `LACUNAS.md` §10 for what it does NOT cover.
 """
 
 from __future__ import annotations
@@ -35,69 +35,69 @@ from .regras import LIMIAR_CONFUSAO, NOME_VALIDO, Skill, _confusao, _um_nomeia_o
 
 FALTA = "?"
 
-#: A `description` final carrega o texto real de `--diz` — nunca vira `{falta}`
-#: sozinha. Duas razões, as duas medidas escrevendo este módulo:
-#:   1. Se ela virasse `{falta}`, a colheita SEGUINTE, comparando contra esta
-#:      skill no disco, não teria palavra nenhuma para cruzar — a checagem de
-#:      colisão (H3) ficaria cega para toda skill ainda não preenchida.
-#:   2. As DUAS cláusulas que faltam (gatilho positivo e negativo) ficam como
-#:      `{falta}` dentro da MESMA description, mas sem a palavra "quando"/
-#:      "when" ao lado — escrevê-la aqui faria as regras S3/S4 lerem o rótulo
-#:      da lacuna como se fosse o gatilho, e passarem verde num campo vazio.
+#: The final `description` carries the real text from `--says` — it never
+#: becomes `{falta}` by itself. Two reasons, both measured writing this module:
+#:   1. If it became `{falta}`, the NEXT harvest, comparing against this skill
+#:      on disk, would have no word to cross-check — the collision check (H3)
+#:      would be blind to every not-yet-filled skill.
+#:   2. The TWO missing clauses (positive and negative trigger) stay as
+#:      `{falta}` inside the SAME description, but without the word "when" next
+#:      to them — writing it here would make the S3/S4 rules read the gap's
+#:      label as if it were the trigger, and pass green on an empty field.
 MODELO = '''---
 name: {slug}
-description: {descricao} — gatilho positivo: {falta}; gatilho negativo: {falta}
+description: {descricao} — positive trigger: {falta}; negative trigger: {falta}
 ---
 
 # {slug}
 
 {falta}
 
-<!-- A colheita deixou três buracos de pé, de propósito — ela não tem
-modelo, e não escreve nenhum deles por você:
-  1. gatilho positivo, acima — quando usar, régua S3: escreva a cláusula
-     condicional ("...quando o PR mexe em autenticação", por exemplo).
-  2. gatilho negativo, acima — quando NÃO usar, régua S4: nomeie a skill
-     mais parecida, se houver, pelo slug dela.
-  3. o corpo, aqui embaixo — o passo a passo que funcionou de verdade.
-Rode `python -m vitrine {pasta}` depois de preencher: os três buracos viram
-⛔ até virarem texto de verdade, e o resto das regras (S1, S2, S6…) já nasceu
-limpo. -->
+<!-- The harvest left three holes standing, on purpose — it has no model, and
+does not write any of them for you:
+  1. the positive trigger, above — when to use it, rule S3: write the
+     conditional clause ("...when the PR touches authentication", for example).
+  2. the negative trigger, above — when NOT to use it, rule S4: name the most
+     similar skill, if any, by its slug.
+  3. the body, down here — the step-by-step that actually worked.
+Run `python -m vitrine {pasta}` after filling them in: the three holes are ⛔
+until they become real text, and the rest of the rules (S1, S2, S6…) is already
+born clean. -->
 '''
 
 
 class Recusa(ValueError):
-    """A colheita se recusou a escrever. Sempre com o código da regra e o conserto."""
+    """The harvest refused to write. Always with the rule code and the fix."""
 
     def __init__(self, regra: str, motivo: str, conserto: str) -> None:
         self.regra, self.motivo, self.conserto = regra, motivo, conserto
-        super().__init__(f"{regra}: {motivo}\n      conserto: {conserto}")
+        super().__init__(f"{regra}: {motivo}\n      fix: {conserto}")
 
 
 def colher(slug: str, descricao: str, pasta: Path) -> Path:
-    """Escreve `<pasta>/<slug>/SKILL.md`, ou recusa. Nunca os dois pela metade.
+    """Writes `<folder>/<slug>/SKILL.md`, or refuses. Never both half-way.
 
-    `descricao` é usada SÓ para checar colisão com quem já existe em `pasta` —
-    ela não é copiada verbatim para o arquivo: o `description` final nasce
-    como `?`, porque a frase que passa na checagem de colisão pode não ser a
-    frase que passa em `S3`/`S4` (gatilho positivo e negativo), e confundir
-    as duas é exatamente a família de defeito que este projeto inteiro existe
-    para cobrar.
+    `descricao` is used ONLY to check for a collision with what already exists
+    in `pasta` — it is not copied verbatim into the file: the final
+    `description` is born as `?`, because the sentence that passes the collision
+    check may not be the sentence that passes `S3`/`S4` (positive and negative
+    trigger), and confusing the two is exactly the family of defect this whole
+    project exists to demand.
     """
     if not (NOME_VALIDO.match(slug) and len(slug) <= 64):
         raise Recusa(
             "H1",
-            f"`{slug}` não é um slug válido",
-            "1 a 64 caracteres, só minúsculas, dígitos e hífen simples — mesma "
-            "gramática que a regra S2 audita depois do fato",
+            f"`{slug}` is not a valid slug",
+            "1 to 64 characters, only lowercase, digits and a single hyphen — the "
+            "same grammar rule S2 audits after the fact",
         )
     if not descricao.strip():
         raise Recusa(
             "H4",
-            "nenhuma `--diz` foi passada",
-            "descreva em uma frase o que a skill faz — é essa frase que a "
-            "colheita usa para checar se já existe uma irmã ocupando o mesmo "
-            "despacho, antes de escrever um byte",
+            "no `--says` was passed",
+            "describe in one sentence what the skill does — it is that sentence the "
+            "harvest uses to check whether a sibling already occupies the same "
+            "dispatch, before writing a byte",
         )
 
     pasta = Path(pasta)
@@ -105,9 +105,9 @@ def colher(slug: str, descricao: str, pasta: Path) -> Path:
     if (destino / "SKILL.md").exists():
         raise Recusa(
             "H2",
-            f"já existe `{destino / 'SKILL.md'}`",
-            "a colheita nunca sobrescreve — edite a existente à mão, ou "
-            "escolha outro slug",
+            f"`{destino / 'SKILL.md'}` already exists",
+            "the harvest never overwrites — edit the existing one by hand, or "
+            "choose another slug",
         )
 
     existentes = ler_pasta(pasta, com_git=False) if pasta.is_dir() else []
@@ -121,10 +121,10 @@ def colher(slug: str, descricao: str, pasta: Path) -> Path:
         pares = ", ".join(f"`{slug_}` ({pct}%)" for slug_, pct in colisoes)
         raise Recusa(
             "H3",
-            f"a descrição colide com {pares} — mesma régua do S11",
-            "estenda a skill existente em vez de criar uma rival, ou nomeie-a "
-            'por extenso na sua `--diz` ("...different from <slug-irmã>...") '
-            "para que a régua leia o gatilho negativo como intencional",
+            f"the description collides with {pares} — the same rule as S11",
+            "extend the existing skill instead of creating a rival, or name it "
+            'out loud in your `--says` ("...different from <sibling-slug>...") '
+            "so the rule reads the negative trigger as intentional",
         )
 
     destino.mkdir(parents=True, exist_ok=True)

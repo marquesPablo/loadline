@@ -1,13 +1,13 @@
-"""`python -m placar <caminho>` — as sete portas, com evidência.
+"""`python -m placar <path>` — the seven gates, with evidence.
 
     $ python -m placar .
-    $ python -m placar /caminho/do/seu/projeto
-    $ python -m placar . --html relatorio.html   # ESCREVE, além do terminal
+    $ python -m placar /path/to/your/project
+    $ python -m placar . --html report.html   # WRITES, on top of the terminal
 
-Código de saída: 0 sete de sete · 1 alguma porta reprova · 2 não havia
-harness de agente para ler (nenhum `CLAUDE.md`, `AGENTS.md` ou `.claude/`).
+Exit code: 0 seven of seven · 1 a gate fails · 2 there was no agent
+harness to read (no `CLAUDE.md`, `AGENTS.md` or `.claude/`).
 
-Sem dependência. Sem chave de API. Sem chamada de modelo. Roda offline.
+No dependency. No API key. No model call. Runs offline.
 """
 
 from __future__ import annotations
@@ -31,7 +31,7 @@ def _linha_porta(p: Porta) -> list[str]:
     for item in p.itens[:6]:
         linhas.append(f"       {item}")
     if len(p.itens) > 6:
-        linhas.append(f"       … e mais {len(p.itens) - 6}")
+        linhas.append(f"       … and {len(p.itens) - 6} more")
     if p.grave and p.conserto:
         linhas.append(f"     → {p.conserto}")
     linhas.append("")
@@ -39,28 +39,28 @@ def _linha_porta(p: Porta) -> list[str]:
 
 
 def relatorio(placar: Placar, hoje: str) -> list[str]:
-    linhas = [f"placar · {placar.alvo} · em {hoje}", "=" * LARGURA, ""]
+    linhas = [f"placar · {placar.alvo} · on {hoje}", "=" * LARGURA, ""]
     for p in placar.portas:
         linhas.extend(_linha_porta(p))
 
     linhas.append("-" * LARGURA)
-    linhas.append(f"{placar.passam} de {len(placar.portas)} portas")
+    linhas.append(f"{placar.passam} of {len(placar.portas)} gates")
     linhas.append("")
     if placar.no_go:
         linhas.append("NO-GO" + " " * 45 + "(exit 1)")
-        linhas.append("IDENTITY, AUTHORITY ou CONTAINMENT reprovando é automático — o resto do")
-        linhas.append("placar não compensa uma porta que decide o que o agente ALCANÇA.")
+        linhas.append("IDENTITY, AUTHORITY or CONTAINMENT failing is automatic — the rest of the")
+        linhas.append("scoreboard does not make up for a gate that decides what the agent REACHES.")
     elif placar.reprova:
-        linhas.append("REPROVA" + " " * 63 + "(exit 1)")
+        linhas.append("FAIL" + " " * 65 + "(exit 1)")
     else:
-        linhas.append("PASSA" + " " * 65 + "(exit 0)")
+        linhas.append("PASS" + " " * 65 + "(exit 0)")
     return linhas
 
 
 def main(argv: list[str] | None = None) -> int:
     try:
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    except (AttributeError, OSError):  # pragma: no cover — stdout redirecionado
+    except (AttributeError, OSError):  # pragma: no cover — stdout redirected
         pass
 
     args = list(sys.argv[1:] if argv is None else argv)
@@ -78,13 +78,13 @@ def main(argv: list[str] | None = None) -> int:
     alvo = Path(args[0]).expanduser()
     hoje = date.today().isoformat()
     if not alvo.exists():
-        print(f"placar: caminho não existe — {alvo}", file=sys.stderr)
+        print(f"placar: path does not exist — {alvo}", file=sys.stderr)
         return 2
 
     placar = avaliar(alvo)
     if placar is None:
-        print(f"placar: nenhum harness de agente sob {alvo}", file=sys.stderr)
-        print("        (procurei CLAUDE.md, AGENTS.md e .claude/ na raiz e um nível abaixo)", file=sys.stderr)
+        print(f"placar: no agent harness under {alvo}", file=sys.stderr)
+        print("        (looked for CLAUDE.md, AGENTS.md and .claude/ at the root and one level down)", file=sys.stderr)
         return 2
 
     linhas = relatorio(placar, hoje)
@@ -94,7 +94,7 @@ def main(argv: list[str] | None = None) -> int:
     codigo = 1 if placar.reprova else 0
     if html_arg is not None:
         html_arg.write_text(evidencia.pagina("placar", str(alvo), hoje, linhas, codigo), encoding="utf-8")
-        print(f"\nrelatório HTML autocontido escrito em {html_arg}")
+        print(f"\nself-contained HTML report written to {html_arg}")
     return codigo
 
 

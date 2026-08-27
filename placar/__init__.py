@@ -1,21 +1,21 @@
-"""`placar` — as sete portas de "Would you ship this AI agent?", conferidas.
+"""`placar` — the seven gates of "Would you ship this AI agent?", checked.
 
-nature: fix — este módulo só lê e relata; ele nunca escreve no
-repositório alvo e nunca chama modelo.
+nature: fix — this module only reads and reports; it never writes to the
+target repository and never calls a model.
 
-    python -m placar <caminho>
+    python -m placar <path>
 
-Cada porta responde a UMA pergunta com evidência de disco, nunca com opinião:
-`OBJECTIVE` (para quando?) · `IDENTITY` (que segredo está exposto?) ·
-`AUTHORITY` (o que alcança?) · `FAILURE` (e se a ferramenta mentir?) ·
-`APPROVAL` (que ação exige humano?) · `TRACEABILITY` (dá para reconstruir?) ·
-`CONTAINMENT` (dá para reverter?). Reprovar `IDENTITY`, `AUTHORITY` ou
-`CONTAINMENT` é NO-GO — as três são sobre o que o agente ALCANÇA, não sobre o
-que ele declara ter intenção de fazer.
+Each gate answers ONE question with disk evidence, never with opinion:
+`OBJECTIVE` (until when?) · `IDENTITY` (which secret is exposed?) ·
+`AUTHORITY` (what does it reach?) · `FAILURE` (what if the tool lies?) ·
+`APPROVAL` (which action needs a human?) · `TRACEABILITY` (can it be
+reconstructed?) · `CONTAINMENT` (can it be reverted?). Failing `IDENTITY`,
+`AUTHORITY` or `CONTAINMENT` is NO-GO — the three are about what the agent
+REACHES, not about what it declares it intends to do.
 
-`placar` não substitui a `vistoria` do `forja` — ele a USA (Porta 3 é, em
-parte, `V3`/`V7` relidos). Ver `placar/LACUNAS.md` para o que cada porta NÃO
-prova.
+`placar` does not replace `forja`'s `vistoria` — it USES it (Gate 3 is, in
+part, `V3`/`V7` re-read). See `placar/LACUNAS.md` for what each gate does NOT
+prove.
 """
 
 from __future__ import annotations

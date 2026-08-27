@@ -1,9 +1,9 @@
-"""`blind` — acha fronteira que uma varredura ingênua atravessa em silêncio.
+"""`blind` — finds a boundary a naive scan crosses silently.
 
-Duas causas, sempre confundidas como uma: reparse point (junction do Windows,
-symlink de diretório) que a ferramenta não segue estruturalmente, e regra de
-`.gitignore` que esconde a fronteira mesmo quando a ferramenta segue. Ver
-`blind/limites.py` para a distinção medida.
+Two causes, always confused as one: a reparse point (a Windows junction, a
+directory symlink) the tool does not follow structurally, and a `.gitignore`
+rule that hides the boundary even when the tool does follow it. See
+`blind/limites.py` for the measured distinction.
 """
 
 from __future__ import annotations

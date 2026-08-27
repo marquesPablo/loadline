@@ -1,35 +1,31 @@
-"""Onde uma varredura ingênua para sem avisar, e por qual dos dois motivos.
+"""Where a naive scan stops without warning, and for which of the two reasons.
 
-nature: fix — fronteira que não dá para classificar vira item "não
-verificado" no relatório, nunca uma exceção que derruba a rodada inteira.
+nature: fix — a boundary that cannot be classified becomes a "not verified"
+item in the report, never an exception that takes down the whole run.
 
-## As duas causas, medidas, nunca a mesma
+## The two causes, measured, never the same
 
-**Causa 1 — estrutural.** Um reparse point (junction do Windows, symlink de
-diretório em qualquer sistema) não é descido por uma varredura que não pede
-isso explicitamente. É o defeito fundador: `rg --files` sem `-L` para na
-fronteira, `os.walk(seguir_links=False)` também para — mas junction do
-Windows **não é** symlink (`os.path.islink` devolve `False` nas duas; quem
-acerta é `os.path.isjunction`, só a partir do Python 3.12, ou o reparse tag
-`0xA0000003` lido direto em versões anteriores).
+**Cause 1 — structural.** A reparse point (a Windows junction, a directory
+symlink on any system) is not descended into by a scan that does not ask for
+it explicitly. It is the founding defect: `rg --files` without `-L` stops at
+the boundary, `os.walk(followlinks=False)` stops too — but a Windows junction
+**is not** a symlink (`os.path.islink` returns `False` for both; what gets it
+right is `os.path.isjunction`, only from Python 3.12 on, or the reparse tag
+`0xA0000003` read directly on earlier versions).
 
-**Causa 2 — política, não estrutura.** Dentro de um repositório git de
-verdade, um `.gitignore` que lista a pasta esconde o conteúdo dela de
-qualquer ferramenta que respeite ignore files — **mesmo com a flag que
-atravessa reparse point ligada**. As duas causas parecem a mesma coisa de
-fora ("a ferramenta não viu") e pedem conserto diferente: a primeira pede
-apontar para a raiz real; a segunda pede `--no-ignore` ou editar o
-`.gitignore`, e apontar para a raiz real NÃO resolve sozinho se o próprio
-`.gitignore` da raiz nova também a esconde.
+**Cause 2 — policy, not structure.** Inside a real git repository, a
+`.gitignore` that lists the folder hides its contents from any tool that
+respects ignore files — **even with the flag that crosses reparse points on**.
+The two causes look the same from outside ("the tool did not see it") and need
+a different fix: the first needs you to point at the real root; the second
+needs `--no-ignore` or editing the `.gitignore`, and pointing at the real root
+does NOT fix it by itself if the new root's own `.gitignore` also hides it.
 
-Medido nesta sessão, com fixture sintético e `.git` real:
+Measured this session, with a synthetic fixture and a real `.git`:
 
-    rg --files -L <pasta-sem-.git>                    → atravessa o link
-    rg --files -L <pasta-com-.git-e-.gitignore>        → NÃO atravessa
-    rg --files -L --no-ignore <a mesma, com .gitignore> → atravessa de novo
-
-É a mesma distinção que o `Y12` desta casa mede desde 2026-08-08, generalizada
-para qualquer repositório — não só o cérebro que a documenta.
+    rg --files -L <folder-with-no-.git>                     → crosses the link
+    rg --files -L <folder-with-.git-and-.gitignore>         → does NOT cross
+    rg --files -L --no-ignore <the same, with .gitignore>   → crosses again
 """
 
 from __future__ import annotations
@@ -40,44 +36,45 @@ import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
 
-#: Arquivos cuja ausência do relatório de alguém é o pior caso possível: são
-#: os que carregam a instrução ou o gate. Nome exato, não padrão — um agente
-#: chamado "AGENTS.MD.bak" não é este arquivo, e fingir que é seria o mesmo
-#: excesso que o `V6` da `vitrine` já decidiu não cometer.
+#: Files whose absence from someone's report is the worst possible case: they
+#: are the ones that carry the instruction or the gate. An exact name, not a
+#: pattern — an agent called "AGENTS.MD.bak" is not this file, and pretending
+#: it is would be the same excess `vitrine`'s `V6` already decided not to commit.
 ARQUIVOS_DE_DECLARACAO = frozenset({
     "CLAUDE.md", "AGENTS.md", "SKILL.md", "agent.toml", "settings.json",
 })
 
-#: Pasta cujo conteúdo inteiro é declaração, mesmo que o nome do arquivo
-#: dentro dela não bata com a lista acima — `.claude/agents/*.md`,
+#: A folder whose entire content is a declaration, even if the filename inside
+#: it does not match the list above — `.claude/agents/*.md`,
 #: `.claude/hooks/*.py`, `.claude/skills/**/SKILL.md`.
 PASTA_DE_DECLARACAO = ".claude"
 
-_JUNCTION_TAG = 0xA0000003  # IO_REPARSE_TAG_MOUNT_POINT — o mesmo valor que o Y6 desta casa lê.
+_JUNCTION_TAG = 0xA0000003  # IO_REPARSE_TAG_MOUNT_POINT
 
 
 @dataclass
 class Fronteira:
-    """Um ponto onde varredura ingênua e varredura completa divergem."""
+    """A point where a naive scan and a complete scan diverge."""
 
     tipo: str                                  #: "junction" · "symlink" · "gitignore"
-    caminho: str                                #: relativo à raiz avaliada
-    alvo: str | None = None                     #: para junction/symlink: o destino
-    regra: str | None = None                    #: para gitignore: o padrão que casou
-    arquivos_atras: list[str] = field(default_factory=list)  #: declaração escondida, se houver
+    caminho: str                                #: relative to the evaluated root
+    alvo: str | None = None                     #: for junction/symlink: the destination
+    regra: str | None = None                    #: for gitignore: the pattern that matched
+    arquivos_atras: list[str] = field(default_factory=list)  #: a hidden declaration, if any
 
     @property
     def grave(self) -> bool:
-        """Fronteira vira achado GRAVE quando esconde declaração de verdade.
+        """A boundary becomes a SERIOUS finding when it hides a real declaration.
 
-        Uma junction sem nada sensível atrás é fato do disco, não defeito —
-        por isso ela aparece no relatório como aviso, nunca como reprovação.
+        A junction with nothing sensitive behind it is a fact of the disk, not
+        a defect — that is why it shows up in the report as a warning, never as
+        a failure.
         """
         return bool(self.arquivos_atras)
 
 
 def _tipo_do_link(caminho: Path) -> str | None:
-    """"junction" · "symlink" · `None`. Nunca lança — chamado em toda pasta da árvore."""
+    """"junction" · "symlink" · `None`. Never raises — called on every folder in the tree."""
     try:
         if os.path.islink(caminho):
             return "symlink"
@@ -96,13 +93,13 @@ def _e_declaracao(caminho: Path) -> bool:
 
 
 def _arquivos_de_declaracao_sob(pasta: Path) -> list[str]:
-    """Varredura EXPLÍCITA da fronteira para dentro — só chamada depois de a
-    fronteira já ter sido identificada. Não é a varredura ingênua; é a
-    ferramenta provando o que a ingênua deixaria de ver.
+    """An EXPLICIT scan of the boundary inwards — only called after the boundary
+    has already been identified. It is not the naive scan; it is the tool
+    proving what the naive one would fail to see.
 
-    Devolve caminho relativo À PRÓPRIA FRONTEIRA, não à raiz avaliada — o
-    relatório já nomeia a fronteira uma vez; repetir o prefixo em cada linha
-    só teria feito o achado mais difícil de ler.
+    Returns a path relative TO THE BOUNDARY ITSELF, not to the evaluated root —
+    the report already names the boundary once; repeating the prefix on every
+    line would only have made the finding harder to read.
     """
     achados: list[str] = []
     try:
@@ -128,7 +125,7 @@ def _reparse_points(raiz: Path) -> list[Fronteira]:
                 continue
             tipo = _tipo_do_link(entrada)
             if tipo is None:
-                pilha.append(entrada)  # pasta comum: desce normalmente
+                pilha.append(entrada)  # an ordinary folder: descend normally
                 continue
             try:
                 alvo = str(entrada.resolve())
@@ -140,20 +137,20 @@ def _reparse_points(raiz: Path) -> list[Fronteira]:
                 alvo=alvo,
                 arquivos_atras=_arquivos_de_declaracao_sob(entrada),
             ))
-            # NÃO desce por dentro da fronteira pela pilha principal — ela já
-            # foi varrida à parte por `_arquivos_de_declaracao_sob`. Descer
-            # aqui também contaria a mesma fronteira em profundidades diferentes.
+            # Do NOT descend into the boundary via the main stack — it was
+            # already scanned separately by `_arquivos_de_declaracao_sob`.
+            # Descending here too would count the same boundary at different depths.
     return fronteiras
 
 
 def _raiz_do_git(caminho: Path) -> Path | None:
-    """A pasta com `.git`, subindo a árvore — `None` se não houver nenhuma.
+    """The folder with `.git`, walking up the tree — `None` if there is none.
 
-    `.gitignore` só é lido por ferramentas cientes de git QUANDO existe um
-    repositório de verdade por perto (medido nesta sessão: o mesmo
-    `.gitignore`, fora de um `.git`, não tem efeito nenhum sobre o `rg`).
-    Sem isto o achado de "gitignore esconde declaração" dispararia até em
-    pasta que ferramenta nenhuma trataria como ignorada.
+    A `.gitignore` is only read by git-aware tools WHEN there is a real
+    repository nearby (measured this session: the same `.gitignore`, outside a
+    `.git`, has no effect at all on `rg`). Without this, the "gitignore hides a
+    declaration" finding would fire even in a folder no tool would treat as
+    ignored.
     """
     atual = caminho.resolve()
     for candidata in (atual, *atual.parents):
@@ -163,8 +160,8 @@ def _raiz_do_git(caminho: Path) -> Path | None:
 
 
 def _ler_gitignore(caminho: Path) -> list[str]:
-    """Padrões crus de um `.gitignore`. Não é o parser completo do git — não
-    cobre negação (`!padrao`) nem `**` — e isso está na `LACUNAS.md`."""
+    """Raw patterns from a `.gitignore`. It is not git's full parser — it does
+    not cover negation (`!pattern`) or `**` — and that is in `LACUNAS.md`."""
     try:
         linhas = caminho.read_text(encoding="utf-8", errors="replace").splitlines()
     except OSError:
@@ -173,9 +170,9 @@ def _ler_gitignore(caminho: Path) -> list[str]:
 
 
 def _padrao_bate(padrao: str, relativo_da_regra: str) -> bool:
-    """Subconjunto de gitignore: nome simples, `/` inicial (ancorado à pasta
-    do próprio `.gitignore`), `/` final (só diretório), curinga via `fnmatch`.
-    Documentado como piso em `LACUNAS.md` — não é negação, não é `**`."""
+    """A gitignore subset: a plain name, a leading `/` (anchored to the folder
+    of the `.gitignore` itself), a trailing `/` (directory only), a wildcard via
+    `fnmatch`. Documented as a floor in `LACUNAS.md` — not negation, not `**`."""
     alvo = padrao.rstrip("/")
     ancorado = alvo.startswith("/")
     alvo = alvo.lstrip("/")
@@ -197,10 +194,10 @@ def _fronteiras_de_gitignore(raiz: Path) -> list[Fronteira]:
         if not padroes:
             continue
 
-        # Só a fronteira MAIS RASA que bate — um padrão como "vinculo" casa
-        # com "vinculo" e com todo descendente dele (`fnmatch` roda por
-        # componente de caminho). Sem este corte, cada nível abaixo da mesma
-        # junction virava um achado repetido citando o mesmo arquivo.
+        # Only the SHALLOWEST boundary that matches — a pattern like "vinculo"
+        # matches "vinculo" and every descendant of it (`fnmatch` runs per path
+        # component). Without this cut, each level below the same junction
+        # became a repeated finding citing the same file.
         aceitas: list[Path] = []
         for caminho in sorted(pasta_da_regra.rglob("*"), key=lambda p: len(p.parts)):
             if not caminho.is_dir():
@@ -227,8 +224,8 @@ def _fronteiras_de_gitignore(raiz: Path) -> list[Fronteira]:
 
 
 def detectar(raiz: str | Path) -> list[Fronteira]:
-    """Toda fronteira sob `raiz` — reparse point e regra de `.gitignore` que
-    esconde declaração. Não executa nada, não chama modelo, só lê o disco."""
+    """Every boundary under `raiz` — a reparse point and a `.gitignore` rule
+    that hides a declaration. Runs nothing, calls no model, only reads the disk."""
     caminho = Path(raiz).expanduser()
     achadas = _reparse_points(caminho) + _fronteiras_de_gitignore(caminho)
     return sorted(achadas, key=lambda f: (f.tipo, f.caminho))

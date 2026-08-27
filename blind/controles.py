@@ -1,14 +1,15 @@
-"""Controles negativos do `blind` — cada um é visto REPROVANDO e CALANDO.
+"""`blind` negative controls — each one is seen FAILING and GOING QUIET.
 
     python -m blind.controles
 
-Um detector que nunca foi visto acusar não vale nada: ele pode estar quieto
-porque o mundo está limpo, ou porque ele não olha. Cada controle abaixo monta
-uma fronteira DE VERDADE (junction real via `mklink /J`, `.gitignore` real
-dentro de um `git init` real), exige o achado, desfaz o defeito, e exige o
-silêncio — ou o rebaixamento de ⛔ para ⚠️, quando é isso que deveria mudar.
+A detector that has never been seen accusing is worth nothing: it may be quiet
+because the world is clean, or because it does not look. Each control below
+builds a REAL boundary (a real junction via `mklink /J`, a real `.gitignore`
+inside a real `git init`), requires the finding, undoes the defect, and
+requires the silence — or the downgrade from ⛔ to ⚠️, when that is what should
+change.
 
-Reprova com exit 1. Sem dependência, sem rede, sem modelo.
+Fails with exit 1. No dependency, no network, no model.
 """
 
 from __future__ import annotations
@@ -33,9 +34,9 @@ def _junction(link: Path, alvo: Path) -> bool:
 
 
 def _desfazer_junction(link: Path) -> None:
-    # `os.rmdir` numa junction remove só o REPARSE POINT — nunca o alvo.
-    # Mesma técnica e mesmo motivo do Y-de-junção desta casa: se isto usasse
-    # `shutil.rmtree`, o Windows seguiria o link e apagaria o alvo de fora.
+    # `os.rmdir` on a junction removes only the REPARSE POINT — never the target.
+    # If this used `shutil.rmtree`, Windows would follow the link and delete the
+    # target from outside.
     try:
         os.rmdir(link)
     except OSError:
@@ -48,7 +49,7 @@ def _git_init(pasta: Path) -> None:
 
 
 def _grave(base: Path, caminho_relativo: str) -> bool | None:
-    """`True`/`False` se a fronteira existe, `None` se sumiu de vez."""
+    """`True`/`False` if the boundary exists, `None` if it is gone for good."""
     for f in detectar(base):
         if f.caminho == caminho_relativo:
             return f.grave
@@ -66,14 +67,14 @@ def main() -> int:
         pass
 
     falhas: list[str] = []
-    print("controles negativos do blind")
+    print("blind negative controls")
     print("=" * 74)
 
     with tempfile.TemporaryDirectory() as tmp:
         base = Path(tmp)
 
-        # --- B1: junction real escondendo CLAUDE.md — acusa GRAVE, e some
-        # a gravidade (não a fronteira) quando o arquivo sai de trás dela ---
+        # --- B1: a real junction hiding CLAUDE.md — accuses SERIOUS, and the
+        # severity (not the boundary) goes away when the file leaves it ---
         raiz1 = base / "b1"
         link1 = raiz1 / "vinculo"
         alvo1 = base / "b1-alvo"
@@ -86,34 +87,34 @@ def main() -> int:
             _desfazer_junction(link1)
         else:
             acusou = calou = False
-            falhas.append("B1: não deu para criar junction real (mklink /J falhou) — "
-                           "controle não pôde rodar")
-        marca = "ok  " if (acusou and calou) else "FALHA"
-        print(f"  {marca} B1   junction esconde CLAUDE.md — grave, e deixa de ser quando some")
+            falhas.append("B1: could not create a real junction (mklink /J failed) — "
+                           "control could not run")
+        marca = "ok   " if (acusou and calou) else "FAIL "
+        print(f"  {marca} B1   a junction hides CLAUDE.md — serious, and stops being so when it is gone")
         if criou and not acusou:
-            falhas.append("B1: NÃO acusou junction com CLAUDE.md atrás")
+            falhas.append("B1: did NOT accuse a junction with CLAUDE.md behind it")
         if criou and not calou:
-            falhas.append("B1: continuou grave depois de o CLAUDE.md sair de trás da junction")
+            falhas.append("B1: stayed serious after CLAUDE.md left the junction")
 
-        # --- B2: junction SEM nada sensível não é grave — fato do disco,
-        # não defeito. Sem este controle, todo mount ficaria REPROVA. ---
+        # --- B2: a junction with NOTHING sensitive is not serious — a fact of the
+        # disk, not a defect. Without this control, every mount would be FAIL. ---
         raiz2 = base / "b2"
         link2 = raiz2 / "vinculo"
         alvo2 = base / "b2-alvo"
         criou2 = _junction(link2, alvo2)
         if criou2:
-            (alvo2 / "notas.txt").write_text("nada de declaração aqui", encoding="utf-8")
+            (alvo2 / "notas.txt").write_text("no declaration here", encoding="utf-8")
             grave2 = _grave(raiz2, "vinculo")
             _desfazer_junction(link2)
-            ok2 = grave2 is False  # existe (não é None) e não é grave
+            ok2 = grave2 is False  # exists (not None) and is not serious
         else:
             ok2 = False
-            falhas.append("B2: não deu para criar junction real — controle não pôde rodar")
-        print(f"  {'ok  ' if ok2 else 'FALHA'} B2   junction sem declaração atrás não vira ⛔")
+            falhas.append("B2: could not create a real junction — control could not run")
+        print(f"  {'ok   ' if ok2 else 'FAIL '} B2   a junction with no declaration behind it does not become ⛔")
         if criou2 and not ok2:
-            falhas.append("B2: junction inofensiva foi tratada como grave (falso positivo)")
+            falhas.append("B2: a harmless junction was treated as serious (false positive)")
 
-        # --- B3: .gitignore dentro de repo git real escondendo AGENTS.md ---
+        # --- B3: a .gitignore inside a real git repo hiding AGENTS.md ---
         raiz3 = base / "b3"
         (raiz3 / "escondida").mkdir(parents=True)
         (raiz3 / "escondida" / "AGENTS.md").write_text("x", encoding="utf-8")
@@ -122,45 +123,45 @@ def main() -> int:
         acusou3 = _algum_gitignore(raiz3)
         (raiz3 / ".gitignore").write_text("", encoding="utf-8")
         calou3 = not _algum_gitignore(raiz3)
-        print(f"  {'ok  ' if (acusou3 and calou3) else 'FALHA'} B3   .gitignore esconde "
-              f"AGENTS.md — acusa, e cala sem a regra")
+        print(f"  {'ok   ' if (acusou3 and calou3) else 'FAIL '} B3   .gitignore hides "
+              f"AGENTS.md — accuses, and goes quiet without the rule")
         if not acusou3:
-            falhas.append("B3: NÃO acusou .gitignore escondendo AGENTS.md")
+            falhas.append("B3: did NOT accuse a .gitignore hiding AGENTS.md")
         if not calou3:
-            falhas.append("B3: continuou acusando depois de a regra sumir do .gitignore")
+            falhas.append("B3: kept accusing after the rule was gone from .gitignore")
 
-        # --- B4: a MESMA regra, mas SEM `.git` por perto — não deve acusar.
-        # É a causa 2 medida nesta sessão: `.gitignore` só é lido por
-        # ferramentas cientes de git DENTRO de um repositório de verdade.
-        # Sem este controle, o detector confundiria "existe um arquivo
-        # chamado .gitignore" com "algo de fato respeita esta regra". ---
+        # --- B4: the SAME rule, but with NO `.git` nearby — must not accuse.
+        # It is cause 2 measured this session: a `.gitignore` is only read by
+        # git-aware tools INSIDE a real repository. Without this control, the
+        # detector would confuse "there is a file called .gitignore" with
+        # "something actually respects this rule". ---
         raiz4 = base / "b4"
         (raiz4 / "escondida").mkdir(parents=True)
         (raiz4 / "escondida" / "AGENTS.md").write_text("x", encoding="utf-8")
         (raiz4 / ".gitignore").write_text("escondida/\n", encoding="utf-8")
         silencioso4 = not _algum_gitignore(raiz4)
-        print(f"  {'ok  ' if silencioso4 else 'FALHA'} B4   .gitignore sem `.git` por perto "
-              f"não acusa (a regra não vale fora de repo)")
+        print(f"  {'ok   ' if silencioso4 else 'FAIL '} B4   .gitignore with no `.git` nearby "
+              f"does not accuse (the rule does not apply outside a repo)")
         if not silencioso4:
-            falhas.append("B4: acusou .gitignore mesmo sem `.git` — a causa 2 não se aplica aí")
+            falhas.append("B4: accused a .gitignore even with no `.git` — cause 2 does not apply there")
 
-        # --- B5: pasta sem fronteira nenhuma sai limpa ---
+        # --- B5: a folder with no boundary at all comes out clean ---
         raiz5 = base / "b5"
         (raiz5 / "comum").mkdir(parents=True)
         (raiz5 / "comum" / "README.md").write_text("x", encoding="utf-8")
         limpo5 = detectar(raiz5) == []
-        print(f"  {'ok  ' if limpo5 else 'FALHA'} B5   pasta sem junction/symlink/gitignore "
-              f"sai com zero fronteiras")
+        print(f"  {'ok   ' if limpo5 else 'FAIL '} B5   a folder with no junction/symlink/gitignore "
+              f"comes out with zero boundaries")
         if not limpo5:
-            falhas.append("B5: achou fronteira numa árvore sem reparse point e sem .gitignore")
+            falhas.append("B5: found a boundary in a tree with no reparse point and no .gitignore")
 
     print("-" * 74)
     if falhas:
         for f in falhas:
             print(f"  ⛔ {f}")
-        print(f"\nREPROVA — {len(falhas)} controle(s)                                   (exit 1)")
+        print(f"\nFAIL — {len(falhas)} control(s)                                       (exit 1)")
         return 1
-    print("PASSA — toda regra foi vista acusando E calando            (exit 0)")
+    print("PASS — every rule was seen accusing AND going quiet         (exit 0)")
     return 0
 
 

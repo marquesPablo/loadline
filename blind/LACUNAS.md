@@ -1,75 +1,72 @@
-# O que o `blind` NÃO mede
+# What `blind` does NOT measure
 
-> A mesma terceira lista que o `LACUNAS.md` da raiz e a `vitrine` publicam.
-> Quase toda ferramenta diz o que passou e o que falhou; poucas dizem o que
-> nunca olharam — e é essa lista que decide se o silêncio do `blind` significa
-> alguma coisa.
+> The same third list the root `LACUNAS.md` and `vitrine` publish. Almost every
+> tool says what passed and what failed; few say what they never looked at —
+> and it is that list that decides whether `blind`'s silence means anything.
 
-## 1 · Duas causas nomeadas, e só essas duas
+## 1 · Two named causes, and only those two
 
 <!-- measured: blind.causas=2 nature=count on=2026-08-26 expires=never source=blind/limites.py -->
 
-`blind` sabe procurar reparse point (junction/symlink) e regra de `.gitignore`
-dentro de repositório git real. Ele **não** procura:
+`blind` knows how to look for a reparse point (junction/symlink) and a
+`.gitignore` rule inside a real git repository. It does **not** look for:
 
-- **Submódulo git** (`.gitmodules`) — nomeado na proposta original, não
-  implementado nesta rodada. Um submódulo com `CLAUDE.md` dentro escapa.
-- **`.ignore`/`.rgignore`** — o ripgrep respeita os dois além do `.gitignore`,
-  mesmo fora de repositório git. Não lidos aqui.
-- **`.git/info/exclude`** e gitignore **global** (`core.excludesFile`) — regra
-  de exclusão que não mora num `.gitignore` versionado não é vista.
-- **Fronteira de monorepo** (workspace do pnpm/Bazel/Nx que aponta para fora
-  da árvore) — nomeada na proposta, não medida: não há um formato único para
-  detectar por parser.
-- **Symlink de ARQUIVO**, só de diretório. Um `CLAUDE.md` que é ele mesmo um
-  symlink para outro lugar não é achado.
+- **A git submodule** (`.gitmodules`) — named in the original proposal, not
+  implemented this round. A submodule with a `CLAUDE.md` inside it escapes.
+- **`.ignore`/`.rgignore`** — ripgrep respects both on top of `.gitignore`,
+  even outside a git repository. Not read here.
+- **`.git/info/exclude`** and the **global** gitignore (`core.excludesFile`) —
+  an exclusion rule that does not live in a versioned `.gitignore` is not seen.
+- **A monorepo boundary** (a pnpm/Bazel/Nx workspace pointing outside the tree)
+  — named in the proposal, not measured: there is no single format to detect by
+  parser.
+- **A FILE symlink**, only a directory one. A `CLAUDE.md` that is itself a
+  symlink to somewhere else is not found.
 
-## 2 · O parser de `.gitignore` é um piso, não a especificação
+## 2 · The `.gitignore` parser is a floor, not the spec
 
-Cobre nome simples, `/` inicial (ancorado à pasta do próprio `.gitignore`),
-`/` final (só diretório) e curinga via `fnmatch`. **Não cobre:** negação
-(`!padrao`), `**`, classe de caracteres `[abc]`, nem a precedência entre
-`.gitignore` aninhados (um `.gitignore` mais profundo que reverte a regra do
-pai). Um padrão usando qualquer um destes pode casar errado — falso positivo
-ou falso negativo, sem aviso.
+It covers a plain name, a leading `/` (anchored to the folder of the
+`.gitignore` itself), a trailing `/` (directory only) and a wildcard via
+`fnmatch`. It does **not** cover: negation (`!pattern`), `**`, a character class
+`[abc]`, or the precedence between nested `.gitignore`s (a deeper `.gitignore`
+that reverts the parent's rule). A pattern using any of these may match wrong —
+a false positive or a false negative, with no warning.
 
-## 3 · A lista de "arquivo de declaração" é ESCOLHIDA, não normativa
+## 3 · The "declaration file" list is CHOSEN, not normative
 
-`CLAUDE.md`, `AGENTS.md`, `SKILL.md`, `agent.toml`, `settings.json`, mais
-qualquer coisa sob uma pasta `.claude/`. É a lista de nomes que os harnesses
-de hoje usam — **não** um padrão do formato. Um harness que inventar outro
-nome de arquivo de instrução não é reconhecido aqui.
+`CLAUDE.md`, `AGENTS.md`, `SKILL.md`, `agent.toml`, `settings.json`, plus
+anything under a `.claude/` folder. It is the list of names today's harnesses
+use — **not** a format standard. A harness that invents another
+instruction-file name is not recognized here.
 
 <!-- measured: blind.declaracao=5 nature=count on=2026-08-23 expires=never source=blind/limites.py -->
 
-## 4 · `blind` não prova o que a SUA ferramenta faz
+## 4 · `blind` does not prove what YOUR tool does
 
-Ele inventaria a fronteira e simula as duas causas medidas nesta casa (rg,
-Python `os.walk`/`rglob`). Ele **não roda** o seu `grep`, o seu indexador de
-IDE, ou o crawler do seu CI contra o alvo — não sabe se ELES especificamente
-enxergam a fronteira. Ele responde *"existe aqui uma fronteira que É CONHECIDA
-por confundir ferramenta nenhuma-consciente"*, não *"a sua ferramenta X
-especificamente falhou agora"*.
+It inventories the boundary and simulates the two causes measured here (rg,
+Python `os.walk`/`rglob`). It does **not run** your `grep`, your IDE indexer or
+your CI crawler against the target — it does not know whether THEY specifically
+see the boundary. It answers *"there is a boundary here that IS KNOWN to fool a
+non-aware tool"*, not *"your tool X specifically failed just now"*.
 
-## 5 · Ciclo de symlink não foi testado sob estresse
+## 5 · A symlink cycle was not stress-tested
 
-Um symlink que aponta para um ancestral dele mesmo (ciclo) não é impedido
-explicitamente — a pilha de varredura do `_reparse_points` não desce POR
-DENTRO da fronteira encontrada (ela varre para inventariar, não para
-percorrer de novo pela pilha principal), o que evita o caso comum, mas não
-foi montado um teste dirigido para o ciclo.
+A symlink pointing at an ancestor of itself (a cycle) is not explicitly
+prevented — the `_reparse_points` scan stack does not descend INTO the boundary
+it finds (it scans to inventory, not to walk again via the main stack), which
+avoids the common case, but no directed test was built for the cycle.
 
-## 6 · Construído e testado só no Windows, nesta sessão
+## 6 · Built and tested only on Windows, this session
 
-A detecção de junction usa `os.path.isjunction` (Python ≥ 3.12) com fallback
-para o reparse tag `0xA0000003`, e os cinco controles negativos
-(`blind/controles.py`) rodam `mklink /J`. `os.path.islink` (o ramo de
-symlink, para POSIX) é código escrito e não tem controle negativo dirigido
-nesta rodada — **nomeado, não verificado**.
+Junction detection uses `os.path.isjunction` (Python ≥ 3.12) with a fallback to
+the reparse tag `0xA0000003`, and the five negative controls
+(`blind/controles.py`) run `mklink /J`. `os.path.islink` (the symlink branch,
+for POSIX) is written code and has no directed negative control this round —
+**named, not verified**.
 
-## 7 · Não julga se a fronteira devia existir
+## 7 · It does not judge whether the boundary should exist
 
-Uma junction é frequentemente uma decisão legítima — é assim que este próprio
-cérebro liga vaults. `blind` nunca diz "remova isto"; ele diz "isto existe, e
-aqui está o que uma varredura ingênua não veria atrás dela". A decisão sobre
-se a fronteira é apropriada continua sendo de quem lê o relatório.
+A junction is often a legitimate decision — it is how a knowledge base links
+vaults. `blind` never says "remove this"; it says "this exists, and here is
+what a naive scan would not see behind it". The decision about whether the
+boundary is appropriate stays with whoever reads the report.

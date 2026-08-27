@@ -1,105 +1,105 @@
-# O que o `placar` NÃO mede
+# What `placar` does NOT measure
 
-> A mesma terceira lista que o `LACUNAS.md` da raiz, da `vitrine` e do `blind` publicam. Sete portas
-> que respondem "existe evidência?" não são sete portas que respondem "isto está bem feito?" — e é
-> esta lista que marca a fronteira entre as duas.
+> The same third list the root `LACUNAS.md`, `vitrine` and `blind` publish. Seven gates that answer
+> "is there evidence?" are not seven gates that answer "is this well done?" — and it is this list
+> that marks the border between the two.
 
-## 1 · Toda porta é AUSÊNCIA DE DECLARAÇÃO, nunca julgamento de qualidade
+## 1 · Every gate is the ABSENCE OF A DECLARATION, never a judgment of quality
 
-O mesmo contrato da `vistoria` (`forja/vistoria.py`): uma porta acusa quando não encontra evidência
-legível por máquina — nunca decide se a evidência encontrada é a certa. Um `PreToolUse` que nega por
-um motivo errado passa a `APPROVAL`. Um registro de decisão cheio de datas e vazio de substância passa
-a `TRACEABILITY`. **`placar` prova que a peça existe, não que ela funciona.**
+The same contract as `vistoria` (`forja/vistoria.py`): a gate accuses when it finds no
+machine-readable evidence — it never decides whether the evidence found is the right one. A
+`PreToolUse` that denies for a wrong reason passes `APPROVAL`. A decision record full of dates and
+empty of substance passes `TRACEABILITY`. **`placar` proves the piece exists, not that it works.**
 
-## 2 · `OBJECTIVE` e `FAILURE` são busca de palavra, e a lista é ESCOLHIDA
+## 2 · `OBJECTIVE` and `FAILURE` are word searches, and the list is CHOSEN
 
-`MARCAS_OBJECTIVE` e `MARCAS_FAILURE` (`placar/portas.py`) são vocabulário coletado, não normativo.
-Um agente que declara orçamento com uma palavra fora da lista passa como REPROVA. Achar sinônimo
-exigiria um modelo — e um verificador que depende de modelo não é verificador, é segunda opinião.
+`MARCAS_OBJECTIVE` and `MARCAS_FAILURE` (`placar/portas.py`) are collected vocabulary, not normative.
+An agent that declares a budget with a word outside the list comes out as FAIL. Finding a synonym
+would need a model — and a verifier that depends on a model is not a verifier, it is a second opinion.
 
-## 3 · `IDENTITY` é sete padrões REAIS, não um scanner de entropia
+## 3 · `IDENTITY` is seven REAL patterns, not an entropy scanner
 
-Sete formatos de credencial conhecidos (AWS, GitHub, Slack, Anthropic, OpenAI, Google, chave privada
-PEM). **Não cobre:** segredo genérico sem prefixo reconhecível, credencial de serviço interno, hash
-que parece chave mas não é, nem o inverso — texto de alta entropia que É segredo mas não casa com
-nenhum dos sete formatos. Isto é um piso, não um `gitleaks`/`trufflehog` completo, e a lista de
-exclusão de placeholder (`_PLACEHOLDER`) pode deixar passar um segredo real cujo nome de variável
-contém uma das palavras da lista (`API_KEY_EXAMPLE_PROD = "sk-ant-..."`, por exemplo).
+Seven known credential formats (AWS, GitHub, Slack, Anthropic, OpenAI, Google, a PEM private key).
+It does **not** cover: a generic secret with no recognizable prefix, an internal-service credential,
+a hash that looks like a key but is not, or the inverse — high-entropy text that IS a secret but
+matches none of the seven formats. This is a floor, not a full `gitleaks`/`trufflehog`, and the
+placeholder exclusion list (`_PLACEHOLDER`) may let through a real secret whose variable name
+contains one of the list's words (`API_KEY_EXAMPLE_PROD = "sk-ant-..."`, for example).
 
-## 4 · `IDENTITY` não olha o HISTÓRICO do git
+## 4 · `IDENTITY` does not look at the git HISTORY
 
-Um segredo removido do arquivo de hoje e ainda vivo em `git log -p` não é achado. `placar` lê o
-disco atual, nunca a árvore de commits — a mesma fronteira que o `blind` já declara para si mesmo.
+A secret removed from today's file and still alive in `git log -p` is not found. `placar` reads the
+current disk, never the commit tree — the same boundary `blind` already declares for itself.
 
-## 5 · `AUTHORITY` sem roster é mais fraco que `AUTHORITY` com roster
+## 5 · `AUTHORITY` with no roster is weaker than `AUTHORITY` with a roster
 
-Com `.claude/agents/`, a porta reusa `V3`/`V7` da `vistoria` — por agente, com nome. Sem roster
-(harness de um agente só, ou nenhuma pasta de agentes), ela cai para uma pergunta mais grosseira:
-*existe algum `PreToolUse` cobrindo escrita e algum cobrindo rede/execução, no harness inteiro?* Ela
-não sabe dizer QUAL ferramenta ficou sem cerca — só que existe cobertura ou não.
+With `.claude/agents/`, the gate reuses `V3`/`V7` from `vistoria` — per agent, with a name. With no
+roster (a single-agent harness, or no agents folder), it falls back to a coarser question: *is there
+any `PreToolUse` covering write and any covering network/execution, in the whole harness?* It cannot
+say WHICH tool was left unfenced — only whether there is coverage or not.
 
-## 6 · `APPROVAL` lê o SCRIPT, nunca RODA o hook
+## 6 · `APPROVAL` reads the SCRIPT, never RUNS the hook
 
-A porta procura, no texto do arquivo referenciado por `PreToolUse`, os marcadores que o Claude Code
-de fato usa para negar (`permissionDecision: deny`, `decision: block`, `sys.exit(2)`). Ela não invoca
-o hook com um evento sintético e confere a saída — um script que contém a string `"deny"` dentro de
-um comentário, nunca executado, passaria. E um hook escrito em linguagem sem essas três marcas
-(Node com `process.exit(1)`, por exemplo, que também bloqueia no Claude Code) pode ficar sem crédito:
-`_MARCA_EXIT2` cobre `process.exit(2)`, mas não todo código de saída não-zero que a ferramenta aceita.
+The gate looks, in the text of the file referenced by `PreToolUse`, for the markers Claude Code
+actually uses to deny (`permissionDecision: deny`, `decision: block`, `sys.exit(2)`). It does not
+invoke the hook with a synthetic event and check the output — a script that contains the string
+`"deny"` inside a comment, never executed, would pass. And a hook written in a language without those
+three marks (Node with `process.exit(1)`, for example, which also blocks in Claude Code) may be
+left without credit: `_MARCA_EXIT2` covers `process.exit(2)`, but not every non-zero exit code the
+tool accepts.
 
-## 7 · `TRACEABILITY` não verifica APPEND-ONLY de verdade
+## 7 · `TRACEABILITY` does not really verify APPEND-ONLY
 
-A proposta original pede "registro presente, append-only, datado". `placar` confere presença e data.
-**Não confere append-only** — isso exigiria varrer `git log` por arquivo procurando remoção ou edição
-destrutiva de entrada antiga, e nesta rodada isso não foi construído. Um registro de decisões que é
-editado e reescrito por cima passa igual a um que só cresce.
+The original proposal asks for "a record present, append-only, dated". `placar` checks presence and
+date. It does **not** check append-only — that would need scanning `git log` per file for a removal
+or a destructive edit of an old entry, and that was not built this round. A decision record that is
+edited and rewritten over itself passes the same as one that only grows.
 
-## 8 · `CONTAINMENT` é o mais fraco das sete, e é assim de propósito
+## 8 · `CONTAINMENT` is the weakest of the seven, and it is so on purpose
 
-A busca por `\bR[0-4]\b` perto de uma palavra de reversibilidade é o padrão MENOS específico do
-módulo — ele vai errar para os dois lados. **A régua R0–R4 em si é emprestada** de uma fonte externa
-ao ecossistema majoritário; a maioria dos repositórios do mundo não usa NENHUM vocabulário parecido,
-mesmo tendo mecanismo de reversibilidade de fato (um `git revert` documentado, um feature flag). Isto
-faz `CONTAINMENT` reprovar a maioria absoluta dos repositórios reais hoje — **e essa é a leitura
-correta da proposta**: é a porta mais rara de passar, porque é a menos praticada do ecossistema.
+The search for `\bR[0-4]\b` near a reversibility word is the LEAST specific pattern in the module —
+it will get it wrong both ways. **The R0–R4 rule itself is borrowed** from a source outside the
+majority ecosystem; most repositories in the world use NO similar vocabulary, even while actually
+having a reversibility mechanism (a documented `git revert`, a feature flag). This makes
+`CONTAINMENT` fail the vast majority of real repositories today — **and that is the correct reading
+of the proposal**: it is the rarest gate to pass, because it is the least practiced in the ecosystem.
 
-Medido nesta rodada: o próprio repositório `loadline` **não tem harness de agente na raiz**
-(`python -m placar .` devolve exit 2 — nenhum `CLAUDE.md`/`AGENTS.md`/`.claude/`, porque este
-repositório É a ferramenta, não um agente configurado). Contra `exemplos/roster-de-exemplo/` — o
-mesmo fixture que o `README.md` da `forja` usa — o placar reprova 6 das 7 portas, e `CONTAINMENT` é
-uma delas: nenhum dos quatro agentes de exemplo classifica reversibilidade. `IDENTITY` é a única que
-passa limpa. Isto não está publicado no `README.md` — o `README.md` está deliberadamente curto
-(`ADR-112`), e uma rodada completa de `placar` não cabe nele sem competir com o exemplo da `forja`,
-que é a porta de entrada.
+Measured this round: the `loadline` repository itself **has no agent harness at the root**
+(`python -m placar .` returns exit 2 — no `CLAUDE.md`/`AGENTS.md`/`.claude/`, because this repository
+IS the tool, not a configured agent). Against `exemplos/roster-de-exemplo/` — the same fixture the
+`forja` README uses — placar fails 6 of the 7 gates, and `CONTAINMENT` is one of them: none of the
+four example agents classifies reversibility. `IDENTITY` is the only one that passes clean. This is
+not published in the `README.md` — the `README.md` is deliberately short, and a full `placar` run
+does not fit it without competing with the `forja` example, which is the front door.
 
-## 9 · Nenhuma porta é dinâmica
+## 9 · No gate is dynamic
 
-`placar` lê arquivo parado. Ele não roda o agente, não observa o hook sendo de fato chamado pelo
-harness, e não sabe se o `PreToolUse` está de fato registrado no lugar que o Claude Code lê (um
-`settings.json` mal-formado que o parser do harness rejeita silenciosamente passaria aqui, porque
-`json.loads` consegue ler o que o Claude Code recusaria). Mesma fronteira que `LACUNAS.md` da raiz já
-declara para a `vistoria`, generalizada às sete portas.
+`placar` reads a file at rest. It does not run the agent, does not watch the hook actually being
+called by the harness, and does not know whether the `PreToolUse` is actually registered in the
+place Claude Code reads (a malformed `settings.json` that the harness parser silently rejects would
+pass here, because `json.loads` can read what Claude Code would refuse). The same boundary the root
+`LACUNAS.md` already declares for `vistoria`, generalized to the seven gates.
 
-## 10 · O teto de 4.000 arquivos por varredura é ESCOLHIDO, não medido
+## 10 · The 4,000-files-per-scan ceiling is CHOSEN, not measured
 
-`_arquivos_de_texto` para de ler depois de 4.000 arquivos (2.000 para `TRACEABILITY`) — um monorepo
-gigante pode ter segredo ou registro de decisão fora da janela lida. **O corte em si é declarado no
-relatório** (ver item "Fechadas" abaixo); o que continua em aberto é só o NÚMERO do teto, que foi
-escolhido para não travar, não medido contra um repositório real desse tamanho.
+`_arquivos_de_texto` stops reading after 4,000 files (2,000 for `TRACEABILITY`) — a giant monorepo
+may have a secret or a decision record outside the read window. **The cut itself is declared in the
+report** (see the "Closed" item below); what is still open is only the NUMBER of the ceiling, which
+was chosen not to hang, not measured against a real repository of that size.
 
-## Fechadas
+## Closed
 
-- **`_arquivos_de_texto` cortava em silêncio ao bater o teto** — fechada na mesma rodada em que
-  nasceu, antes do primeiro commit. `IDENTITY`, `TRACEABILITY` (ramo sem pasta de decisão dedicada)
-  e `CONTAINMENT` agora recebem `(arquivos, truncado, puladas)` e imprimem o aviso no `resumo` quando
-  o corte aconteceu. Era exatamente a armadilha que o comentário do próprio código já citava (`rg`
-  sem `-L`) — deixá-la de pé teria sido a ferramenta que prega honestidade sendo desonesta sobre si
-  mesma.
-- **A varredura de arquivo atravessava junction/symlink sem avisar** — fechada na mesma rodada.
-  `os.walk` sem cuidado desce por dentro de reparse point do Windows de qualquer forma (a mesma causa
-  1 que o `blind` desta casa mediu). `_arquivos_de_texto` agora PODA junction e symlink de diretório
-  antes de descer, e o relatório nomeia quantas fronteiras foram puladas, apontando para
-  `python -m blind` como o comando que mostra o que está atrás. Sem isto, rodar `placar` na raiz de
-  um repositório com uma junction para conteúdo externo (este próprio ecossistema de `loadline` vive
-  ao lado de um cérebro montado por junction) leria — e poderia reportar segredo de — uma árvore que
-  o alvo declarado não sabia que alcançava.
+- **`_arquivos_de_texto` cut silently on hitting the ceiling** — closed in the same round it was
+  born, before the first commit. `IDENTITY`, `TRACEABILITY` (the branch with no dedicated decision
+  folder) and `CONTAINMENT` now receive `(files, truncated, skipped)` and print the warning in the
+  `resumo` when the cut happened. It was exactly the trap the code's own comment cited (`rg` without
+  `-L`) — leaving it standing would have been the tool that preaches honesty being dishonest about
+  itself.
+- **The file scan crossed a junction/symlink without warning** — closed in the same round. A
+  careless `os.walk` descends into a Windows reparse point anyway (the same cause 1 `blind` measured).
+  `_arquivos_de_texto` now PRUNES a junction and a directory symlink before descending, and the
+  report names how many boundaries were skipped, pointing at `python -m blind` as the command that
+  shows what is behind them. Without this, running `placar` at the root of a repository with a
+  junction to external content (this `loadline` ecosystem itself lives next to a junction-mounted
+  knowledge base) would read — and could report a secret from — a tree the declared target did not
+  know it reached.
