@@ -1,40 +1,43 @@
-# TODO — uma frase dizendo o que este agente responde e por que isso dói.
+# TODO — one sentence saying what this agent answers and why it hurts.
 #
-# Compile com:  python -m forja comunidade/nome-da-sua-operacao/agente.toml
-# A forja tem oito recusas, e todas falham fechadas — se a sua spec pedir rede
-# sem declarar domínio, ou escrita sem declarar caminho, ela não compila, e a
-# recusa vem com o conserto escrito. Rode antes de abrir o PR.
+# (The TOML keys below are still Portuguese — translating the spec schema is its
+#  own step.)
+#
+# Compile with:  python -m forja comunidade/your-operation-name/agente.toml
+# The forge has eight refusals, and all of them fail closed — if your spec asks
+# for network without declaring a domain, or write without declaring a path, it
+# does not compile, and the refusal comes with the fix written out. Run it
+# before opening the PR.
 
 [agente]
-slug = "TODO-nome-curto-do-agente"
-nome = "TODO — Nome legível"
+slug = "TODO-short-agent-name"
+nome = "TODO — Readable name"
 uma_frase = """
-TODO — o que ele lê e devolve, em uma frase objetiva. Sempre com "arquivo e linha de cada \
-afirmação" no final, se aplicável — é o padrão da casa.\
+TODO — what it reads and returns, in one objective sentence. Always with "the file and line of \
+every claim" at the end, where it applies — it is the house standard.\
 """
 usar_quando = [
-  "TODO — situação concreta em que alguém chamaria este agente",
+  "TODO — a concrete situation in which someone would call this agent",
 ]
 nunca_usar = [
-  "TODO — pelo menos um caso que parece óbvio e NÃO é para este agente; cite o agente certo se houver um na prateleira",
+  "TODO — at least one case that looks obvious and is NOT for this agent; name the right agent if there is one on the shelf",
 ]
 
 [fronteira]
-# Liste só as ferramentas que este agente PRECISA. Ausência de `tools:` nos
-# harnesses de hoje quer dizer TODAS — declarar de menos é mais seguro que
-# esquecer de declarar.
+# List only the tools this agent NEEDS. No `tools:` in today's harnesses means
+# ALL of them — declaring too few is safer than forgetting to declare.
 ferramentas = ["Read", "Grep", "Glob"]
 toca_alvo = false
 
 [prova]
 lacunas = [
-  "TODO — pelo menos duas. O que este agente lê mas não sabe interpretar; o que ele nunca vê porque não virou arquivo; etc.",
+  "TODO — at least two. What this agent reads but cannot interpret; what it never sees because it never became a file; etc.",
 ]
 
 [[prova.golden]]
-pergunta = "TODO — uma pergunta real, com um caso concreto (não genérico: 'um arquivo X faz Y, o que acontece?')"
+pergunta = "TODO — a real question, with a concrete case (not generic: 'a file X does Y, what happens?')"
 esperado = """
-TODO — a resposta que um humano competente daria, citando o mecanismo real (não uma explicação \
-de manual). Termine explicando O PORQUÊ do comportamento, não só o quê.\
+TODO — the answer a competent human would give, citing the real mechanism (not a manual-style \
+explanation). Finish by explaining THE WHY of the behavior, not just the what.\
 """
-derivado_de = "comunidade/nome-da-sua-operacao/sondas.py — TODO: qual sonda ou regra sustenta esta resposta"
+derivado_de = "comunidade/your-operation-name/sondas.py — TODO: which probe or rule holds up this answer"

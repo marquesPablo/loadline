@@ -1,28 +1,29 @@
-"""Gera uma edição datada e recorrente do censo — `censo/edicoes/AAAA-MM-DD.md`.
+"""Generates a dated, recurring census edition — `censo/edicoes/YYYY-MM-DD.md`.
 
-nature: fix — este gerador só lê `ecossistema.json` e os snapshots já
-gravados em `censo/edicoes/*.json`. Não faz rede, não decide nada de segurança;
-erro aqui vira exceção visível, nunca edição pela metade.
+nature: fix — this generator only reads `ecossistema.json` and the snapshots
+already written to `censo/edicoes/*.json`. It does no network, it decides
+nothing about security; an error here becomes a visible exception, never a
+half-written edition.
 
-`censo/gerar.py` responde "o `CENSO.md` publicado ainda corresponde à fonte?" —
-uma pergunta de INTEGRIDADE, sobre um artefato que muda toda vez que alguém
-edita `ecossistema.json`. Este arquivo responde outra pergunta, sobre outro
-eixo: "o que mudou no ecossistema desde a última vez que alguém olhou?" — uma
-série no tempo, não um espelho do presente.
+`censo/gerar.py` answers "does the published `CENSO.md` still match the
+source?" — an INTEGRITY question, about an artifact that changes every time
+someone edits `ecossistema.json`. This file answers a different question, on a
+different axis: "what changed in the ecosystem since the last time someone
+looked?" — a series over time, not a mirror of the present.
 
-Cada edição grava DOIS arquivos, nunca um só:
+Each edition writes TWO files, never just one:
 
-    censo/edicoes/AAAA-MM-DD.json   # o snapshot bruto — o que a PRÓXIMA edição lê para diferir
-    censo/edicoes/AAAA-MM-DD.md     # a leitura publicável — o que um humano lê
+    censo/edicoes/YYYY-MM-DD.json   # the raw snapshot — what the NEXT edition reads to diff
+    censo/edicoes/YYYY-MM-DD.md     # the publishable reading — what a human reads
 
-⚠️ **Por que o `.json` existe, e não só o `.md`.** Diferir duas edições lendo o
-texto do `.md` anterior seria a mesma classe de erro que o `LACUNAS.md` do
-núcleo já nomeia para `arbitrado:` — extrair número de prosa é frágil e muda de
-sentido com qualquer reformulação de frase. O `.json` é a fonte que a PRÓXIMA
-rodada lê; o `.md` é só a vitrine daquela rodada, e nunca é lido de volta.
+⚠️ **Why the `.json` exists, and not just the `.md`.** Diffing two editions by
+reading the previous `.md`'s text would be the same class of error the core's
+`LACUNAS.md` already names for `arbitrado:` — pulling a number out of prose is
+fragile and shifts meaning with any rewording. The `.json` is the source the
+NEXT run reads; the `.md` is just that run's window, and it is never read back.
 
-    python censo/edicao.py             # escreve a edição de hoje
-    python censo/edicao.py --conferir  # não escreve; sai 1 se já existe edição hoje
+    python censo/edicao.py             # writes today's edition
+    python censo/edicao.py --conferir  # does not write; exits 1 if today already has an edition
 """
 
 from __future__ import annotations
@@ -44,9 +45,9 @@ def _carregar_fonte() -> dict:
 
 
 def _snapshot(censo: dict) -> dict:
-    """Reduz o censo de hoje aos números que uma edição compara — nunca a ficha
-    inteira de cada projeto, que já mora em `ecossistema.json` e não precisa de
-    uma segunda cópia envelhecendo em paralelo."""
+    """Reduces today's census to the numbers an edition compares — never the
+    whole entry of each project, which already lives in `ecossistema.json` and
+    does not need a second copy aging in parallel."""
     projetos = censo["projetos"]
     por_estagio: dict[str, int] = {}
     for p in projetos:
@@ -86,22 +87,22 @@ def _diferenca(hoje: dict, ontem: dict) -> list[str]:
     delta_total = hoje["total"] - ontem["total"]
     linhas.append(f"**Total:** {ontem['total']} → {hoje['total']} ({delta_total:+d})")
     if novos:
-        linhas.append(f"**Entraram ({len(novos)}):** " + ", ".join(f"`{n}`" for n in novos))
+        linhas.append(f"**Entered ({len(novos)}):** " + ", ".join(f"`{n}`" for n in novos))
     if saidos:
         linhas.append(
-            f"**Saíram do arquivo ({len(saidos)}):** " + ", ".join(f"`{n}`" for n in saidos)
+            f"**Left the file ({len(saidos)}):** " + ", ".join(f"`{n}`" for n in saidos)
         )
         linhas.append(
-            "  ⚠️ saída do arquivo `ecossistema.json` — nunca leia como \"o projeto morreu\"; "
-            "pode ter sido reclassificado, fundido, ou removido por decisão editorial"
+            "  ⚠️ left the `ecossistema.json` file — never read this as \"the project died\"; "
+            "it may have been reclassified, merged, or removed by an editorial decision"
         )
     if not novos and not saidos and delta_total == 0:
-        linhas.append("Nenhum nome novo, nenhum removido, desde a edição anterior.")
+        linhas.append("No new name, none removed, since the previous edition.")
 
     delta_colisao = len(hoje["nomes_com_colisao"]) - len(ontem["nomes_com_colisao"])
     if delta_colisao:
         linhas.append(
-            f"**Nomes colidindo:** {len(ontem['nomes_com_colisao'])} → "
+            f"**Colliding names:** {len(ontem['nomes_com_colisao'])} → "
             f"{len(hoje['nomes_com_colisao'])} ({delta_colisao:+d})"
         )
 
@@ -112,7 +113,7 @@ def _diferenca(hoje: dict, ontem: dict) -> list[str]:
         if ontem["por_estagio"].get(e, 0) != hoje["por_estagio"].get(e, 0)
     ]
     if mudou_estagio:
-        linhas.append("**Estágios que mudaram de contagem:**")
+        linhas.append("**Stages whose count changed:**")
         for estagio, antes, agora in mudou_estagio:
             linhas.append(f"  - `{estagio}`: {antes} → {agora} ({agora - antes:+d})")
     return linhas
@@ -135,40 +136,39 @@ def gerar(hoje: date | None = None) -> tuple[Path, Path]:
 
     L: list[str] = []
     A = L.append
-    A(f"# Estado do ecossistema de agentes de IA — edição {numero}")
+    A(f"# The state of the AI agent ecosystem — edition {numero}")
     A("")
     A(f"<!-- measured: censo.edicao={numero} nature=count on={hoje.isoformat()} expires=never source=censo/edicoes/ -->")
     A("")
     A(
-        "Gerado por `censo/edicao.py` a partir de `censo/ecossistema.json` — nenhum número aqui "
-        "foi escrito à mão. A leitura completa de cada projeto está em [`CENSO.md`](../CENSO.md)."
+        "Generated by `censo/edicao.py` from `censo/ecossistema.json` — no number here was "
+        "written by hand. The full reading of each project is in [`CENSO.md`](../CENSO.md)."
     )
     A("")
-    A(f"**{atual['total']} projetos catalogados**, {len(atual['nomes_com_colisao'])} nomes " "identificando mais de um projeto independente.")
+    A(f"**{atual['total']} projects catalogued**, {len(atual['nomes_com_colisao'])} names " "identifying more than one independent project.")
     A("")
     if anterior is None:
-        A("## Primeira edição")
+        A("## First edition")
         A("")
         A(
-            "Não há edição anterior para comparar — esta é a linha de base. A próxima edição "
-            "vai poder dizer o que mudou; esta só pode dizer o que existe hoje."
+            "There is no previous edition to compare against — this is the baseline. The next "
+            "edition will be able to say what changed; this one can only say what exists today."
         )
     else:
-        A("## O que mudou desde a edição anterior")
+        A("## What changed since the previous edition")
         A("")
         L.extend(_diferenca(atual, anterior))
     A("")
-    A("## Por estágio, hoje")
+    A("## By stage, today")
     A("")
-    A("| Estágio | Projetos |")
+    A("| Stage | Projects |")
     A("|---|---:|")
     for estagio, contagem in sorted(atual["por_estagio"].items(), key=lambda kv: -kv[1]):
         A(f"| `{estagio}` | {contagem} |")
     A("")
     A(
-        "**Isto não é opinião sobre o ecossistema — é a contagem de hoje de um arquivo que "
-        "qualquer um pode reconferir.** Nenhuma entrada aqui foi clonada ou executada; ver o "
-        "aviso de denominador em `CENSO.md`."
+        "**This is not an opinion about the ecosystem — it is today's count of a file anyone can "
+        "re-check.** No entry here was cloned or run; see the denominator warning in `CENSO.md`."
     )
     caminho_md.write_text("\n".join(L) + "\n", encoding="utf-8")
     return caminho_json, caminho_md
@@ -178,9 +178,9 @@ def conferir() -> int:
     hoje = date.today()
     ja_existe = (PASTA_EDICOES / f"{hoje.isoformat()}.json").exists()
     if ja_existe:
-        print(f"já existe edição de hoje ({hoje.isoformat()}) — rode sem --conferir para regravá-la")
+        print(f"today's edition already exists ({hoje.isoformat()}) — run without --conferir to rewrite it")
         return 1
-    print("nenhuma edição de hoje ainda")
+    print("no edition for today yet")
     return 0
 
 
@@ -188,4 +188,4 @@ if __name__ == "__main__":
     if "--conferir" in sys.argv:
         raise SystemExit(conferir())
     j, m = gerar()
-    print(f"escrevi {j.relative_to(RAIZ)} e {m.relative_to(RAIZ)}")
+    print(f"wrote {j.relative_to(RAIZ)} and {m.relative_to(RAIZ)}")

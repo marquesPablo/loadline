@@ -1,50 +1,50 @@
-# Operação · `nome-da-sua-operacao`
+# Operation · `your-operation-name`
 
-<!-- loadline-ignore-file: este arquivo ENSINA a sintaxe do selo para quem for escrever uma
-     operação nova — o `AAAA-MM-DD` abaixo é placeholder de propósito, não uma data quebrada. -->
+<!-- loadline-ignore-file: this file TEACHES the seal syntax to whoever is going to write a new
+     operation — the `YYYY-MM-DD` below is a placeholder on purpose, not a broken date. -->
 
-> TODO — uma frase que resume a dor, no mesmo tom de "O que está parado agora esperando uma decisão
-> sua?" (`sala-de-decisao`) ou "Você tem mais de um agente e ninguém olha o conjunto" (`forja`). Se
-> a frase não incomoda ninguém, a operação provavelmente não devia existir.
+> TODO — one sentence summarizing the pain, in the same tone as "What is stuck right now waiting on
+> a decision from you?" (`sala-de-decisao`) or "You have more than one agent and nobody looks at the
+> set" (`forja`). If the sentence bothers nobody, the operation probably should not exist.
 
-## A dor
+## The pain
 
-TODO — dois ou três parágrafos. Descreva o problema real, com um exemplo concreto (nome de arquivo,
-formato, situação). Não descreva a solução aqui — só a dor.
+TODO — two or three paragraphs. Describe the real problem, with a concrete example (file name,
+format, situation). Do not describe the solution here — only the pain.
 
-## O que esta operação instala
+## What this operation installs
 
-TODO — a tabela de sondas, no mesmo formato das outras:
+TODO — the probe table, in the same format as the others:
 
-<!-- measured: operacao.NOME.sondas=N nature=count on=AAAA-MM-DD expires=never source=comunidade/nome-da-sua-operacao/sondas.py -->
+<!-- measured: operacao.NOME.sondas=N nature=count on=YYYY-MM-DD expires=never source=comunidade/your-operation-name/sondas.py -->
 
-| Métrica | O que recomputa | Natureza |
+| Metric | What it recomputes | Nature |
 |---|---|---|
-| `NOME.exemplo` | TODO | contagem ou relacao |
+| `NOME.exemplo` | TODO | count or relation |
 
-## O ajuste
+## The adjustment
 
-TODO — o campo (ou campos) que quem clona precisa mudar. A régua da casa: no máximo dois campos.
+TODO — the field (or fields) whoever clones has to change. The house ruler: at most two fields.
 
 ```python
 CAMPO_DE_AJUSTE = "TODO"
 ```
 
-## Como rodar
+## How to run
 
 ```console
-$ cp comunidade/nome-da-sua-operacao/sondas.py /caminho/do/seu/repo/sondas.py
-$ cd /caminho/do/seu/repo
-$ PYTHONPATH=/caminho/para/loadline python -m loadline .
+$ cp comunidade/your-operation-name/sondas.py /path/to/your/repo/sondas.py
+$ cd /path/to/your/repo
+$ PYTHONPATH=/path/to/loadline python -m loadline .
 ```
 
-TODO — cole a saída real de uma execução, não uma saída inventada. Se a saída for inventada, o
-revisor vai pedir a execução de verdade antes de continuar.
+TODO — paste the real output of a run, not an invented one. If the output is invented, the reviewer
+will ask for the real run before continuing.
 
-## O que esta operação NÃO faz
+## What this operation does NOT do
 
-TODO — pelo menos dois itens. Toda operação desta prateleira declara o limite dela por extenso;
-uma operação sem esta seção não passa de revisão. Releia `LACUNAS.md` do repositório antes de
-escrever esta seção — três dos limites de lá (a sonda prova coerência interna, nunca a verdade do
-mundo; nada aqui julga se a métrica era a certa; nada aqui instala/baixa/envia/telefona) valem para
-a sua operação também, e não precisam ser reescritos — só citados.
+TODO — at least two items. Every operation on this shelf declares its limit in full; an operation
+with no such section does not pass review. Re-read the repository's `LACUNAS.md` before writing this
+section — three of the limits there (the probe proves internal coherence, never the truth of the
+world; nothing here judges whether the metric was the right one; nothing here installs/downloads/
+sends/phones) hold for your operation too, and do not need to be rewritten — only cited.

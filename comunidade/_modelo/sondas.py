@@ -1,20 +1,21 @@
-"""Sondas da operação `nome-da-sua-operacao`.
+"""Probes for the `your-operation-name` operation.
 
-nature: fix — sonda que estoura vira `UNPROVEN` no relatório, com o erro
-por extenso. Ela nunca devolve um palpite.
+nature: fix — a probe that blows up becomes `UNPROVEN` in the report, with the
+error written out. It never returns a guess.
 
-COPIE ESTE ARQUIVO para a raiz do seu repositório, como `sondas.py`.
-Para combinar com outra operação, use `operacoes/juntar.py` ou concatene à mão —
-mas primeiro escolha um prefixo de função auxiliar que não colida com as sete
-operações existentes (elas usam `_instr_`, `_repo_`, `_cer_`, `_dec_`, `_su_`,
-`_hand_`, `_vit_`).
+COPY THIS FILE to the root of your repository, as `sondas.py`.
+To combine with another operation, use `operacoes/juntar.py` or concatenate by
+hand — but first pick a helper-function prefix that does not collide with the
+seven existing operations (they use `_instr_`, `_repo_`, `_cer_`, `_dec_`,
+`_su_`, `_hand_`, `_vit_`).
 
-⚠️ TODO — a regra anti-espelho, para a SUA operação. O número ESCRITO mora em
-algum lugar (um índice, um README, um dashboard). O número MEDIDO tem de sair
-de uma fonte DIFERENTE — nunca do mesmo artefato derivado que o número escrito
-já resume. Se as duas leituras saem do mesmo lugar, o par passa verde travando
-o defeito em vez de achá-lo. Descreva aqui, por extenso, qual é a fonte medida
-e por que ela é independente do número escrito.
+⚠️ TODO — the anti-mirror rule, for YOUR operation. The WRITTEN number lives
+somewhere (an index, a README, a dashboard). The MEASURED number has to come
+from a DIFFERENT source — never from the same derived artifact the written
+number already summarizes. If both readings come from the same place, the pair
+passes green locking the defect in instead of finding it. Describe here, in
+full, what the measured source is and why it is independent of the written
+number.
 """
 
 from __future__ import annotations
@@ -25,18 +26,19 @@ from loadline import sonda
 
 RAIZ = Path(__file__).resolve().parent
 
-#: AJUSTE ÚNICO (ou os dois, se sua operação precisar) desta operação.
-#: TODO — documente o que este campo aponta e por quê.
+#: THE ONE ADJUSTMENT (or the two, if your operation needs it) of this operation.
+#: TODO — document what this field points at and why.
 CAMPO_DE_AJUSTE = "TODO"
 
 
-@sonda("NOME.exemplo", origem="TODO: descreva a fonte medida, por extenso e verificável")
+@sonda("NOME.exemplo", origem="TODO: describe the measured source, in full and verifiable")
 def _NOME_exemplo(metrica, selo):
-    """TODO — o que esta sonda mede, em uma frase.
+    """TODO — what this probe measures, in one sentence.
 
-    Estoura (levanta exceção) se a fonte declarada não existir — nunca devolve
-    0 para "não encontrei". "Não olhei" e "olhei e não há" são coisas opostas.
-    `metrica` é o nome completo casado pelo padrão; `selo` traz `selo.source` e
-    o resto do que foi escrito no comentário `measured:`/`arbitrated:`.
+    Blows up (raises an exception) if the declared source does not exist — it
+    never returns 0 for "not found". "I did not look" and "I looked and there is
+    nothing" are opposite things. `metrica` is the full name matched by the
+    pattern; `selo` carries `selo.source` and the rest of what was written in
+    the `measured:`/`arbitrated:` comment.
     """
-    raise NotImplementedError("preencha esta sonda antes de abrir o PR")
+    raise NotImplementedError("fill in this probe before opening the PR")

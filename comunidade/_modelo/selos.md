@@ -1,30 +1,31 @@
-# Os selos desta operação
+# The seals of this operation
 
-TODO — cole no arquivo que a sua métrica julga (o selo tem de morar no arquivo que ele mede, nunca
-num relatório à parte).
+TODO — paste into the file your metric judges (the seal must live in the file it measures, never in
+a separate report).
 
 ```markdown
-TODO — a frase em prosa que a métrica sustenta.
-<!-- measured: NOME.exemplo=N nature=count-ou-relacao on=AAAA-MM-DD expires=90d source=caminho/relativo/ -->
+TODO — the prose sentence the metric holds up.
+<!-- measured: NOME.exemplo=N nature=count-or-relation on=YYYY-MM-DD expires=90d source=relative/path/ -->
 ```
 
-## Sobre `natureza`
+## About `nature`
 
-- **`contagem`** — anda quando alguém escreve. Divergiu, resele e siga.
-- **`relacao`** — só anda se o medidor ou o repositório quebrou. Divergiu, **pare e investigue**.
+- **`count`** — moves when someone writes. It diverged, re-seal and move on.
+- **`relation`** — only moves if the meter or the repository broke. It diverged, **stop and
+  investigate**.
 
-Se sua métrica é ambígua entre as duas, releia `LACUNAS.md` do repositório — a distinção existe
-precisamente para que ninguém precise adivinhar o que um vermelho significa.
+If your metric is ambiguous between the two, re-read the repository's `LACUNAS.md` — the distinction
+exists precisely so nobody has to guess what a red means.
 
-## Sobre `vence`
+## About `expires`
 
-TODO — escolha o prazo e diga por quê, no mesmo espírito de
-`operacoes/sala-de-decisao/selos.md` (`vence=7d` porque o valor ali envelhece em dias, não meses).
-Um selo sem `vence` nomeado é um número sem prazo de validade.
+TODO — pick the deadline and say why, in the same spirit as
+`operacoes/sala-de-decisao/selos.md` (`expires=7d` because the value there ages in days, not
+months). A seal with no named `expires` is a number with no expiry date.
 
-## O que NÃO selar aqui
+## What NOT to seal here
 
-TODO — pelo menos uma frase que pareceria natural selar e que a sua sonda NÃO pode sustentar (ex.:
-qualidade, intenção, comportamento em produção — coisas que a sonda não lê). Toda operação desta
-prateleira nomeia isso; é o que impede um selo verde de virar a ferramenta atestando o próprio
-ponto cego.
+TODO — at least one sentence that would seem natural to seal and that your probe CANNOT hold up
+(e.g. quality, intent, behavior in production — things the probe does not read). Every operation on
+this shelf names this; it is what keeps a green seal from becoming the tool attesting its own blind
+spot.

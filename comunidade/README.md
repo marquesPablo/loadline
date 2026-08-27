@@ -1,65 +1,66 @@
-# Contribuindo com uma operação
+# Contributing an operation
 
-> **Este repositório ainda é privado.** Esta pasta documenta o mecanismo de contribuição para
-> quando ele for público — hoje ela não recebe PR de ninguém de fora, porque não há de onde vir.
-> Ela existe agora, e não só no dia da publicação, para que a régua já esteja escrita quando a
-> primeira pessoa de fora perguntar "posso mandar a minha?".
+> **This repository is still private.** This folder documents the contribution mechanism for when it
+> goes public — today it takes no PR from anyone outside, because there is nowhere for one to come
+> from. It exists now, and not only on publication day, so the ruler is already written when the
+> first outside person asks "can I send mine?".
 
-## O que entra aqui, e o que não entra
+## What goes here, and what does not
 
-**Não é** um lugar para conectores de API, integrações ou exemplos de uso. **É** um lugar para
-**sondas de domínio** — a mesma anatomia fixa de `operacoes/`, aplicada a uma dor que você tem e a
-prateleira de hoje não cobre.
+**It is not** a place for API connectors, integrations or usage examples. **It is** a place for
+**domain probes** — the same fixed anatomy as `operacoes/`, applied to a pain you have that today's
+shelf does not cover.
 
-A régua de admissão é a mesma do produto inteiro (`ADR-109` do hub que mantém este repositório):
-**o que a pessoa GANHA ao rodar isto?** Uma sonda que só confirma o que você já desconfiava
-("meu README está velho") é higiene. Uma sonda que entrega uma capacidade nova é o que esta
-prateleira busca. As duas são bem-vindas — a régua está em `operacoes/README.md`, seção
-"Escrevendo a sua".
+The admission ruler is the same as the whole product's: **what does the person GAIN by running
+this?** A probe that only confirms what you already suspected ("my README is stale") is hygiene. A
+probe that delivers a new capability is what this shelf is after. Both are welcome — the ruler is in
+`operacoes/README.md`, section "Writing your own".
 
-## Por que isso não é "PR aceito automaticamente se passar o CI verde"
+## Why this is not "PR merged automatically if CI is green"
 
-`operacoes/README.md` já diz: **"a prateleira cresce por decisão, não por acúmulo."** A prateleira
-nasceu com dez candidatas e o board cortou para sete, porque as que saíram ou eram puro alarme ou
-já eram feitas por outra peça. Aceitar contribuição por volume repetiria exatamente esse erro, só
-que sem um board para cortar depois.
+`operacoes/README.md` already says: **"the shelf grows by decision, not by accumulation."** The
+shelf was born with ten candidates and the board cut it to seven, because the ones that left were
+either pure alarm or were already done by another piece. Accepting contributions by volume would
+repeat exactly that mistake, only with no board to cut afterward.
 
-**Por isso todo PR nesta pasta é revisado por decisão humana antes do merge — nunca por CI
-sozinho.** O CI (item 5 do checklist abaixo) é o piso, não o teto: ele reprova o que está
-mecanicamente errado; ele não decide se a operação merece existir.
+**That is why every PR in this folder is reviewed by human decision before the merge — never by CI
+alone.** CI (item 5 of the checklist below) is the floor, not the ceiling: it fails what is
+mechanically wrong; it does not decide whether the operation deserves to exist.
 
-## O checklist de uma contribuição
+## A contribution's checklist
 
-Copie `_modelo/` para uma pasta nova com o nome da sua operação (`comunidade/nome-da-sua-operacao/`)
-e preencha os cinco arquivos. Antes de abrir o PR, confira os cinco pontos que todo revisor vai
-conferir primeiro — estão nomeados em `operacoes/README.md` §"Escrevendo a sua":
+Copy `_modelo/` to a new folder named after your operation (`comunidade/your-operation-name/`) and
+fill in the five files. Before opening the PR, check the five points every reviewer will check
+first — they are named in `operacoes/README.md` §"Writing your own":
 
-1. **A sonda não pode ler a fonte que produziu o número escrito.** Se os dois lados saem do mesmo
-   lugar, o par passa verde travando o defeito em vez de achá-lo. Declare `origem=` no seu selo
-   para isso ser conferível de fora — é a mesma regra que toda sonda desta prateleira já segue.
-2. **`natureza` é obrigatória em cada métrica**, e muda o que fazer com o vermelho: `contagem`
-   anda quando alguém escreve (resele e siga); `relacao` só anda se o medidor ou o repositório
-   quebrou (pare e investigue).
-3. **Estourar é melhor que devolver zero.** Se sua sonda não achou a pasta que devia medir, ela
-   levanta erro — nunca devolve `0`. *"Não olhei"* e *"olhei e não há"* são coisas opostas, e
-   confundir as duas é o defeito que este projeto inteiro existe para proibir.
-4. **Nenhum nome de função auxiliar pode colidir com os das outras sete operações.** Prefixe com
-   algo específico da sua (as existentes usam `_instr_`, `_repo_`, `_cer_`, `_dec_`, `_su_`,
-   `_hand_`, `_vit_` — escolha um prefixo livre).
-5. **`agente.toml` precisa compilar na `forja`, sem recusa.** Rode `python -m forja
-   comunidade/<sua-operacao>/agente.toml` antes de abrir o PR — as oito recusas da forja falham
-   fechadas, e vêm com o conserto escrito.
+1. **The probe must not read the source that produced the written number.** If both sides come from
+   the same place, the pair passes green locking the defect in instead of finding it. Declare
+   `origem=` on your seal so that is auditable from outside — it is the same rule every probe on
+   this shelf already follows.
+2. **`nature` is required on every metric**, and it changes what to do with the red: `count` moves
+   when someone writes (re-seal and move on); `relation` only moves if the meter or the repository
+   broke (stop and investigate).
+3. **Blowing up is better than returning zero.** If your probe did not find the folder it was meant
+   to measure, it raises an error — it never returns `0`. *"I did not look"* and *"I looked and
+   there is nothing"* are opposite things, and confusing the two is the defect this whole project
+   exists to forbid.
+4. **No helper function name may collide with those of the other seven operations.** Prefix with
+   something specific to yours (the existing ones use `_instr_`, `_repo_`, `_cer_`, `_dec_`, `_su_`,
+   `_hand_`, `_vit_` — pick a free prefix).
+5. **`agente.toml` must compile in the forge, with no refusal.** Run `python -m forja
+   comunidade/<your-operation>/agente.toml` before opening the PR — the forge's eight refusals fail
+   closed, and come with the fix written out.
 
-## O que acontece depois do PR
+## What happens after the PR
 
-Alguém do board lê a `RECEITA.md` (a dor é real? o exemplo executado é verdadeiro?) e roda a sonda
-contra um repositório de teste. **Aceitar, pedir ajuste, ou recusar com o motivo escrito** — nunca
-silêncio. Uma operação aceita entra em `operacoes/`, nunca fica presa em `comunidade/`: esta pasta
-é a sala de espera, não o destino final.
+Someone on the board reads the `RECEITA.md` (is the pain real? is the run in the example true?) and
+runs the probe against a test repository. **Accept, ask for changes, or refuse with the reason
+written out** — never silence. An accepted operation moves into `operacoes/`, it never stays stuck
+in `comunidade/`: this folder is the waiting room, not the final destination.
 
-## Ligações
+## Links
 
-- [`operacoes/README.md`](../operacoes/README.md) — a anatomia fixa e a régua completa de "o que
-  faz uma boa [operação]"
-- [`LACUNAS.md`](../LACUNAS.md) — o que este projeto inteiro nunca mede, para sua sonda não prometer
-  o que a prateleira já declarou fora de escopo
+- [`operacoes/README.md`](../operacoes/README.md) — the fixed anatomy and the full ruler for "what
+  makes a good [operation]"
+- [`LACUNAS.md`](../LACUNAS.md) — what this whole project never measures, so your probe does not
+  promise what the shelf has already declared out of scope

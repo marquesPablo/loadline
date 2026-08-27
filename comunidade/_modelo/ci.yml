@@ -1,11 +1,11 @@
-# Copie para `.github/workflows/nome-da-sua-operacao.yml`.
+# Copy to `.github/workflows/your-operation-name.yml`.
 #
-# TODO — se sua sonda mede algo que só piora com INAÇÃO (como `sala-de-decisao`
-# mede fila parada), considere `schedule` diário em vez de só `pull_request` —
-# um item que não muda não dispara evento nenhum, e sem cron ele fica invisível
-# até alguém precisar dele.
+# TODO — if your probe measures something that only gets worse with INACTION
+# (the way `sala-de-decisao` measures a stalled queue), consider a daily
+# `schedule` instead of just `pull_request` — an item that does not change
+# fires no event, and with no cron it stays invisible until someone needs it.
 
-name: nome-da-sua-operacao
+name: your-operation-name
 
 on:
   pull_request:
@@ -23,32 +23,32 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: instalar o loadline
+      - name: install loadline
         run: |
           git clone --depth 1 https://github.com/marquesPablo/loadline.git /tmp/loadline
           echo "PYTHONPATH=/tmp/loadline" >> "$GITHUB_ENV"
 
-      - name: conferir
+      - name: check
         run: |
           set +e
           python -m loadline . | tee relatorio.txt
           codigo=${PIPESTATUS[0]}
           set -e
           case "$codigo" in
-            0) echo "íntegro: todo selo bate com a sonda" ;;
+            0) echo "intact: every seal matches the probe" ;;
             1)
-              echo "::error::divergência entre o que está escrito e o que a sonda mediu agora"
-              echo "::notice::relacao divergindo = PARE e investigue. contagem = leia o número, depois resele."
+              echo "::error::divergence between what is written and what the probe measured just now"
+              echo "::notice::relation diverging = STOP and investigate. count = read the number, then re-seal."
               exit 1
               ;;
             2)
-              echo "::error::nenhum selo cobre a métrica desta operação. Leia comunidade/nome-da-sua-operacao/selos.md"
+              echo "::error::no seal covers this operation's metric. Read comunidade/your-operation-name/selos.md"
               exit 1
               ;;
-            *) echo "::error::o loadline não pôde rodar"; exit 1 ;;
+            *) echo "::error::loadline could not run"; exit 1 ;;
           esac
 
-# TODO — releia LACUNAS.md antes de decidir se este job REPROVA (exit 1) ou só
-# AVISA (::warning::, sem exit). Métrica heurística (erra nos dois sentidos)
-# nunca deve reprovar sozinha — treina quem usa a escrever código para agradar
-# a régua, não para corrigir o problema real.
+# TODO — re-read LACUNAS.md before deciding whether this job FAILS (exit 1) or
+# only WARNS (::warning::, no exit). A heuristic metric (wrong both ways) should
+# never fail on its own — it trains whoever uses it to write code to please the
+# ruler, not to fix the real problem.

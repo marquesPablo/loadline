@@ -1,23 +1,26 @@
-"""Gera `censo/CENSO.md` — a superfície de leitura do censo — do `ecossistema.json`.
+"""Generates `censo/CENSO.md` — the census reading surface — from `ecossistema.json`.
 
-nature: fix — este gerador só lê JSON e escreve Markdown. Ele não decide
-nada de segurança; erro aqui vira exceção visível, nunca artefato pela metade.
+nature: fix — this generator only reads JSON and writes Markdown. It decides
+nothing about security; an error here becomes a visible exception, never a
+half-written artifact.
 
-⚠️ **Por que o CENSO.md quase não tem selo, e isso é de propósito.**
+⚠️ **Why CENSO.md has almost no seal, and that is on purpose.**
 
-Ele é ARTEFATO GERADO. Selar cada número dele seria check espelho:
-os dois lados sairiam do mesmo JSON, e o par passaria verde travando o
-defeito em vez de achá-lo. A pergunta certa para um artefato derivado não é *"o
-número está certo?"* — é **"este artefato ainda corresponde à fonte?"**.
+It is a GENERATED ARTIFACT. Sealing every number in it would be a mirror check:
+both sides would come from the same JSON, and the pair would pass green locking
+the defect in instead of finding it. The right question for a derived artifact
+is not *"is the number right?"* — it is **"does this artifact still match the
+source?"**.
 
-Por isso o CENSO.md carrega **um** selo só, `censo.gerado_em_dia`, de
-`natureza=relacao`: ele não anda quando alguém escreve no censo, ele só anda se
-alguém editou o publicado à mão ou mexeu na fonte e não regerou. Divergir ali é
-defeito, e o veredito manda parar — que é a leitura certa para lista publicada
-que saiu de sincronia com o dado.
+That is why CENSO.md carries **one** seal only, `censo.gerado_em_dia`, of
+`nature=relation`: it does not move when someone writes to the census, it only
+moves if someone edited the published one by hand or touched the source and did
+not regenerate. Diverging there is a defect, and the verdict says stop — which
+is the right reading for a published list that has fallen out of sync with the
+data.
 
-    python censo/gerar.py            # escreve censo/CENSO.md
-    python censo/gerar.py --conferir # não escreve; sai 1 se estiver desatualizado
+    python censo/gerar.py            # writes censo/CENSO.md
+    python censo/gerar.py --conferir # does not write; exits 1 if it is stale
 """
 
 from __future__ import annotations
@@ -31,27 +34,27 @@ RAIZ = Path(__file__).resolve().parent.parent
 FONTE = RAIZ / "censo" / "ecossistema.json"
 PUBLICADO = RAIZ / "censo" / "CENSO.md"
 
-# Ordem de leitura, e ela é um argumento: o ciclo de vida de um agente, do que
-# ele entende até quem o ataca. Alfabética esconderia que estágio tem dono e
-# qual não tem.
+# Reading order, and it is an argument: an agent's life cycle, from what it
+# understands to who attacks it. Alphabetical would hide which stage has an
+# owner and which does not.
 ESTAGIOS = [
-    ("entendimento", "Entender o repositório", "o agente lê a base de código antes de agir"),
-    ("capacidade", "Ter capacidade", "de onde vem a habilidade que o agente ainda não tem"),
-    ("memoria", "Ter memória", "o que sobrevive ao contexto apagado entre sessões"),
-    ("ontologia", "Saber o que é o quê", "entidades, relações e de onde veio cada fato"),
-    ("runtime", "Rodar o laço", "quem executa o agente, com sandbox e subagente"),
-    ("controle", "Bloquear em runtime", "o guarda que decide o que o agente não faz"),
-    ("prova", "Provar que passou", "a evidência que o humano lê no lugar do diff"),
-    ("adversarial", "Atacar", "quem tenta quebrar o agente de propósito"),
-    ("aprendizado", "Aprender com a falha", "o que converte falha em conserto"),
-    ("ameaca", "A ameaça medida", "pesquisa, não ferramenta"),
+    ("entendimento", "Understand the repository", "the agent reads the codebase before acting"),
+    ("capacidade", "Have capability", "where the skill the agent does not yet have comes from"),
+    ("memoria", "Have memory", "what survives the context wiped between sessions"),
+    ("ontologia", "Know what is what", "entities, relations and where each fact came from"),
+    ("runtime", "Run the loop", "what runs the agent, with sandbox and subagents"),
+    ("controle", "Block at runtime", "the guard that decides what the agent does not do"),
+    ("prova", "Prove it passed", "the evidence the human reads instead of the diff"),
+    ("adversarial", "Attack", "who tries to break the agent on purpose"),
+    ("aprendizado", "Learn from failure", "what turns failure into a fix"),
+    ("ameaca", "The measured threat", "research, not a tool"),
 ]
 
 ROTULO_LICENCA = {
     "osi": "✅ OSI",
-    "osi_copyleft_forte": "⚠️ OSI, copyleft forte",
-    "nao_osi": "⛔ não é open source",
-    "nao_verificado": "◻️ não verificado",
+    "osi_copyleft_forte": "⚠️ OSI, strong copyleft",
+    "nao_osi": "⛔ not open source",
+    "nao_verificado": "◻️ not verified",
 }
 
 
@@ -74,49 +77,49 @@ def _linha_de_projeto(p: dict) -> str:
 def _ficha(p: dict) -> list[str]:
     linhas = [f"#### {p['nome']}", ""]
     if p.get("repo"):
-        linhas.append(f"- **Repositório:** {p['repo']}")
+        linhas.append(f"- **Repository:** {p['repo']}")
     else:
-        linhas.append("- **Repositório canônico:** ⛔ **não existe** — ver a seção de colisão")
+        linhas.append("- **Canonical repository:** ⛔ **does not exist** — see the collision section")
     if p.get("paper"):
         linhas.append(f"- **Paper:** `{p['paper']}`")
     linhas.append(
-        f"- **Licença:** {p.get('licenca', '—')} — {ROTULO_LICENCA.get(p.get('veredito_licenca', ''), '◻️')}"
+        f"- **License:** {p.get('licenca', '—')} — {ROTULO_LICENCA.get(p.get('veredito_licenca', ''), '◻️')}"
     )
-    linhas.append(f"- **Faz:** {p['faz']}")
-    linhas.append(f"- **Depende de:** {p.get('dependencias', 'não verificado')}")
+    linhas.append(f"- **Does:** {p['faz']}")
+    linhas.append(f"- **Depends on:** {p.get('dependencias', 'not verified')}")
 
     sem = []
     if p.get("sem_llm") is True:
-        sem.append("sem LLM no caminho")
+        sem.append("no LLM in the path")
     if p.get("sem_embedding") is True:
-        sem.append("sem embedding")
+        sem.append("no embedding")
     if p.get("custa_dinheiro") is True:
-        sem.append("⚠️ **custa dinheiro** (chave de API ou serviço pago)")
+        sem.append("⚠️ **costs money** (API key or paid service)")
     if sem:
-        linhas.append(f"- **Peso:** {' · '.join(sem)}")
+        linhas.append(f"- **Weight:** {' · '.join(sem)}")
 
     if p.get("alegacao_do_autor"):
         linhas.append(
-            f"- **Alegação do autor** (não medida por este censo): {p['alegacao_do_autor']}"
+            f"- **Author's claim** (not measured by this census): {p['alegacao_do_autor']}"
         )
     for campo, rotulo in (
-        ("responde", "Responde"),
-        ("nao_responde", "**Não** responde"),
-        ("achado_principal", "Achado principal"),
-        ("ressalva_do_proprio_paper", "Ressalva do próprio paper"),
-        ("consequencia_da_licenca", "Consequência da licença"),
-        ("ressalva_operacional", "Ressalva operacional"),
-        ("nota", "Nota"),
-        ("nota_de_colisao", "Sobre a contagem de colisão"),
-        ("limite_desta_leitura", "Limite desta leitura"),
+        ("responde", "Answers"),
+        ("nao_responde", "Does **not** answer"),
+        ("achado_principal", "Main finding"),
+        ("ressalva_do_proprio_paper", "The paper's own caveat"),
+        ("consequencia_da_licenca", "License consequence"),
+        ("ressalva_operacional", "Operational caveat"),
+        ("nota", "Note"),
+        ("nota_de_colisao", "About the collision count"),
+        ("limite_desta_leitura", "Limit of this reading"),
     ):
         if p.get(campo):
             linhas.append(f"- **{rotulo}:** {p[campo]}")
 
     if p.get("colide_com"):
         outros = " · ".join(f"`{x}`" for x in p["colide_com"])
-        linhas.append(f"- **Colide com:** {outros}")
-    linhas.append(f"- **Lido em:** {p.get('lido_em', '—')}")
+        linhas.append(f"- **Collides with:** {outros}")
+    linhas.append(f"- **Read on:** {p.get('lido_em', '—')}")
     linhas.append("")
     return linhas
 
@@ -125,10 +128,11 @@ def gerar(hoje: date | None = None) -> str:
     censo = carregar()
     projetos = censo["projetos"]
     den = censo["denominador"]
-    # ⚠️ A data do selo é a leitura MAIS NOVA do censo, nunca `date.today()`.
-    # Carimbar hoje faria o arquivo gerado mudar sozinho à meia-noite, e o
-    # `--conferir` acusaria "desatualizado" sem ninguém ter tocado em nada —
-    # um alarme que só sabe disparar por passagem do tempo é ruído, não medida.
+    # ⚠️ The seal date is the NEWEST reading in the census, never `date.today()`.
+    # Stamping today would make the generated file change on its own at midnight,
+    # and `--conferir` would flag "stale" with nobody having touched anything —
+    # an alarm that only knows how to fire by the passage of time is noise, not
+    # a measurement.
     hoje = hoje or max(
         (date.fromisoformat(p["lido_em"]) for p in projetos if p.get("lido_em")),
         default=date.today(),
@@ -146,93 +150,93 @@ def gerar(hoje: date | None = None) -> str:
     L: list[str] = []
     A = L.append
 
-    A("# O Censo do ecossistema de agentes de IA")
+    A("# The AI agent ecosystem census")
     A("")
-    A("> **Este arquivo é gerado.** Não o edite à mão — edite `censo/ecossistema.json` e rode")
-    A("> `python censo/gerar.py`. O verificador reprova se os dois saírem de sincronia.")
+    A("> **This file is generated.** Do not edit it by hand — edit `censo/ecossistema.json` and run")
+    A("> `python censo/gerar.py`. The verifier fails if the two fall out of sync.")
     A("")
     A(f"<!-- measured: censo.gerado_em_dia=1 nature=relation on={hoje.isoformat()} expires=never source=censo/gerar.py -->")
     A("")
-    A("Uma lista `awesome-*` não reprova quando envelhece. Este censo reprova.")
+    A("An `awesome-*` list does not fail when it ages. This census fails.")
     A("")
-    A(f"**{len(projetos)} projetos.** Cada entrada foi lida **na página do repositório**, nunca no")
-    A("post que o citou. O que não foi verificado está escrito como não verificado — nunca")
-    A("preenchido por plausibilidade, e nunca convertido em zero.")
+    A(f"**{len(projetos)} projects.** Every entry was read **on the repository's page**, never in the")
+    A("post that cited it. What was not verified is written as not verified — never filled in by")
+    A("plausibility, and never turned into a zero.")
     A("")
 
-    # --- o achado, primeiro: é o motivo de o censo existir --------------------
-    # ⚠️ O TÍTULO e a contagem abaixo saem de `len(colisoes)`, nunca de um número
-    # escrito à mão — um "cinco nomes" fixo no código sobreviveu à primeira
-    # versão só porque, na época, `colisoes` tinha exatamente cinco entradas.
-    # Acrescentar uma sexta colisão (medido: `Awesome A2A`, `MateClaw`,
-    # `SILENTCHAIN AI`) deixou o título mentindo sobre a própria tabela dele —
-    # a mesma família de defeito que este projeto inteiro existe para proibir.
+    # --- the finding, first: it is the reason the census exists ---------------
+    # ⚠️ The HEADING and the count below come from `len(colisoes)`, never from a
+    # hand-written number — a fixed "five names" in the code survived the first
+    # version only because, at the time, `colisoes` had exactly five entries.
+    # Adding a sixth collision (measured: `Awesome A2A`, `MateClaw`,
+    # `SILENTCHAIN AI`) left the heading lying about its own table — the same
+    # family of defect this whole project exists to forbid.
     A("---")
     A("")
-    A(f"## O achado: {len(colisoes)} nomes não identificam um projeto")
+    A(f"## The finding: {len(colisoes)} names do not identify a project")
     A("")
-    A("Estes nomes identificam um **cacho de projetos independentes** — mesmo nome, mesmo")
-    A("problema, sem se citarem:")
+    A("These names identify a **cluster of independent projects** — same name, same problem,")
+    A("not citing each other:")
     A("")
-    A("| Nome | Projetos independentes | Existe canônico? |")
+    A("| Name | Independent projects | Is there a canonical one? |")
     A("|---|---:|---|")
     for nome, quantos in colisoes:
         canonico = next(p for p in projetos if p["nome"] == nome)
-        tem = "sim" if canonico.get("repo") else "⛔ **não**"
+        tem = "yes" if canonico.get("repo") else "⛔ **no**"
         A(f"| `{nome}` | **{quantos}** | {tem} |")
     A("")
     pior_nome, pior_quantos = colisoes[0] if colisoes else ("—", 0)
     A(
-        f"Quem ouve *\"instala o `{pior_nome}`\"* não tem como saber qual dos {pior_quantos}. "
-        f"**Nenhum lista os outros.** Isso não é \"existem muitos projetos\" — é o mesmo projeto"
+        f"Someone who hears *\"install `{pior_nome}`\"* has no way to know which of the {pior_quantos}. "
+        f"**None of them lists the others.** This is not \"there are many projects\" — it is the same"
     )
-    A(f"feito {pior_quantos} vezes no escuro, no pior caso desta leitura.")
+    A(f"project built {pior_quantos} times in the dark, in the worst case of this reading.")
     A("")
-    A("> **Denominador, e ele importa:** isto é o que **uma busca por nome, num dia** devolveu.")
-    A("> Não é censo do GitHub. **É piso, não teto** — o número real é maior, nunca menor.")
+    A("> **Denominator, and it matters:** this is what **a search by name, on one day** returned.")
+    A("> It is not a census of GitHub. **It is a floor, not a ceiling** — the real number is larger, never smaller.")
     A("")
 
-    # --- por estágio ----------------------------------------------------------
+    # --- by stage -----------------------------------------------------------
     A("---")
     A("")
-    A("## Quem já ocupa cada estágio")
+    A("## Who already occupies each stage")
     A("")
-    A("Ordenado pelo ciclo de vida de um agente, não pelo alfabeto — porque o que interessa")
-    A("é **onde já tem dono grande** e onde não tem.")
+    A("Ordered by an agent's life cycle, not by the alphabet — because what matters is **where")
+    A("there is already a big owner** and where there is not.")
     A("")
-    A("| Estágio | O que é | Quem ocupa |")
+    A("| Stage | What it is | Who occupies it |")
     A("|---|---|---|")
     for chave, titulo, oque in ESTAGIOS:
         nomes = [p["nome"] for p in projetos if p.get("estagio") == chave]
         A(f"| **{titulo}** | {oque} | {' · '.join(nomes) if nomes else '—'} |")
     A("")
 
-    # --- tabela geral ---------------------------------------------------------
+    # --- general table ------------------------------------------------------
     A("---")
     A("")
-    A("## Os projetos, com licença lida na fonte")
+    A("## The projects, with the license read at the source")
     A("")
-    A("A coluna que decide se você pode usar é a **terceira**, não a segunda. Uma licença que")
-    A("não é OSI não vira open source por o projeto se chamar de aberto.")
+    A("The column that decides whether you can use it is the **third**, not the second. A license")
+    A("that is not OSI does not become open source because the project calls itself open.")
     A("")
-    A("| Projeto | Onde | Licença | Veredito | Nomes no cacho |")
+    A("| Project | Where | License | Verdict | Names in the cluster |")
     A("|---|---|---|---|---:|")
     for p in sorted(projetos, key=lambda x: x["nome"].lower()):
         A(_linha_de_projeto(p))
     A("")
-    A("**As três portas de uma licença não-OSI**, porque tratá-las como uma só é o erro comum:")
+    A("**The three doors of a non-OSI license**, because treating them as one is the common mistake:")
     A("")
-    A("| O que fazer | Permitido? |")
+    A("| What to do | Allowed? |")
     A("|---|---|")
-    A("| **Rodar** a ferramenta | ✅ sim — é o que a licença concede |")
-    A("| **Ler a arquitetura como especificação** e reimplementar | ✅ sim — API e modelo não são a expressão protegida |")
-    A("| **Copiar o código para dentro** do seu projeto | ⛔ não — a restrição atravessa para todos os seus usuários |")
+    A("| **Run** the tool | ✅ yes — it is what the license grants |")
+    A("| **Read the architecture as a specification** and reimplement it | ✅ yes — an API and a model are not the protected expression |")
+    A("| **Copy the code into** your project | ⛔ no — the restriction carries across to all of your users |")
     A("")
 
-    # --- fichas ---------------------------------------------------------------
+    # --- entries ----------------------------------------------------------
     A("---")
     A("")
-    A("## Ficha de cada um")
+    A("## Each one's entry")
     A("")
     for chave, titulo, _ in ESTAGIOS:
         do_estagio = [p for p in projetos if p.get("estagio") == chave]
@@ -243,50 +247,50 @@ def gerar(hoje: date | None = None) -> str:
         for p in sorted(do_estagio, key=lambda x: x["nome"].lower()):
             L.extend(_ficha(p))
 
-    # --- denominador ----------------------------------------------------------
+    # --- denominator -----------------------------------------------------
     A("---")
     A("")
-    A("## O denominador desta leitura")
+    A("## The denominator of this reading")
     A("")
-    A("Toda superfície que conta declara **de quantos** contou. Sem isso, um filtro que pula")
-    A("em silêncio produz resposta plausível e vazia.")
+    A("Every surface that counts declares **how many** it counted from. Without that, a filter that")
+    A("skips silently produces a plausible, empty answer.")
     A("")
     A("| | |")
     A("|---|---:|")
-    A(f"| Nomes buscados | {den['nomes_buscados']} |")
-    A(f"| Com repositório canônico identificado e lido | {den['com_repo_canonico']} |")
-    A(f"| **Sem** repositório canônico — e essa ausência **é** o achado | {den['sem_repo_canonico']} |")
-    A(f"| São paper, não repositório | {den['sao_paper_nao_repo']} |")
-    A(f"| **Clonados, instalados ou executados** | **{den['clonados_ou_executados']}** |")
+    A(f"| Names searched | {den['nomes_buscados']} |")
+    A(f"| With a canonical repository identified and read | {den['com_repo_canonico']} |")
+    A(f"| **Without** a canonical repository — and that absence **is** the finding | {den['sem_repo_canonico']} |")
+    A(f"| Are a paper, not a repository | {den['sao_paper_nao_repo']} |")
+    A(f"| **Cloned, installed or run** | **{den['clonados_ou_executados']}** |")
     if den.get("sem_estagio_classificado"):
         A(
-            "| Têm repositório (ou cacho), mas nenhum dos dez estágios cobre o que fazem "
+            "| Have a repository (or cluster), but none of the ten stages covers what they do "
             f"| {den['sem_estagio_classificado']} |"
         )
     A("")
     A(f"⚠️ {den['aviso']}")
     A("")
-    A("**O que este censo NÃO mede, declarado:**")
+    A("**What this census does NOT measure, declared:**")
     A("")
-    A("- **Se o projeto funciona.** Nada aqui foi executado. Desempenho é alegação do autor.")
-    A("- **Se ele ainda existe hoje.** É para isso que serve o `vence=` de cada selo — nenhuma")
-    A("  sonda offline alcança a verdade do mundo lá fora, e confundir as duas coisas seria")
-    A("  dizer que um JSON coerente é um fato verdadeiro.")
-    A("- **Quantos projetos existem de verdade.** A contagem de colisão é piso de uma busca.")
-    A("- **Se a licença mudou depois da data de leitura.** O campo `lido_em` de cada ficha é")
-    A("  a data em que a página foi aberta, não a data de hoje.")
+    A("- **Whether the project works.** Nothing here was run. Performance is the author's claim.")
+    A("- **Whether it still exists today.** That is what each seal's `expires=` is for — no offline")
+    A("  probe reaches the truth of the world out there, and confusing the two would be saying that")
+    A("  a coherent JSON is a true fact.")
+    A("- **How many projects really exist.** The collision count is the floor of one search.")
+    A("- **Whether the license changed after the reading date.** Each entry's `lido_em` field is")
+    A("  the date the page was opened, not today's date.")
     A("")
     A("---")
     A("")
-    A("## Como contribuir com uma entrada")
+    A("## How to contribute an entry")
     A("")
-    A("1. Abra a **página do repositório** — não o post, não a lista, não o print. A memória")
-    A("   desta casa registra o custo de atribuir pela embalagem: um projeto deste censo")
-    A("   estava creditado a quem postou no LinkedIn, não a quem escreveu o código.")
-    A("2. Preencha `censo/ecossistema.json`. **`nao_verificado` é um valor legítimo** e nunca")
-    A("   vira zero.")
-    A("3. Rode `python censo/gerar.py` e `python -m loadline .`. Se algum dos dois reprovar, a")
-    A("   entrada ainda não está pronta.")
+    A("1. Open the **repository's page** — not the post, not the list, not the screenshot. This")
+    A("   house's memory records the cost of attributing by the packaging: one project in this")
+    A("   census was credited to whoever posted on LinkedIn, not to whoever wrote the code.")
+    A("2. Fill in `censo/ecossistema.json`. **`nao_verificado` is a legitimate value** and never")
+    A("   becomes zero.")
+    A("3. Run `python censo/gerar.py` and `python -m loadline .`. If either one fails, the entry")
+    A("   is not ready yet.")
     A("")
     return "\n".join(L) + "\n"
 
@@ -297,9 +301,9 @@ def main(argv: list[str] | None = None) -> int:
     if "--conferir" in argv:
         atual = PUBLICADO.read_text(encoding="utf-8") if PUBLICADO.exists() else ""
         if atual == novo:
-            print(f"{PUBLICADO.name}: em dia com {FONTE.name}")
+            print(f"{PUBLICADO.name}: in sync with {FONTE.name}")
             return 0
-        print(f"{PUBLICADO.name}: DESATUALIZADO — rode `python censo/gerar.py`")
+        print(f"{PUBLICADO.name}: STALE — run `python censo/gerar.py`")
         return 1
     PUBLICADO.write_text(novo, encoding="utf-8")
     print(f"{PUBLICADO}: {len(novo)} chars")

@@ -1,78 +1,78 @@
-# O Censo do ecossistema de agentes de IA
+# The AI agent ecosystem census
 
-> **Este arquivo é gerado.** Não o edite à mão — edite `censo/ecossistema.json` e rode
-> `python censo/gerar.py`. O verificador reprova se os dois saírem de sincronia.
+> **This file is generated.** Do not edit it by hand — edit `censo/ecossistema.json` and run
+> `python censo/gerar.py`. The verifier fails if the two fall out of sync.
 
 <!-- measured: censo.gerado_em_dia=1 nature=relation on=2026-08-26 expires=never source=censo/gerar.py -->
 
-Uma lista `awesome-*` não reprova quando envelhece. Este censo reprova.
+An `awesome-*` list does not fail when it ages. This census fails.
 
-**25 projetos.** Cada entrada foi lida **na página do repositório**, nunca no
-post que o citou. O que não foi verificado está escrito como não verificado — nunca
-preenchido por plausibilidade, e nunca convertido em zero.
+**25 projects.** Every entry was read **on the repository's page**, never in the
+post that cited it. What was not verified is written as not verified — never filled in by
+plausibility, and never turned into a zero.
 
 ---
 
-## O achado: 9 nomes não identificam um projeto
+## The finding: 9 names do not identify a project
 
-Estes nomes identificam um **cacho de projetos independentes** — mesmo nome, mesmo
-problema, sem se citarem:
+These names identify a **cluster of independent projects** — same name, same problem,
+not citing each other:
 
-| Nome | Projetos independentes | Existe canônico? |
+| Name | Independent projects | Is there a canonical one? |
 |---|---:|---|
-| `AgentGuard` | **6** | ⛔ **não** |
-| `Awesome A2A` | **6** | ⛔ **não** |
-| `reverse-skill` | **6** | ⛔ **não** |
-| `PicoAgents` | **4** | sim |
-| `SILENTCHAIN AI` | **3** | sim |
-| `agent-audit` | **3** | sim |
-| `MateClaw` | **2** | sim |
-| `deja-vu` | **2** | sim |
-| `repowise` | **2** | sim |
+| `AgentGuard` | **6** | ⛔ **no** |
+| `Awesome A2A` | **6** | ⛔ **no** |
+| `reverse-skill` | **6** | ⛔ **no** |
+| `PicoAgents` | **4** | yes |
+| `SILENTCHAIN AI` | **3** | yes |
+| `agent-audit` | **3** | yes |
+| `MateClaw` | **2** | yes |
+| `deja-vu` | **2** | yes |
+| `repowise` | **2** | yes |
 
-Quem ouve *"instala o `AgentGuard`"* não tem como saber qual dos 6. **Nenhum lista os outros.** Isso não é "existem muitos projetos" — é o mesmo projeto
-feito 6 vezes no escuro, no pior caso desta leitura.
+Someone who hears *"install `AgentGuard`"* has no way to know which of the 6. **None of them lists the others.** This is not "there are many projects" — it is the same
+project built 6 times in the dark, in the worst case of this reading.
 
-> **Denominador, e ele importa:** isto é o que **uma busca por nome, num dia** devolveu.
-> Não é censo do GitHub. **É piso, não teto** — o número real é maior, nunca menor.
+> **Denominator, and it matters:** this is what **a search by name, on one day** returned.
+> It is not a census of GitHub. **It is a floor, not a ceiling** — the real number is larger, never smaller.
 
 ---
 
-## Quem já ocupa cada estágio
+## Who already occupies each stage
 
-Ordenado pelo ciclo de vida de um agente, não pelo alfabeto — porque o que interessa
-é **onde já tem dono grande** e onde não tem.
+Ordered by an agent's life cycle, not by the alphabet — because what matters is **where
+there is already a big owner** and where there is not.
 
-| Estágio | O que é | Quem ocupa |
+| Stage | What it is | Who occupies it |
 |---|---|---|
-| **Entender o repositório** | o agente lê a base de código antes de agir | repowise · Corbell |
-| **Ter capacidade** | de onde vem a habilidade que o agente ainda não tem | AgentSkillOS · reverse-skill · awesome-agent-skills |
-| **Ter memória** | o que sobrevive ao contexto apagado entre sessões | deja-vu · mem9 |
-| **Saber o que é o quê** | entidades, relações e de onde veio cada fato | Semantica · PANO |
-| **Rodar o laço** | quem executa o agente, com sandbox e subagente | DeerFlow · deepagents · PicoAgents · MateClaw |
-| **Bloquear em runtime** | o guarda que decide o que o agente não faz | AgentGuard · SkillSpector · agent-audit |
-| **Provar que passou** | a evidência que o humano lê no lugar do diff | old-coder · PandaProbe · agent-pd |
-| **Atacar** | quem tenta quebrar o agente de propósito | DeepTeam · SILENTCHAIN AI |
-| **Aprender com a falha** | o que converte falha em conserto | Harness-R1 |
-| **A ameaça medida** | pesquisa, não ferramenta | Mind Viruses |
+| **Understand the repository** | the agent reads the codebase before acting | repowise · Corbell |
+| **Have capability** | where the skill the agent does not yet have comes from | AgentSkillOS · reverse-skill · awesome-agent-skills |
+| **Have memory** | what survives the context wiped between sessions | deja-vu · mem9 |
+| **Know what is what** | entities, relations and where each fact came from | Semantica · PANO |
+| **Run the loop** | what runs the agent, with sandbox and subagents | DeerFlow · deepagents · PicoAgents · MateClaw |
+| **Block at runtime** | the guard that decides what the agent does not do | AgentGuard · SkillSpector · agent-audit |
+| **Prove it passed** | the evidence the human reads instead of the diff | old-coder · PandaProbe · agent-pd |
+| **Attack** | who tries to break the agent on purpose | DeepTeam · SILENTCHAIN AI |
+| **Learn from failure** | what turns failure into a fix | Harness-R1 |
+| **The measured threat** | research, not a tool | Mind Viruses |
 
 ---
 
-## Os projetos, com licença lida na fonte
+## The projects, with the license read at the source
 
-A coluna que decide se você pode usar é a **terceira**, não a segunda. Uma licença que
-não é OSI não vira open source por o projeto se chamar de aberto.
+The column that decides whether you can use it is the **third**, not the second. A license
+that is not OSI does not become open source because the project calls itself open.
 
-| Projeto | Onde | Licença | Veredito | Nomes no cacho |
+| Project | Where | License | Verdict | Names in the cluster |
 |---|---|---|---|---:|
-| **agent-audit** | [scadastrangelove/agent-audit](https://github.com/scadastrangelove/agent-audit) | nao verificado | ◻️ não verificado | **3** |
+| **agent-audit** | [scadastrangelove/agent-audit](https://github.com/scadastrangelove/agent-audit) | not verified | ◻️ not verified | **3** |
 | **agent-pd** | [varmabudharaju/agent-pd](https://github.com/varmabudharaju/agent-pd) | Apache-2.0 | ✅ OSI | 1 |
-| **AgentGuard** | — | varia por projeto | ◻️ não verificado | **6** |
+| **AgentGuard** | — | varies by project | ◻️ not verified | **6** |
 | **AgentSkillOS** | [ynulihao/AgentSkillOS](https://github.com/ynulihao/AgentSkillOS) | MIT | ✅ OSI | 1 |
-| **Awesome A2A** | — | varia por projeto | ◻️ não verificado | **6** |
+| **Awesome A2A** | — | varies by project | ◻️ not verified | **6** |
 | **awesome-agent-skills** | [VoltAgent/awesome-agent-skills](https://github.com/VoltAgent/awesome-agent-skills) | MIT | ✅ OSI | 1 |
-| **Corbell** | [Corbell-AI/Corbell](https://github.com/Corbell-AI/Corbell) | Apache-2.0 | ◻️ não verificado | 1 |
-| **deepagents** | [langchain-ai/deepagents](https://github.com/langchain-ai/deepagents) | MIT | ◻️ não verificado | 1 |
+| **Corbell** | [Corbell-AI/Corbell](https://github.com/Corbell-AI/Corbell) | Apache-2.0 | ◻️ not verified | 1 |
+| **deepagents** | [langchain-ai/deepagents](https://github.com/langchain-ai/deepagents) | MIT | ◻️ not verified | 1 |
 | **DeepSearcher** | [zilliztech/deep-searcher](https://github.com/zilliztech/deep-searcher) | Apache-2.0 | ✅ OSI | 1 |
 | **DeepTeam** | [confident-ai/deepteam](https://github.com/confident-ai/deepteam) | Apache-2.0 | ✅ OSI | 1 |
 | **DeerFlow** | [bytedance/deer-flow](https://github.com/bytedance/deer-flow) | MIT | ✅ OSI | 1 |
@@ -80,313 +80,313 @@ não é OSI não vira open source por o projeto se chamar de aberto.
 | **Harness-R1** | [DeepExperience/Harness-R1](https://github.com/DeepExperience/Harness-R1) | Apache-2.0 | ✅ OSI | 1 |
 | **MateClaw** | [matevip/mateclaw](https://github.com/matevip/mateclaw) | Apache-2.0 | ✅ OSI | **2** |
 | **mem9** | [mem9-ai/mem9](https://github.com/mem9-ai/mem9) | Apache-2.0 | ✅ OSI | 1 |
-| **Mind Viruses** | `arXiv:2608.10218` | paper | ⛔ não é open source | 1 |
+| **Mind Viruses** | `arXiv:2608.10218` | paper | ⛔ not open source | 1 |
 | **old-coder** | [AmazingAng/old-coder](https://github.com/AmazingAng/old-coder) | MIT | ✅ OSI | 1 |
 | **PandaProbe** | [chirpz-ai/pandaprobe](https://github.com/chirpz-ai/pandaprobe) | Apache-2.0 | ✅ OSI | 1 |
-| **PANO** | [ALW1EZ/PANO](https://github.com/ALW1EZ/PANO) | CC BY-NC | ⛔ não é open source | 1 |
-| **PicoAgents** | [victordibia/designing-multiagent-systems](https://github.com/victordibia/designing-multiagent-systems) | nao verificado | ◻️ não verificado | **4** |
-| **repowise** | [repowise-dev/repowise](https://github.com/repowise-dev/repowise) | AGPL-3.0 | ⚠️ OSI, copyleft forte | **2** |
-| **reverse-skill** | — | varia por projeto | ◻️ não verificado | **6** |
+| **PANO** | [ALW1EZ/PANO](https://github.com/ALW1EZ/PANO) | CC BY-NC | ⛔ not open source | 1 |
+| **PicoAgents** | [victordibia/designing-multiagent-systems](https://github.com/victordibia/designing-multiagent-systems) | not verified | ◻️ not verified | **4** |
+| **repowise** | [repowise-dev/repowise](https://github.com/repowise-dev/repowise) | AGPL-3.0 | ⚠️ OSI, strong copyleft | **2** |
+| **reverse-skill** | — | varies by project | ◻️ not verified | **6** |
 | **Semantica** | [semantica-agi/semantica](https://github.com/semantica-agi/semantica) | MIT | ✅ OSI | 1 |
-| **SILENTCHAIN AI** | [silentchainai/SILENTCHAIN](https://github.com/silentchainai/SILENTCHAIN) | proprietaria, source-visible | ⛔ não é open source | **3** |
+| **SILENTCHAIN AI** | [silentchainai/SILENTCHAIN](https://github.com/silentchainai/SILENTCHAIN) | proprietary, source-visible | ⛔ not open source | **3** |
 | **SkillSpector** | [NVIDIA/skillspector](https://github.com/NVIDIA/skillspector) | Apache-2.0 | ✅ OSI | 1 |
 
-**As três portas de uma licença não-OSI**, porque tratá-las como uma só é o erro comum:
+**The three doors of a non-OSI license**, because treating them as one is the common mistake:
 
-| O que fazer | Permitido? |
+| What to do | Allowed? |
 |---|---|
-| **Rodar** a ferramenta | ✅ sim — é o que a licença concede |
-| **Ler a arquitetura como especificação** e reimplementar | ✅ sim — API e modelo não são a expressão protegida |
-| **Copiar o código para dentro** do seu projeto | ⛔ não — a restrição atravessa para todos os seus usuários |
+| **Run** the tool | ✅ yes — it is what the license grants |
+| **Read the architecture as a specification** and reimplement it | ✅ yes — an API and a model are not the protected expression |
+| **Copy the code into** your project | ⛔ no — the restriction carries across to all of your users |
 
 ---
 
-## Ficha de cada um
+## Each one's entry
 
-### Entender o repositório
+### Understand the repository
 
 #### Corbell
 
-- **Repositório:** https://github.com/Corbell-AI/Corbell
-- **Licença:** Apache-2.0 — ◻️ não verificado
-- **Faz:** Grafo de codigo multi-repo -> geracao e revisao de spec. Expoe grafo, embeddings e ferramentas de spec por MCP.
-- **Depende de:** nao verificado
-- **Lido em:** 2026-08-16
+- **Repository:** https://github.com/Corbell-AI/Corbell
+- **License:** Apache-2.0 — ◻️ not verified
+- **Does:** A multi-repo code graph -> spec generation and review. Exposes the graph, embeddings and spec tools over MCP.
+- **Depends on:** not verified
+- **Read on:** 2026-08-16
 
 #### repowise
 
-- **Repositório:** https://github.com/repowise-dev/repowise
-- **Licença:** AGPL-3.0 — ⚠️ OSI, copyleft forte
-- **Faz:** Repo -> grafo consultavel por 10 ferramentas MCP. AST de 19 linguagens + historico git, comunidades de Leiden, PageRank. O PR bot faz zero chamada de LLM e e' deterministico: o mesmo diff da' sempre a mesma revisao.
-- **Depende de:** pip install; offline com Ollama; licenca comercial paga disponivel
-- **Peso:** sem LLM no caminho
-- **Colide com:** `RepoWise/backend`
-- **Lido em:** 2026-08-16
+- **Repository:** https://github.com/repowise-dev/repowise
+- **License:** AGPL-3.0 — ⚠️ OSI, strong copyleft
+- **Does:** Repo -> graph queryable by 10 MCP tools. AST of 19 languages + git history, Leiden communities, PageRank. The PR bot makes zero LLM calls and is deterministic: the same diff always gives the same review.
+- **Depends on:** pip install; offline with Ollama; a paid commercial license is available
+- **Weight:** no LLM in the path
+- **Collides with:** `RepoWise/backend`
+- **Read on:** 2026-08-16
 
-### Ter capacidade
+### Have capability
 
 #### AgentSkillOS
 
-- **Repositório:** https://github.com/ynulihao/AgentSkillOS
+- **Repository:** https://github.com/ynulihao/AgentSkillOS
 - **Paper:** `arXiv:2603.02176`
-- **Licença:** MIT — ✅ OSI
-- **Faz:** Indice de 90.000+ skills (a pagina hoje ja fala em 200.000+) com retrieval hibrido LLM + arvore de capacidade, e composicao em DAG. O repo afirma que embedding puro perde skills que parecem nao-relacionadas no espaco vetorial e sao cruciais.
-- **Depende de:** Claude Code instalado + chave de API; SEM MCP
-- **Peso:** ⚠️ **custa dinheiro** (chave de API ou serviço pago)
-- **Sobre a contagem de colisão:** AgentSkillOS/SkillAnything e' da mesma organizacao, e agentskills/agentskills e' a ESPECIFICACAO mantida pela Anthropic. Nome parecido, projeto diferente — nao e' colisao e nao entra na contagem.
-- **Lido em:** 2026-08-16
+- **License:** MIT — ✅ OSI
+- **Does:** An index of 90,000+ skills (the page now talks about 200,000+) with hybrid retrieval (LLM + capability tree), and composition as a DAG. The repo claims that pure embedding misses skills that look unrelated in vector space and are crucial.
+- **Depends on:** Claude Code installed + an API key; NO MCP
+- **Weight:** ⚠️ **costs money** (API key or paid service)
+- **About the collision count:** AgentSkillOS/SkillAnything is from the same organization, and agentskills/agentskills is the SPECIFICATION maintained by Anthropic. Similar name, different project — it is not a collision and does not enter the count.
+- **Read on:** 2026-08-16
 
 #### awesome-agent-skills
 
-- **Repositório:** https://github.com/VoltAgent/awesome-agent-skills
-- **Licença:** MIT — ✅ OSI
-- **Faz:** Indice curado de 1497+ Agent Skills oficiais (Anthropic, Google Labs, Vercel, Stripe, Cloudflare, Netlify, Trail of Bits, Sentry, Expo, Hugging Face, Figma) mais skills da comunidade, compativel com Claude Code, Codex, Antigravity, Gemini CLI, Cursor, GitHub Copilot, OpenCode, Windsurf.
-- **Depende de:** nenhuma - e' uma lista curada, sem servico proprio
-- **Peso:** sem LLM no caminho · sem embedding
-- **Lido em:** 2026-08-25
+- **Repository:** https://github.com/VoltAgent/awesome-agent-skills
+- **License:** MIT — ✅ OSI
+- **Does:** A curated index of 1497+ official Agent Skills (Anthropic, Google Labs, Vercel, Stripe, Cloudflare, Netlify, Trail of Bits, Sentry, Expo, Hugging Face, Figma) plus community skills, compatible with Claude Code, Codex, Antigravity, Gemini CLI, Cursor, GitHub Copilot, OpenCode, Windsurf.
+- **Depends on:** none - it is a curated list, with no service of its own
+- **Weight:** no LLM in the path · no embedding
+- **Read on:** 2026-08-25
 
 #### reverse-skill
 
-- **Repositório canônico:** ⛔ **não existe** — ver a seção de colisão
-- **Licença:** varia por projeto — ◻️ não verificado
-- **Faz:** Skill de engenharia reversa / pentest para Claude Code. NAO EXISTE REPOSITORIO CANONICO: seis autores distintos publicaram sob nomes quase iguais.
-- **Depende de:** varia por projeto
-- **Peso:** sem embedding
-- **Colide com:** `zhaoxuya520/reverse-skill` · `P4nda0s/reverse-skills` · `meirm/reverse-engineering-skill` · `incogbyte/iOS-reverse-engineering-claude-skill` · `SimoneAvogadro/android-reverse-engineering-skill` · `vgrichina/re-skill`
-- **Lido em:** 2026-08-16
+- **Canonical repository:** ⛔ **does not exist** — see the collision section
+- **License:** varies by project — ◻️ not verified
+- **Does:** A reverse-engineering / pentest skill for Claude Code. THERE IS NO CANONICAL REPOSITORY: six distinct authors published under near-identical names.
+- **Depends on:** varies by project
+- **Weight:** no embedding
+- **Collides with:** `zhaoxuya520/reverse-skill` · `P4nda0s/reverse-skills` · `meirm/reverse-engineering-skill` · `incogbyte/iOS-reverse-engineering-claude-skill` · `SimoneAvogadro/android-reverse-engineering-skill` · `vgrichina/re-skill`
+- **Read on:** 2026-08-16
 
-### Ter memória
+### Have memory
 
 #### deja-vu
 
-- **Repositório:** https://github.com/vshulcz/deja-vu
-- **Licença:** MIT — ✅ OSI
-- **Faz:** Indexa as sessoes que agentes de codigo ja escreveram no disco, de 17 harnesses, e as devolve por MCP, CLI e hooks PreTool.
-- **Depende de:** nenhuma; binario Go unico
-- **Peso:** sem LLM no caminho · sem embedding
-- **Alegação do autor** (não medida por este censo): 84,9% hit@1 no LongMemEval-S; ~1,5 ms mediano sobre 3,5 GB
-- **Colide com:** `acoyfellow/deja`
-- **Lido em:** 2026-08-16
+- **Repository:** https://github.com/vshulcz/deja-vu
+- **License:** MIT — ✅ OSI
+- **Does:** Indexes the sessions that code agents have already written to disk, across 17 harnesses, and serves them back over MCP, CLI and PreTool hooks.
+- **Depends on:** none; a single Go binary
+- **Weight:** no LLM in the path · no embedding
+- **Author's claim** (not measured by this census): 84.9% hit@1 on LongMemEval-S; ~1.5 ms median over 3.5 GB
+- **Collides with:** `acoyfellow/deja`
+- **Read on:** 2026-08-16
 
 #### mem9
 
-- **Repositório:** https://github.com/mem9-ai/mem9
-- **Licença:** Apache-2.0 — ✅ OSI
-- **Faz:** Memoria persistente e compartilhada entre agentes, sessoes e maquinas (OpenClaw, Claude Code, OpenCode, Codex, Dify, Hermes Agent), com hybrid recall (semantica + palavra-chave) e dashboard visual. Ao contrario do deja-vu (mesmo estagio), usa LLM e embedding no caminho: smart-ingest extrai fato com LLM (default gpt-4o-mini) e o recall hibrido depende de embedding.
-- **Depende de:** servidor Go + TiDB (ou PostgreSQL); hosted API disponivel; smart-ingest exige LLM compativel com a API da OpenAI
-- **Peso:** ⚠️ **custa dinheiro** (chave de API ou serviço pago)
-- **Lido em:** 2026-08-25
+- **Repository:** https://github.com/mem9-ai/mem9
+- **License:** Apache-2.0 — ✅ OSI
+- **Does:** Persistent memory shared across agents, sessions and machines (OpenClaw, Claude Code, OpenCode, Codex, Dify, Hermes Agent), with hybrid recall (semantic + keyword) and a visual dashboard. Unlike deja-vu (same stage), it uses an LLM and embedding in the path: smart-ingest extracts a fact with an LLM (default gpt-4o-mini) and hybrid recall depends on embedding.
+- **Depends on:** a Go server + TiDB (or PostgreSQL); a hosted API is available; smart-ingest requires an LLM compatible with the OpenAI API
+- **Weight:** ⚠️ **costs money** (API key or paid service)
+- **Read on:** 2026-08-25
 
-### Saber o que é o quê
+### Know what is what
 
 #### PANO
 
-- **Repositório:** https://github.com/ALW1EZ/PANO
-- **Licença:** CC BY-NC — ⛔ não é open source
-- **Faz:** OSINT como grafo: entities (email, username, website, image, location, event, text) ligadas por transforms (Discovery, Correlation, Analysis, OSINT, Enrichment). Entities e transforms sao explicitamente plugaveis: classe base + arquivo na pasta.
-- **Depende de:** Python 3.11 + PySide6/Qt; Windows e Linux
-- **Peso:** sem embedding
-- **Consequência da licença:** Rodar: permitido. Ler o catalogo entity/transform como especificacao e reimplementar: permitido. Copiar o codigo para dentro de um projeto open source: NAO — a restricao NC atravessa para todos os usuarios abaixo e tira o projeto do open source.
-- **Ressalva operacional:** O transform de e-mail exige login GHunt contra conta Google alvo. Isso TOCA ALVO e exige autorizacao de engajamento, independente de licenca.
-- **Lido em:** 2026-08-16
+- **Repository:** https://github.com/ALW1EZ/PANO
+- **License:** CC BY-NC — ⛔ not open source
+- **Does:** OSINT as a graph: entities (email, username, website, image, location, event, text) linked by transforms (Discovery, Correlation, Analysis, OSINT, Enrichment). Entities and transforms are explicitly pluggable: a base class + a file in the folder.
+- **Depends on:** Python 3.11 + PySide6/Qt; Windows and Linux
+- **Weight:** no embedding
+- **License consequence:** Running it: allowed. Reading the entity/transform catalog as a specification and reimplementing it: allowed. Copying the code into an open source project: NO — the NC restriction carries across to all downstream users and takes the project out of open source.
+- **Operational caveat:** The email transform requires a GHunt login against a target Google account. That TOUCHES A TARGET and requires engagement authorization, regardless of the license.
+- **Read on:** 2026-08-16
 
 #### Semantica
 
-- **Repositório:** https://github.com/semantica-agi/semantica
-- **Licença:** MIT — ✅ OSI
-- **Faz:** Grafo com W3C PROV-O em cada fato, deteccao de conflito antes do merge, snapshot temporal e raciocinio deterministico (SPARQL/Datalog/Rete). Servidor MCP proprio. Anuncia-se como 'The Open Source Palantir for AI Agents'.
-- **Depende de:** triple store (Oxigraph/Jena) ou LPG (Neo4j) E vector store
-- **Peso:** sem LLM no caminho
-- **Responde:** de onde veio o fato, e o que sabiamos naquela data
-- ****Não** responde:** se o que esta escrito continua sendo verdade hoje
-- **Lido em:** 2026-08-16
+- **Repository:** https://github.com/semantica-agi/semantica
+- **License:** MIT — ✅ OSI
+- **Does:** A graph with W3C PROV-O on every fact, conflict detection before the merge, a temporal snapshot and deterministic reasoning (SPARQL/Datalog/Rete). Its own MCP server. Bills itself as 'The Open Source Palantir for AI Agents'.
+- **Depends on:** a triple store (Oxigraph/Jena) or an LPG (Neo4j) AND a vector store
+- **Weight:** no LLM in the path
+- **Answers:** where the fact came from, and what we knew on that date
+- **Does **not** answer:** whether what is written is still true today
+- **Read on:** 2026-08-16
 
-### Rodar o laço
+### Run the loop
 
 #### deepagents
 
-- **Repositório:** https://github.com/langchain-ai/deepagents
-- **Licença:** MIT — ◻️ não verificado
-- **Faz:** Quatro middlewares sobre LangGraph: filesystem virtual com allow/deny, SKILL.md/AGENTS.md sob demanda, tool `task` para subagente efemero, `interrupt_on` para human-in-the-loop.
-- **Depende de:** runtime LangGraph
-- **Peso:** sem embedding
-- **Lido em:** 2026-08-16
+- **Repository:** https://github.com/langchain-ai/deepagents
+- **License:** MIT — ◻️ not verified
+- **Does:** Four middlewares on top of LangGraph: a virtual filesystem with allow/deny, SKILL.md/AGENTS.md on demand, a `task` tool for an ephemeral subagent, `interrupt_on` for human-in-the-loop.
+- **Depends on:** the LangGraph runtime
+- **Weight:** no embedding
+- **Read on:** 2026-08-16
 
 #### DeerFlow
 
-- **Repositório:** https://github.com/bytedance/deer-flow
-- **Licença:** MIT — ✅ OSI
-- **Faz:** SuperAgent harness da ByteDance, 2.0 reescrito do zero. Sandbox local/Docker/k8s/E2B, memoria longa, skills por SKILL.md, subagentes com contexto escopado, gateway de IM.
-- **Depende de:** Python 3.12 + Node 22; 8-16 GB RAM minimo; exige chave de LLM
-- **Peso:** ⚠️ **custa dinheiro** (chave de API ou serviço pago)
-- **Lido em:** 2026-08-16
+- **Repository:** https://github.com/bytedance/deer-flow
+- **License:** MIT — ✅ OSI
+- **Does:** ByteDance's SuperAgent harness, 2.0 rewritten from scratch. Local/Docker/k8s/E2B sandbox, long memory, skills via SKILL.md, subagents with scoped context, an IM gateway.
+- **Depends on:** Python 3.12 + Node 22; 8-16 GB RAM minimum; requires an LLM key
+- **Weight:** ⚠️ **costs money** (API key or paid service)
+- **Read on:** 2026-08-16
 
 #### MateClaw
 
-- **Repositório:** https://github.com/matevip/mateclaw
-- **Licença:** Apache-2.0 — ✅ OSI
-- **Faz:** Harness de orquestracao multi-agente (ReAct + Plan-and-Execute sobre StateGraph) empacotado num JAR Spring Boot so, com skills, memoria, MCP e suporte multi-canal. Multi-vendor failover entre LLM (DashScope, OpenAI, Anthropic, Gemini, DeepSeek, Ollama).
-- **Depende de:** Java 21 + Spring Boot 3.5; PostgreSQL 16 ou MySQL 8 em producao; Ollama permite rodar sem chave paga
-- **Peso:** ⚠️ **custa dinheiro** (chave de API ou serviço pago)
-- **Colide com:** `mateaix/mateclaw`
-- **Lido em:** 2026-08-25
+- **Repository:** https://github.com/matevip/mateclaw
+- **License:** Apache-2.0 — ✅ OSI
+- **Does:** A multi-agent orchestration harness (ReAct + Plan-and-Execute over a StateGraph) packaged as a single Spring Boot JAR, with skills, memory, MCP and multi-channel support. Multi-vendor failover across LLMs (DashScope, OpenAI, Anthropic, Gemini, DeepSeek, Ollama).
+- **Depends on:** Java 21 + Spring Boot 3.5; PostgreSQL 16 or MySQL 8 in production; Ollama lets it run with no paid key
+- **Weight:** ⚠️ **costs money** (API key or paid service)
+- **Collides with:** `mateaix/mateclaw`
+- **Read on:** 2026-08-25
 
 #### PicoAgents
 
-- **Repositório:** https://github.com/victordibia/designing-multiagent-systems
-- **Licença:** nao verificado — ◻️ não verificado
-- **Faz:** Framework multiagente construido do zero para ENSINAR — cada componente, do loop de raciocinio a' orquestracao, escrito para ser lido. 50+ exemplos por capitulo de livro.
-- **Depende de:** nao verificado
-- **Peso:** sem embedding
-- **Colide com:** `borhen68/picoagents` · `dperezcabrera/pico-agent` · `kir-gadjello/picoagent-rnd`
-- **Lido em:** 2026-08-16
+- **Repository:** https://github.com/victordibia/designing-multiagent-systems
+- **License:** not verified — ◻️ not verified
+- **Does:** A multi-agent framework built from scratch to TEACH — every component, from the reasoning loop to the orchestration, written to be read. 50+ examples per book chapter.
+- **Depends on:** not verified
+- **Weight:** no embedding
+- **Collides with:** `borhen68/picoagents` · `dperezcabrera/pico-agent` · `kir-gadjello/picoagent-rnd`
+- **Read on:** 2026-08-16
 
-### Bloquear em runtime
+### Block at runtime
 
 #### agent-audit
 
-- **Repositório:** https://github.com/scadastrangelove/agent-audit
-- **Licença:** nao verificado — ◻️ não verificado
-- **Faz:** Auditor forense estatico e read-only ('no active defense — read-only analysis with consent prompts a cada passo') para agent homes locais (Claude Code, Codex CLI, OpenClaw) e para repositorios com superficie de instrucao (SKILL.md, manifests MCP, plugins). Roda detectores importados (entre eles Cisco PromptGuard, Gitleaks, NOVA, regras YARA da Cisco para MCP) mais logica nativa — 296 regras ao todo, segundo a descricao do proprio repositorio. Produz achados deduplicados, severidade normalizada e patch sugerido; nunca aplica automaticamente. Foco e' seguranca (injecao, exfiltracao, credencial, escalada de privilegio) — nao declara deteccao de sobreposicao/conflito ENTRE dois agentes, que e' o territorio do V6 do loadline. Mesma familia do SkillSpector (mesmo estagio): decide o que e' seguro confiar, nao e' guarda de runtime.
-- **Depende de:** Python; `--verify` opcional chama LLM externo para re-checar achado; `yara-python` opcional para as 10 regras YARA da Cisco
-- **Sobre a contagem de colisão:** Tres projetos independentes publicaram sob o nome EXATO `agent-audit`, sem se citarem — mesmo padrao do AgentGuard/reverse-skill desta lista. `scadastrangelove/agent-audit` e' o mais documentado dos tres (README completo, 296 regras citadas por nome); os outros dois nao foram lidos em profundidade nesta rodada — so' confirmados como existentes.
-- **Colide com:** `piiiico/agent-audit` · `HeadyZhang/agent-audit`
-- **Lido em:** 2026-08-26
+- **Repository:** https://github.com/scadastrangelove/agent-audit
+- **License:** not verified — ◻️ not verified
+- **Does:** A static, read-only forensic auditor ('no active defense — read-only analysis with consent prompts at every step') for local agent homes (Claude Code, Codex CLI, OpenClaw) and for repositories with an instruction surface (SKILL.md, MCP manifests, plugins). Runs imported detectors (among them Cisco PromptGuard, Gitleaks, NOVA, Cisco's YARA rules for MCP) plus native logic — 296 rules in all, according to the repository's own description. It produces deduplicated findings, normalized severity and a suggested patch; it never applies automatically. The focus is security (injection, exfiltration, credentials, privilege escalation) — it does not declare overlap/conflict detection BETWEEN two agents, which is loadline's V6 territory. Same family as SkillSpector (same stage): it decides what is safe to trust, it is not a runtime guard.
+- **Depends on:** Python; the optional `--verify` calls an external LLM to re-check a finding; `yara-python` is optional for Cisco's 10 YARA rules
+- **About the collision count:** Three independent projects published under the EXACT name `agent-audit`, without citing each other — the same pattern as AgentGuard/reverse-skill in this list. `scadastrangelove/agent-audit` is the most documented of the three (full README, 296 rules cited by name); the other two were not read in depth this round — only confirmed to exist.
+- **Collides with:** `piiiico/agent-audit` · `HeadyZhang/agent-audit`
+- **Read on:** 2026-08-26
 
 #### AgentGuard
 
-- **Repositório canônico:** ⛔ **não existe** — ver a seção de colisão
-- **Licença:** varia por projeto — ◻️ não verificado
-- **Faz:** Guardrail de runtime para agente. NAO EXISTE REPOSITORIO CANONICO: o nome identifica seis projetos independentes que resolvem o mesmo problema sem se citarem.
-- **Depende de:** varia por projeto
-- **Colide com:** `GoPlusSecurity/agentguard` · `hidearmoon/agentguard` · `WhitzardAgent/AgentGuard` · `filipw/AgentGuard` · `JeongJaeSoon/agent-guard` · `bmdhodl/agent47`
-- **Lido em:** 2026-08-16
+- **Canonical repository:** ⛔ **does not exist** — see the collision section
+- **License:** varies by project — ◻️ not verified
+- **Does:** A runtime guardrail for an agent. THERE IS NO CANONICAL REPOSITORY: the name identifies six independent projects that solve the same problem without citing each other.
+- **Depends on:** varies by project
+- **Collides with:** `GoPlusSecurity/agentguard` · `hidearmoon/agentguard` · `WhitzardAgent/AgentGuard` · `filipw/AgentGuard` · `JeongJaeSoon/agent-guard` · `bmdhodl/agent47`
+- **Read on:** 2026-08-16
 
 #### SkillSpector
 
-- **Repositório:** https://github.com/NVIDIA/skillspector
-- **Licença:** Apache-2.0 — ✅ OSI
-- **Faz:** Scanner de seguranca para SKILL.md antes de instalar — 70 padroes de vulnerabilidade em 17 categorias (prompt injection, exfiltracao de dado, MCP tool poisoning, escalada de privilegio, entre outras). Nao e' guarda de RUNTIME como o resto desta categoria: decide o que INSTALA, nao o que o agente ja instalado pode fazer.
-- **Depende de:** Python 3.12+; --no-llm roda so a analise estatica; o segundo estagio (avaliacao semantica, OPCIONAL) aceita OpenAI/Anthropic/AWS Bedrock/NVIDIA/agente CLI local
-- **Lido em:** 2026-08-25
+- **Repository:** https://github.com/NVIDIA/skillspector
+- **License:** Apache-2.0 — ✅ OSI
+- **Does:** A security scanner for SKILL.md before you install it — 70 vulnerability patterns in 17 categories (prompt injection, data exfiltration, MCP tool poisoning, privilege escalation, among others). It is not a RUNTIME guard like the rest of this category: it decides what gets INSTALLED, not what the already-installed agent can do.
+- **Depends on:** Python 3.12+; --no-llm runs only the static analysis; the second stage (semantic evaluation, OPTIONAL) accepts OpenAI/Anthropic/AWS Bedrock/NVIDIA/a local CLI agent
+- **Read on:** 2026-08-25
 
-### Provar que passou
+### Prove it passed
 
 #### agent-pd
 
-- **Repositório:** https://github.com/varmabudharaju/agent-pd
-- **Licença:** Apache-2.0 — ✅ OSI
-- **Faz:** Log de auditoria tamper-evident (hash-chain) para Claude Code: hook que audita o agente principal E cada subagente, correlacionando eventos entre sessoes concorrentes e workflows dinamicos. Seis detectores deterministicos (bypass de permissao, acesso a credencial fora de escopo, self-permissioning, ferramenta nao permitida, redundante, trabalho fora de tarefa) com evidencia citada. 'Catch-and-report — it never blocks': e' flight recorder, nunca firewall.
-- **Depende de:** Python 3.11+, PyYAML; feature opcional `pd judge` usa Claude Code CLI (assinatura ja paga) ou API Anthropic metered
-- **Peso:** sem embedding
-- **Sobre a contagem de colisão:** Cobre parte do territorio do V6 do loadline (redundante/self-permissioning tangenciam deteccao de confusao entre agentes) mas em RUNTIME, nao em arquivo parado — o loadline nao roda o agente (LACUNAS.md #12), o agent-pd so' audita agente rodando. Nao declara comparacao de DESCRICAO entre dois agentes (o que o V6 mede).
-- **Lido em:** 2026-08-26
+- **Repository:** https://github.com/varmabudharaju/agent-pd
+- **License:** Apache-2.0 — ✅ OSI
+- **Does:** A tamper-evident audit log (hash-chain) for Claude Code: a hook that audits the main agent AND every subagent, correlating events across concurrent sessions and dynamic workflows. Six deterministic detectors (permission bypass, out-of-scope credential access, self-permissioning, disallowed tool, redundant work, off-task work) with cited evidence. 'Catch-and-report — it never blocks': it is a flight recorder, never a firewall.
+- **Depends on:** Python 3.11+, PyYAML; the optional `pd judge` feature uses the Claude Code CLI (subscription already paid) or the metered Anthropic API
+- **Weight:** no embedding
+- **About the collision count:** It covers part of loadline's V6 territory (redundant/self-permissioning touch on inter-agent confusion detection) but at RUNTIME, not on a file at rest — loadline does not run the agent (LACUNAS.md #12), agent-pd only audits a running agent. It does not declare DESCRIPTION comparison between two agents (what V6 measures).
+- **Read on:** 2026-08-26
 
 #### old-coder
 
-- **Repositório:** https://github.com/AmazingAng/old-coder
-- **Licença:** MIT — ✅ OSI
-- **Faz:** Skill, nao runtime. SPEC -> RED -> GREEN -> REFACTOR -> GAUNTLET -> EVIDENCE. O humano aprova o plano de teste antes do codigo existir e le um relatorio de evidencia depois, no lugar do diff.
-- **Depende de:** o harness de codigo do usuario
-- **Peso:** sem embedding
-- **Nota:** O v6 atribuiu este repo a Andre Lindenberg. Andre Lindenberg postou a peca no LinkedIn; a autoria e' de AmazingAng.
-- **Lido em:** 2026-08-16
+- **Repository:** https://github.com/AmazingAng/old-coder
+- **License:** MIT — ✅ OSI
+- **Does:** A skill, not a runtime. SPEC -> RED -> GREEN -> REFACTOR -> GAUNTLET -> EVIDENCE. The human approves the test plan before the code exists and reads an evidence report afterward, instead of the diff.
+- **Depends on:** the user's code harness
+- **Weight:** no embedding
+- **Note:** v6 attributed this repo to Andre Lindenberg. Andre Lindenberg posted the piece on LinkedIn; the authorship is AmazingAng's.
+- **Read on:** 2026-08-16
 
 #### PandaProbe
 
-- **Repositório:** https://github.com/chirpz-ai/pandaprobe
-- **Licença:** Apache-2.0 — ✅ OSI
-- **Faz:** Observabilidade de agente: trace, eval e metricas (LangGraph, CrewAI, Claude Agent SDK), self-host ou cloud gerenciado. Ao contrario do old-coder (mesmo estagio), a evidencia aqui e' TRACING AO VIVO durante a execucao, nao um relatorio pos-hoc que substitui o diff.
-- **Depende de:** FastAPI + Next.js + PostgreSQL 16 + Redis 7 + Celery; self-host gratuito, cloud com tier gratuito; 'LLM-as-a-judge' (avaliacao automatizada via LiteLLM) e' feature OPCIONAL que exige chave de LLM
-- **Peso:** sem LLM no caminho · sem embedding
-- **Lido em:** 2026-08-25
+- **Repository:** https://github.com/chirpz-ai/pandaprobe
+- **License:** Apache-2.0 — ✅ OSI
+- **Does:** Agent observability: traces, evals and metrics (LangGraph, CrewAI, Claude Agent SDK), self-hosted or managed cloud. Unlike old-coder (same stage), the evidence here is LIVE TRACING during execution, not a post-hoc report that replaces the diff.
+- **Depends on:** FastAPI + Next.js + PostgreSQL 16 + Redis 7 + Celery; free self-host, cloud with a free tier; 'LLM-as-a-judge' (automated evaluation via LiteLLM) is an OPTIONAL feature that requires an LLM key
+- **Weight:** no LLM in the path · no embedding
+- **Read on:** 2026-08-25
 
-### Atacar
+### Attack
 
 #### DeepTeam
 
-- **Repositório:** https://github.com/confident-ai/deepteam
-- **Licença:** Apache-2.0 — ✅ OSI
-- **Faz:** Red team de LLM e de agente. 50+ vulnerabilidades e 20+ vetores, com familia `Agentic`: Goal Theft, Recursive Hijacking, Excessive Agency. Alinhado a OWASP LLM Top 10 e NIST AI RMF. O alvo e' um callback string->string.
-- **Depende de:** OPENAI_API_KEY por padrao; modelo local possivel via DeepEval
-- **Peso:** sem embedding · ⚠️ **custa dinheiro** (chave de API ou serviço pago)
-- **Sobre a contagem de colisão:** Voltaram Genez-io/genezio-deepteam e fengjian686/deepteam. NAO entram na contagem de colisao: nao foi verificado se sao forks, e fork nao e' projeto independente. Sub-contar de proposito.
-- **Lido em:** 2026-08-16
+- **Repository:** https://github.com/confident-ai/deepteam
+- **License:** Apache-2.0 — ✅ OSI
+- **Does:** LLM and agent red teaming. 50+ vulnerabilities and 20+ vectors, with an `Agentic` family: Goal Theft, Recursive Hijacking, Excessive Agency. Aligned with the OWASP LLM Top 10 and the NIST AI RMF. The target is a string->string callback.
+- **Depends on:** OPENAI_API_KEY by default; a local model is possible via DeepEval
+- **Weight:** no embedding · ⚠️ **costs money** (API key or paid service)
+- **About the collision count:** Genez-io/genezio-deepteam and fengjian686/deepteam came up. They do NOT enter the collision count: it was not verified whether they are forks, and a fork is not an independent project. Undercounting on purpose.
+- **Read on:** 2026-08-16
 
 #### SILENTCHAIN AI
 
-- **Repositório:** https://github.com/silentchainai/SILENTCHAIN
-- **Licença:** proprietaria, source-visible — ⛔ não é open source
-- **Faz:** Extensao de Burp Suite que roda analise passiva de trafego HTTP com IA procurando OWASP Top 10 e configuracao insegura, durante um pentest. Fonte visivel no GitHub, mas a licenca PROIBE redistribuicao sem permissao — exceto para a PortSwigger (BApp Store). Pelo menos dois outros repositorios redistribuem o mesmo codigo sob outro nome de organizacao, aparentemente violando essa mesma licenca.
-- **Depende de:** Burp Suite Community/Professional 2025.2+, Java 21, um provedor de IA (Burp AI padrao sem configuracao, ou Ollama local, OpenAI, Claude, Gemini, Azure)
-- **Colide com:** `IOCsec/silentchain` · `itsmadaraflow/silentchain`
-- **Lido em:** 2026-08-25
+- **Repository:** https://github.com/silentchainai/SILENTCHAIN
+- **License:** proprietary, source-visible — ⛔ not open source
+- **Does:** A Burp Suite extension that runs passive AI analysis of HTTP traffic looking for the OWASP Top 10 and insecure configuration, during a pentest. Source is visible on GitHub, but the license FORBIDS redistribution without permission — except for PortSwigger (the BApp Store). At least two other repositories redistribute the same code under a different organization name, apparently violating that same license.
+- **Depends on:** Burp Suite Community/Professional 2025.2+, Java 21, an AI provider (Burp AI by default with no configuration, or local Ollama, OpenAI, Claude, Gemini, Azure)
+- **Collides with:** `IOCsec/silentchain` · `itsmadaraflow/silentchain`
+- **Read on:** 2026-08-25
 
-### Aprender com a falha
+### Learn from failure
 
 #### Harness-R1
 
-- **Repositório:** https://github.com/DeepExperience/Harness-R1
+- **Repository:** https://github.com/DeepExperience/Harness-R1
 - **Paper:** `arXiv:2608.02276`
-- **Licença:** Apache-2.0 — ✅ OSI
-- **Faz:** Um engenheiro de harness de 9B (Qwen3.5-9B) treinado por RL converte lotes de falha do agente-alvo em patches executaveis validados. Checkpoints prontos no Hugging Face permitem usar sem treinar.
-- **Depende de:** 8x NVIDIA H800 para treinar; checkpoint pronto para usar
-- **Peso:** sem embedding
-- **Alegação do autor** (não medida por este censo): 44,3% -> 53,6% (+9,3 p.p.); +5,0 p.p. com fine-tune do alvo
-- **Ressalva do próprio paper:** um engenheiro so' e' significativo contra o alvo para o qual foi treinado
-- **Lido em:** 2026-08-16
+- **License:** Apache-2.0 — ✅ OSI
+- **Does:** A 9B harness engineer (Qwen3.5-9B) trained by RL turns batches of the target agent's failures into validated, executable patches. Ready-made checkpoints on Hugging Face let you use it without training.
+- **Depends on:** 8x NVIDIA H800 to train; a ready-to-use checkpoint
+- **Weight:** no embedding
+- **Author's claim** (not measured by this census): 44.3% -> 53.6% (+9.3 pp); +5.0 pp with a fine-tune of the target
+- **The paper's own caveat:** one engineer is only significant against the target it was trained for
+- **Read on:** 2026-08-16
 
-### A ameaça medida
+### The measured threat
 
 #### Mind Viruses
 
-- **Repositório canônico:** ⛔ **não existe** — ver a seção de colisão
+- **Canonical repository:** ⛔ **does not exist** — see the collision section
 - **Paper:** `arXiv:2608.10218`
-- **Licença:** paper — ⛔ não é open source
-- **Faz:** NAO E' FERRAMENTA. Pesquisa da Anthropic (Papadopoulos, Shah, Zimmerman, Lindsey; 2026-08-10) mostrando que uma ideia implantada em um agente se propaga para os outros. Dois cenarios medidos: um time pequeno de agentes num projeto de codigo compartilhado, e uma cadeia de agentes com contexto apagado entre sessoes.
-- **Depende de:** nenhuma — e' um paper
-- **Peso:** sem embedding
-- **Achado principal:** Um aviso curto no system prompt do agente confere imunidade quase total. Payload nocivo se propaga menos que benigno, mas ainda funciona as vezes.
-- **Limite desta leitura:** So' o abstract foi lido. Canal exato de propagacao e persistencia medida estao no corpo do paper e NAO foram abertos. A frase exata do aviso nao esta no abstract.
-- **Lido em:** 2026-08-16
+- **License:** paper — ⛔ not open source
+- **Does:** NOT A TOOL. Anthropic research (Papadopoulos, Shah, Zimmerman, Lindsey; 2026-08-10) showing that an idea planted in one agent propagates to the others. Two measured scenarios: a small team of agents on a shared code project, and a chain of agents with the context wiped between sessions.
+- **Depends on:** none — it is a paper
+- **Weight:** no embedding
+- **Main finding:** A short warning in the agent's system prompt confers near-total immunity. A harmful payload propagates less than a benign one, but it still works sometimes.
+- **Limit of this reading:** Only the abstract was read. The exact propagation channel and the measured persistence are in the body of the paper and were NOT opened. The exact wording of the warning is not in the abstract.
+- **Read on:** 2026-08-16
 
 ---
 
-## O denominador desta leitura
+## The denominator of this reading
 
-Toda superfície que conta declara **de quantos** contou. Sem isso, um filtro que pula
-em silêncio produz resposta plausível e vazia.
+Every surface that counts declares **how many** it counted from. Without that, a filter that
+skips silently produces a plausible, empty answer.
 
 | | |
 |---|---:|
-| Nomes buscados | 25 |
-| Com repositório canônico identificado e lido | 21 |
-| **Sem** repositório canônico — e essa ausência **é** o achado | 3 |
-| São paper, não repositório | 1 |
-| **Clonados, instalados ou executados** | **0** |
-| Têm repositório (ou cacho), mas nenhum dos dez estágios cobre o que fazem | 2 |
+| Names searched | 25 |
+| With a canonical repository identified and read | 21 |
+| **Without** a canonical repository — and that absence **is** the finding | 3 |
+| Are a paper, not a repository | 1 |
+| **Cloned, installed or run** | **0** |
+| Have a repository (or cluster), but none of the ten stages covers what they do | 2 |
 
-⚠️ Nenhum repositorio foi clonado, instalado ou executado. Numero de desempenho no campo `alegacao_do_autor` NAO foi medido por este censo. `sem_estagio_classificado` conta projetos com `estagio: null` — existem, tem repositorio (ou cacho sem canonico), mas nenhum dos dez estagios do ciclo de vida cobre o que fazem; aparecem na tabela de licenca, nao na secao 'Quem ja ocupa cada estagio'.
+⚠️ No repository was cloned, installed or run. Performance numbers in the `alegacao_do_autor` field were NOT measured by this census. `sem_estagio_classificado` counts projects with `estagio: null` — they exist, they have a repository (or a cluster with no canonical one), but none of the ten life-cycle stages covers what they do; they show up in the license table, not in the 'Who already occupies each stage' section.
 
-**O que este censo NÃO mede, declarado:**
+**What this census does NOT measure, declared:**
 
-- **Se o projeto funciona.** Nada aqui foi executado. Desempenho é alegação do autor.
-- **Se ele ainda existe hoje.** É para isso que serve o `vence=` de cada selo — nenhuma
-  sonda offline alcança a verdade do mundo lá fora, e confundir as duas coisas seria
-  dizer que um JSON coerente é um fato verdadeiro.
-- **Quantos projetos existem de verdade.** A contagem de colisão é piso de uma busca.
-- **Se a licença mudou depois da data de leitura.** O campo `lido_em` de cada ficha é
-  a data em que a página foi aberta, não a data de hoje.
+- **Whether the project works.** Nothing here was run. Performance is the author's claim.
+- **Whether it still exists today.** That is what each seal's `expires=` is for — no offline
+  probe reaches the truth of the world out there, and confusing the two would be saying that
+  a coherent JSON is a true fact.
+- **How many projects really exist.** The collision count is the floor of one search.
+- **Whether the license changed after the reading date.** Each entry's `lido_em` field is
+  the date the page was opened, not today's date.
 
 ---
 
-## Como contribuir com uma entrada
+## How to contribute an entry
 
-1. Abra a **página do repositório** — não o post, não a lista, não o print. A memória
-   desta casa registra o custo de atribuir pela embalagem: um projeto deste censo
-   estava creditado a quem postou no LinkedIn, não a quem escreveu o código.
-2. Preencha `censo/ecossistema.json`. **`nao_verificado` é um valor legítimo** e nunca
-   vira zero.
-3. Rode `python censo/gerar.py` e `python -m loadline .`. Se algum dos dois reprovar, a
-   entrada ainda não está pronta.
+1. Open the **repository's page** — not the post, not the list, not the screenshot. This
+   house's memory records the cost of attributing by the packaging: one project in this
+   census was credited to whoever posted on LinkedIn, not to whoever wrote the code.
+2. Fill in `censo/ecossistema.json`. **`nao_verificado` is a legitimate value** and never
+   becomes zero.
+3. Run `python censo/gerar.py` and `python -m loadline .`. If either one fails, the entry
+   is not ready yet.
 

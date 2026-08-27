@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "loadline"
 version = "0.1.0"
-description = "Lê a pasta de agentes que você já tem e acha o que só aparece a partir do terceiro: quem se confunde com quem, quem alcança o disco todo, o que ninguém cobre."
+description = "Reads the agent folder you already have and finds what only shows up from the third one on: who gets confused with whom, who reaches the whole disk, what nobody covers."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
@@ -29,15 +29,15 @@ classifiers = [
     "Topic :: Software Development :: Quality Assurance",
 ]
 
-# ⚠️ VAZIO DE PROPÓSITO, e o vazio é a característica.
+# ⚠️ EMPTY ON PURPOSE, and the emptiness is the feature.
 #
-# Um verificador que depende de um modelo não é um verificador — é uma segunda
-# opinião. Um verificador que depende de um serviço não roda no CI de quem mais
-# precisa dele. Só a stdlib.
+# A verifier that depends on a model is not a verifier — it is a second opinion.
+# A verifier that depends on a service does not run in the CI of whoever needs it
+# most. Only the stdlib.
 #
-# Esta lista é medida pela sonda `nucleo.dependencias`, e o README a afirma.
-# Acrescentar uma linha aqui reprova o README até alguém reescrever a frase —
-# que é exatamente o comportamento que este projeto vende.
+# This list is measured by the `nucleo.dependencias` probe, and the README
+# asserts it. Adding a line here fails the README until someone rewrites the
+# sentence — which is exactly the behavior this project sells.
 dependencies = []
 
 [project.scripts]
