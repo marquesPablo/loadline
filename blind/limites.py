@@ -1,6 +1,6 @@
 """Onde uma varredura ingênua para sem avisar, e por qual dos dois motivos.
 
-natureza: correcao — fronteira que não dá para classificar vira item "não
+nature: fix — fronteira que não dá para classificar vira item "não
 verificado" no relatório, nunca uma exceção que derruba a rodada inteira.
 
 ## As duas causas, medidas, nunca a mesma

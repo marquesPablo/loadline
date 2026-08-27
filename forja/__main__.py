@@ -1,6 +1,6 @@
 """CLI da forja: `python -m forja <spec.toml> [--saida DIR] [--conferir]`.
 
-natureza: correcao — a saída é sempre impressa por inteiro, inclusive quando a
+nature: fix — a saída é sempre impressa por inteiro, inclusive quando a
 forja RECUSA. Uma recusa que não diz o conserto é um erro; uma recusa que diz o
 conserto é a metade útil de um compilador.
 

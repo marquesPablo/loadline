@@ -1,51 +1,54 @@
-"""Confronto prosa × selo — o número na FRASE bate com o número no SELO?
+"""Prose vs seal — does the number in the SENTENCE match the number in the SEAL?
 
-loadline-ignore-file: este arquivo ENSINA o confronto, e os selos e frases
-escritos aqui são espécimes, não afirmações.
+loadline-ignore-file: this file TEACHES the cross-check, and the seals and
+sentences written here are specimens, not claims.
 
-natureza: correcao — este módulo só lê texto e devolve achados. Ele não escreve
-no disco, não conserta a frase, e exceção aqui libera e avisa em vez de barrar.
+nature: fix — this module only reads text and returns findings. It does
+not write to disk, does not fix the sentence, and an exception here surfaces
+and warns instead of blocking.
 
-O defeito que ele existe para pegar, medido neste repositório em 2026-08-20:
+The defect it exists to catch, measured in this repository on 2026-08-20:
 
-    33 passaram · 0 reprovaram
+    33 passed · 0 failed
     <!-- measured: nucleo.checks=36 nature=count on=2026-08-16 expires=never -->
 
-O selo diz 36. A sonda mede 36. **O verificador devolve `MATCHES`** — e a frase
-três linhas acima diz 33, para sempre, sem nada olhando.
+The seal says 36. The probe measures 36. **The verifier returns `MATCHES`** —
+and the sentence three lines above says 33, forever, with nothing watching.
 
-É o buraco estrutural de todo mecanismo de selo: **o selo cobre o VALOR, e
-ninguém cobre a FRASE.** Quem resela mexe no comentário, que é o que reprova, e
-esquece o texto, que é o que a pessoa lê. O número errado sobrevive a rodada
-após rodada de resselo, verde o tempo todo.
+It is the structural hole in every seal mechanism: **the seal covers the
+VALUE, and nobody covers the SENTENCE.** Whoever re-seals touches the comment,
+which is what fails, and forgets the text, which is what people read. The wrong
+number survives round after round of re-sealing, green the whole time.
 
-## A regra, e o que ela deliberadamente NÃO faz
+## The rule, and what it deliberately does NOT do
 
-Ela morde numa direção só: **número afirmado na prosa que nenhum selo do bloco
-explica.** Se a prosa não afirma número nenhum, não há o que contradizer e nada
-é acusado — o selo continua sendo a única fonte, e isso é legítimo.
+It bites in one direction only: **a number claimed in the prose that no seal
+in the block explains.** If the prose claims no number, there is nothing to
+contradict and nothing is flagged — the seal stays the only source, and that
+is legitimate.
 
-A direção contrária — *a frase afirma uma GRANDEZA que o selo não nomeia* —
-exige um registro fechado de grandezas e o julgamento de o que conta como
-afirmação. Ela **não** está aqui, e está declarada como lacuna em `LACUNAS.md`
-em vez de fingida.
+The opposite direction — *the sentence claims a QUANTITY that the seal does not
+name* — needs a closed register of quantities and a judgment about what counts
+as a claim. It is **not** here, and it is declared as a gap in `LACUNAS.md`
+instead of faked.
 
-## O que conta como número da prosa, e o que é ruído declarado
+## What counts as a prose number, and what is declared noise
 
-Entram: dígitos com fronteira de palavra, e numeral por extenso de zero a vinte
-(em português e inglês) — porque *"seis projetos"* afirma tanto quanto *"6"*.
+In: digits with a word boundary, and number words from zero to twenty (in
+Portuguese and English) — because *"six projects"* claims as much as *"6"*.
 
-Saem, por serem endereço e não asserção: data `AAAA-MM-DD`, versão `N.N.N`,
-identificador com dois-pontos (`arXiv:2608.10218`, `README.md:12`), URL, e
-percentual — que é derivado, e cobrá-lo exigiria conhecer o denominador.
+Out, because they are an address and not a claim: a `YYYY-MM-DD` date, an
+`N.N.N` version, a colon identifier (`arXiv:2608.10218`, `README.md:12`), a
+URL, and a percentage — which is derived, and checking it would need the
+denominator.
 
-Cada exclusão está numa constante nomeada logo abaixo, e não espalhada por
-condições dentro da função: uma regra que não se lê não se audita.
+Each exclusion is a named constant just below, not scattered through
+conditions inside the function: a rule you cannot read you cannot audit.
 
-## A saída declarada
+## The declared waiver
 
-Um selo pode declarar `echo=no` e ficar de fora. Isso é decisão explícita, sai
-NOMEADA no relatório, e é a diferença entre uma exceção e um furo.
+A seal can declare `echo=no` and stay out. That is an explicit decision, comes
+out NAMED in the report, and is the difference between an exception and a hole.
 """
 
 from __future__ import annotations
@@ -57,29 +60,30 @@ from .selo import SELO_NA_LINHA, Selo
 
 PROSE_DRIFT = "PROSE_DRIFT"
 
-#: Trechos que são endereço, não asserção — retirados ANTES de procurar número.
+#: Fragments that are an address, not a claim — removed BEFORE looking for a number.
 RUIDO = (
-    re.compile(r"\d{4}-\d{2}-\d{2}"),          # data
-    # versão — ⚠️ 2026-08-25: era `(?:\.\d+)+` (1 ou mais), exigindo 3+ segmentos
-    # e deixando um identificador de DUAS partes como `Apache-2.0`/`Python 3.14`
-    # atravessar como se fosse número de verdade. Medido contra os próprios
-    # exemplos do docstring da linha de baixo antes do conserto: nenhum batia.
-    re.compile(r"\bv?\d+\.\d+(?:\.\d+)*\b"),   # versão
-    re.compile(r"\bv?\d+\.\d+\+"),             # faixa de versão: `3.9+`, `18.0+`
+    re.compile(r"\d{4}-\d{2}-\d{2}"),          # date
+    # version — ⚠️ 2026-08-25: it was `(?:\.\d+)+` (one or more), requiring 3+
+    # segments and letting a two-part identifier like `Apache-2.0`/`Python 3.14`
+    # through as if it were a real number. Measured against the very examples in
+    # the docstring on the line below, before the fix: none matched.
+    re.compile(r"\bv?\d+\.\d+(?:\.\d+)*\b"),   # version
+    re.compile(r"\bv?\d+\.\d+\+"),             # version range: `3.9+`, `18.0+`
     re.compile(r"\w+:\S*\d\S*"),               # arXiv:2608.10218, README.md:12, http://…
-    re.compile(r"\d+(?:[.,]\d+)?\s*%"),        # percentual — derivado, sem denominador aqui
-    re.compile(r"(?:n[ºo°]|#)\s*\d+", re.IGNORECASE),  # ordinal: `nº 1`, `#3` — endereço, não conta
+    re.compile(r"\d+(?:[.,]\d+)?\s*%"),        # percentage — derived, no denominator here
+    re.compile(r"(?:n[ºo°]|#)\s*\d+", re.IGNORECASE),  # ordinal: `nº 1`, `#3` — address, not a count
 )
 
-#: Numeral por extenso conta como asserção — `seis projetos` não escapa por não
-#: ter dígito. Só até vinte: acima disso ninguém escreve por extenso na prática.
+#: A number word counts as a claim — `six projects` does not escape by having
+#: no digit. Only up to twenty: above that nobody writes it out in practice.
 #:
-#: ⚠️ `um`/`uma`/`one` estão FORA, e a ausência é decisão, não esquecimento: em
-#: português eles são artigo indefinido antes de serem numeral, e *"Um registro
-#: do ecossistema"* não afirma quantidade nenhuma. Distinguir os dois usos exige
-#: análise sintática, que este módulo não faz. **O custo declarado:** uma frase
-#: que afirme de verdade *"um projeto não tem canônico"* passa sem cobrança.
-#: Está em `LACUNAS.md`, e a saída para quem precisa é escrever o dígito.
+#: ⚠️ `um`/`uma`/`one` are OUT, and the absence is a decision, not an oversight:
+#: in Portuguese they are an indefinite article before they are a numeral, and
+#: *"A record of the ecosystem"* claims no quantity at all. Telling the two uses
+#: apart needs syntactic analysis, which this module does not do. **The declared
+#: cost:** a sentence that really does claim *"one project has no canonical"*
+#: passes uncharged. It is in `LACUNAS.md`, and the way out for whoever needs it
+#: is to write the digit.
 POR_EXTENSO = {
     "zero": "0", "nenhum": "0", "nenhuma": "0",
     "dois": "2", "duas": "2", "two": "2",
@@ -98,45 +102,46 @@ POR_EXTENSO = {
 
 _DIGITO = re.compile(r"(?<![\w.,])(\d+)(?![\w])")
 
-#: Numeral precedido de artigo DEFINIDO é pronome, não asserção: *"os dois
-#: lados"* e *"as três formas"* retomam coisas já ditas, não contam nada novo.
-#: Sem esta regra, toda prosa bem escrita vira falso positivo — e um detector
-#: que grita no texto certo é desligado na primeira semana, que é o modo mais
-#: caro de um check falhar.
+#: A numeral preceded by a DEFINITE article is a pronoun, not a claim: *"os dois
+#: lados"* and *"as três formas"* refer back to things already said, they count
+#: nothing new. Without this rule, all well-written prose turns into a false
+#: positive — and a detector that shouts on the right text is switched off in
+#: the first week, which is the most expensive way for a check to fail.
+#: ⚠️ Portuguese-only: English *"the two"* is not stripped. Declared in `LACUNAS.md`.
 _PRONOMINAL = re.compile(
     r"\b(?:os|as|nos|nas|dos|das|aos|às|pelos|pelas)\s+"
     r"(?:dois|duas|tr[êe]s|quatro|cinco|seis|sete|oito|nove|dez|doze|quinze|vinte)\b",
     re.IGNORECASE,
 )
 _PALAVRA = re.compile(r"[a-zà-ÿ]+", re.IGNORECASE)
-#: Importado, nunca reescrito: a lista de marcas mora em `selo.py` e uma cópia
-#: aqui já ficou para trás quando a terceira marca nasceu.
+#: Imported, never rewritten: the list of marks lives in `selo.py` and a copy
+#: here already fell behind when the third mark was born.
 _SELO_NA_LINHA = SELO_NA_LINHA
 _CERCA = "```"
 
 
 def bloco_selado(linhas: list[str], linha_do_selo: int) -> tuple[int, int]:
-    """As linhas (1-based, inclusivas) que o selo da linha `linha_do_selo` cobre.
+    """The lines (1-based, inclusive) that the seal on `linha_do_selo` covers.
 
-    Sobe a partir do selo pulando linha em branco e **outros selos** — selo
-    empilhado cobre o mesmo bloco, que é como a prática de fato escreve — e
-    junta as linhas contíguas até a linha em branco anterior.
+    Walks up from the seal skipping blank lines and **other seals** — a stacked
+    seal covers the same block, which is how practice actually writes it — and
+    joins the contiguous lines up to the previous blank line.
 
-    ⚠️ **Cerca de código entra no bloco, de propósito, e isso é o oposto da
-    regra da varredura.** Para LER SELO, o que está dentro de cerca é espécime e
-    se ignora. Para CONFRONTAR PROSA, a cerca é justamente onde a afirmação
-    mora: no defeito que abre este arquivo, o `33` está dentro de um bloco de
-    console. As duas regras olham a mesma cerca e perguntam coisas diferentes —
-    *"alguém declarou um selo aqui?"* e *"alguém afirmou um número aqui?"*.
+    ⚠️ **A code fence goes INTO the block, on purpose, and this is the opposite
+    of the scanning rule.** To READ A SEAL, what is inside a fence is a specimen
+    and is ignored. To CROSS-CHECK PROSE, the fence is exactly where the claim
+    lives: in the defect that opens this file, the `33` is inside a console
+    block. The two rules look at the same fence and ask different things —
+    *"did someone declare a seal here?"* and *"did someone claim a number here?"*.
     """
-    i = linha_do_selo - 2  # índice 0-based da linha logo acima do selo
+    i = linha_do_selo - 2  # 0-based index of the line just above the seal
     while i >= 0 and (not linhas[i].strip() or _SELO_NA_LINHA.search(linhas[i])):
         i -= 1
     if i < 0:
         return (0, 0)
 
     fim = i
-    if linhas[i].lstrip().startswith(_CERCA):  # fechamento de cerca: desce até a abertura
+    if linhas[i].lstrip().startswith(_CERCA):  # closing fence: walk down to the opening
         i -= 1
         while i >= 0 and not linhas[i].lstrip().startswith(_CERCA):
             i -= 1
@@ -148,7 +153,7 @@ def bloco_selado(linhas: list[str], linha_do_selo: int) -> tuple[int, int]:
 
 
 def numeros_afirmados(texto: str) -> set[str]:
-    """Os números que este texto AFIRMA, já sem o ruído de endereço."""
+    """The numbers this text CLAIMS, with the address noise already removed."""
     limpo = texto
     for padrao in RUIDO:
         limpo = padrao.sub(" ", limpo)
@@ -163,36 +168,37 @@ def numeros_afirmados(texto: str) -> set[str]:
 
 @dataclass(frozen=True)
 class Afirmacao:
-    """Um número afirmado na prosa que NENHUM selo cobre — a lista 3.
+    """A number claimed in the prose that NO seal covers — list 3.
 
-    É suspeita, não defeito. Um número que ninguém consegue conferir não é um
-    número errado; ele é um número sobre o qual a ferramenta não tem nada a
-    dizer, e dizer isso alto é o oposto de devolver `PASSA`.
+    It is a suspect, not a defect. A number nobody can verify is not a wrong
+    number; it is a number the tool has nothing to say about, and saying so out
+    loud is the opposite of returning `PASS`.
     """
 
     arquivo: str
     linha: int
     numero: str
     trecho: str
-    #: Nome de métrica SUGERIDO, tirado da palavra que segue o número na frase
-    #: (`"12 endpoints"` -> `endpoints`). É heurística declarada, para o humano
-    #: renomear — nunca uma afirmação de que a ferramenta sabe o que é aquilo.
+    #: A SUGGESTED metric name, taken from the word that follows the number in
+    #: the sentence (`"12 endpoints"` -> `endpoints`). It is a declared
+    #: heuristic, for the human to rename — never a claim that the tool knows
+    #: what that is.
     nome: str
 
     def __str__(self) -> str:
         return (
-            f"SEM PROVA  {self.arquivo}:{self.linha}  "
-            f'"{self.trecho.strip()[:60]}" → ninguém confere {self.numero}'
+            f"UNVERIFIED  {self.arquivo}:{self.linha}  "
+            f'"{self.trecho.strip()[:60]}" → nobody verifies {self.numero}'
         )
 
 
 def afirmacoes_da_linha(texto: str) -> list[tuple[str, str]]:
-    """`(numero, nome_sugerido)` de uma linha, já sem o ruído de endereço.
+    """`(number, suggested_name)` for a line, with the address noise removed.
 
-    O nome sai da primeira palavra depois do número — a mesma heurística que um
-    humano usa lendo *"12 endpoints"*. Quando não houver palavra, o nome sai
-    genérico: inventar um nome bonito para o que não se entendeu seria a mesma
-    família de mentira que o projeto persegue.
+    The name comes from the first word after the number — the same heuristic a
+    human uses reading *"12 endpoints"*. When there is no word, the name comes
+    out generic: inventing a pretty name for what was not understood would be
+    the same family of lie the project chases.
     """
     limpo = texto
     for padrao in RUIDO:
@@ -217,33 +223,33 @@ def afirmacoes_da_linha(texto: str) -> list[tuple[str, str]]:
 
 
 def _nome_depois(texto: str, posicao: int) -> str:
-    """A palavra logo depois do número, normalizada — ou um nome genérico."""
+    """The word right after the number, normalized — or a generic name."""
     resto = _PALAVRA.search(texto, posicao)
     if resto is None:
-        return "SUA_METRICA"
+        return "YOUR_METRIC"
     palavra = resto.group(0).lower()
-    # Preposição e artigo não nomeiam nada: `3 de 5` não vira `de=3`.
+    # A preposition or article names nothing: `3 de 5` does not become `de=3`.
     if palavra in {"de", "do", "da", "dos", "das", "em", "no", "na", "e", "ou",
                    "a", "o", "os", "as", "para", "por", "com", "of", "in", "and"}:
-        return "SUA_METRICA"
+        return "YOUR_METRIC"
     return palavra
 
 
 def afirmacoes_sem_selo(
     linhas: list[str], selos: list[Selo], arquivo: str, especimes: set[int] | None = None
 ) -> list[Afirmacao]:
-    """A lista 3: números afirmados FORA de qualquer bloco selado.
+    """List 3: numbers claimed OUTSIDE any sealed block.
 
-    Esta é a função que inverte o arranque a frio. O detector já existia — é o
-    mesmo `numeros_afirmados` que o confronto usa — e estava trancado atrás de
-    um `if`: ele só rodava DENTRO de um bloco que já tinha selo. Num repositório
-    que nunca anotou nada não há bloco nenhum, logo não havia o que confrontar,
-    logo a rodada devolvia verde sobre um arquivo cheio de números que ninguém
-    pode conferir.
+    This is the function that inverts the cold start. The detector already
+    existed — it is the same `numeros_afirmados` the cross-check uses — and it
+    was locked behind an `if`: it only ran INSIDE a block that already had a
+    seal. In a repository that never annotated anything there is no block, so
+    there was nothing to cross-check, so the run returned green over a file full
+    of numbers nobody can verify.
 
-    O que muda aqui é só o alcance: as mesmas regras de ruído, o mesmo
-    tratamento de numeral por extenso e de pronome, apontados para o texto que
-    NÃO está coberto.
+    What changes here is only the reach: the same noise rules, the same
+    handling of number words and pronouns, pointed at the text that is NOT
+    covered.
     """
     especimes = especimes or set()
     cobertas: set[int] = set()
@@ -267,16 +273,16 @@ def afirmacoes_sem_selo(
 def confrontar(
     selos: list[Selo], linhas: list[str], arquivo: str
 ) -> tuple[list[tuple[Selo, str, set[str]]], list[Selo]]:
-    """Confronta cada bloco selado com os selos que o cobrem.
+    """Cross-checks each sealed block against the seals that cover it.
 
-    Devolve `(discrepancias, dispensados)`. Uma discrepância é
-    `(selo, numero_da_prosa, valores_do_selo)` — o número que a frase afirma e
-    que nenhum selo do bloco explica.
+    Returns `(discrepancies, waived)`. A discrepancy is
+    `(seal, prose_number, seal_values)` — the number the sentence claims and
+    that no seal in the block explains.
 
-    O confronto é por BLOCO, não por selo: selos empilhados sobre o mesmo
-    parágrafo são lidos juntos, porque juntos é como eles cobrem a frase.
-    Julgar um por um acusaria cada selo do empilhamento pelos números dos
-    outros — verde-falso ao contrário, e igualmente inútil.
+    The cross-check is per BLOCK, not per seal: seals stacked over the same
+    paragraph are read together, because together is how they cover the
+    sentence. Judging them one by one would flag each seal in the stack for the
+    others' numbers — false-green in reverse, and just as useless.
     """
     dispensados = [s for s in selos if s.echo == "no"]
     ativos = [s for s in selos if s.echo != "no"]
@@ -295,7 +301,7 @@ def confrontar(
         texto = "\n".join(linhas[ini - 1 : fim])
         na_prosa = numeros_afirmados(texto)
         if not na_prosa:
-            continue  # a prosa não afirma número: não há o que contradizer
+            continue  # the prose claims no number: nothing to contradict
         no_selo = {v for s in grupo for v in s.metricas.values()}
         orfaos = na_prosa - no_selo
         for numero in sorted(orfaos, key=lambda x: (len(x), x)):

@@ -1,6 +1,6 @@
 """`placar` — as sete portas de "Would you ship this AI agent?", conferidas.
 
-natureza: correcao — este módulo só lê e relata; ele nunca escreve no
+nature: fix — este módulo só lê e relata; ele nunca escreve no
 repositório alvo e nunca chama modelo.
 
     python -m placar <caminho>

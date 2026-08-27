@@ -1,6 +1,6 @@
 """Gera uma edição datada e recorrente do censo — `censo/edicoes/AAAA-MM-DD.md`.
 
-natureza: correcao — este gerador só lê `ecossistema.json` e os snapshots já
+nature: fix — este gerador só lê `ecossistema.json` e os snapshots já
 gravados em `censo/edicoes/*.json`. Não faz rede, não decide nada de segurança;
 erro aqui vira exceção visível, nunca edição pela metade.
 

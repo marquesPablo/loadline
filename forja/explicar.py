@@ -1,6 +1,6 @@
 """`--explain <achado>`: explica UM achado, citando o parágrafo de onde ele vem.
 
-natureza: correcao — este módulo NUNCA copia a doutrina para um segundo lugar.
+nature: fix — este módulo NUNCA copia a doutrina para um segundo lugar.
 Um duplicado apodrece no dia em que o original mudar e ninguém lembrar do
 gêmeo; em vez disso ele LÊ, a cada chamada, a linha da tabela em `README.md` e
 o parágrafo correspondente em `LACUNAS.md` — os dois arquivos deste pacote,

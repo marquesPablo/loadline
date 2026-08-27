@@ -1,6 +1,6 @@
 """Gera `censo/CENSO.md` — a superfície de leitura do censo — do `ecossistema.json`.
 
-natureza: correcao — este gerador só lê JSON e escreve Markdown. Ele não decide
+nature: fix — este gerador só lê JSON e escreve Markdown. Ele não decide
 nada de segurança; erro aqui vira exceção visível, nunca artefato pela metade.
 
 ⚠️ **Por que o CENSO.md quase não tem selo, e isso é de propósito.**

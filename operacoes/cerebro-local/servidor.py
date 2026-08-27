@@ -1,6 +1,6 @@
 """Um servidor MCP somente-leitura sobre as SUAS notas. Zero dependências.
 
-natureza: seguranca — toda decisão de caminho deste módulo é uma RECUSA, e ela
+nature: security — toda decisão de caminho deste módulo é uma RECUSA, e ela
 falha fechada. Caminho que sai da raiz declarada não é lido; caminho que o
 servidor não consegue resolver não é lido. Um leitor de arquivos que falha
 aberto entrega o disco inteiro para quem pedir com `../` suficiente.

@@ -1,6 +1,6 @@
 """O conselho do Censo — a forja não inventa peça, ela consulta o registro.
 
-natureza: correcao — censo ausente ou ilegível vira aviso escrito no relatório,
+nature: fix — censo ausente ou ilegível vira aviso escrito no relatório,
 nunca uma recomendação inventada. A forja compila do mesmo jeito; ela só perde
 a capacidade de dizer o que já existe, e diz que perdeu.
 

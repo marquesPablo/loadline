@@ -1,6 +1,6 @@
 """Sondas da operação `nome-da-sua-operacao`.
 
-natureza: correcao — sonda que estoura vira `UNPROVEN` no relatório, com o erro
+nature: fix — sonda que estoura vira `UNPROVEN` no relatório, com o erro
 por extenso. Ela nunca devolve um palpite.
 
 COPIE ESTE ARQUIVO para a raiz do seu repositório, como `sondas.py`.

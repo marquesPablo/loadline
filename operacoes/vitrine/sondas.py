@@ -1,6 +1,6 @@
 """Sondas da operação `vitrine`.
 
-natureza: correcao — sonda que estoura vira `UNPROVEN` no relatório, com o erro
+nature: fix — sonda que estoura vira `UNPROVEN` no relatório, com o erro
 por extenso. Ela nunca devolve um palpite.
 
 COPIE ESTE ARQUIVO **E** A PASTA `vitrine/` (a que fica na raiz deste repositório,

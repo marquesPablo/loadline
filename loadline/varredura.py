@@ -1,11 +1,11 @@
-"""Varre arquivos, lê os selos, confronta a prosa, e monta o relatório com denominador.
+"""Scans files, reads the seals, cross-checks the prose, and builds the report with a denominator.
 
-natureza: correcao — arquivo ilegível vira linha no relatório, nunca uma
-exceção que derruba a rodada e deixa o resto sem medir.
+nature: fix — an unreadable file becomes a line in the report, never an
+exception that takes down the run and leaves the rest unmeasured.
 
-A varredura carrega as sondas do projeto por convenção: um `sondas.py` na
-raiz do alvo, importado antes de julgar. Convenção em vez de configuração,
-porque um campo de config com caminho a executar é convite escrito.
+The scan loads the project's probes by convention: a `sondas.py` at the root
+of the target, imported before judging. Convention instead of configuration,
+because a config field with a path to execute is a written invitation.
 """
 
 from __future__ import annotations
@@ -23,35 +23,36 @@ from .veredito import Achado, Relatorio, julgar
 EXTENSOES = (".md", ".markdown", ".txt", ".py", ".rst", ".toml", ".yaml", ".yml")
 IGNORAR = {".git", "node_modules", "__pycache__", ".venv", "venv", "dist", "build", ".mypy_cache"}
 
-# Um arquivo que ENSINA a sintaxe do selo não pode ser lido como se afirmasse.
-# Sem isto, todo texto que documenta a ferramenta a sabota — inclusive o
-# exemplo de selo malformado, que precisa poder existir escrito.
+# A file that TEACHES the seal syntax must not be read as if it were claiming.
+# Without this, every text that documents the tool sabotages it — including the
+# malformed-seal example, which has to be able to exist written out.
 DIRETIVA_ESPECIME = "loadline-ignore-file"
 _CERCA = "```"
 
 
 def _linhas_de_literal(texto: str) -> set[int]:
-    """Linhas de um `.py` que estão DENTRO de uma string literal.
+    """Lines of a `.py` that are INSIDE a string literal.
 
-    Esta é a regra que separa o código que **declara** um selo do código que o
-    **emite**. Um selo num comentário (`# measured: x=1`) é uma afirmação de
-    verdade: alguém escreveu aquele número e ele se recompute. Um selo dentro
-    de uma string é outra coisa inteira — é o gerador montando o texto que o
-    USUÁRIO vai escrever, ou a documentação ensinando a sintaxe.
+    This is the rule that separates code that **declares** a seal from code that
+    **emits** one. A seal in a comment (`# measured: x=1`) is a real claim:
+    someone wrote that number and it recomputes. A seal inside a string is a
+    whole other thing — it is the generator assembling the text the USER will
+    write, or the documentation teaching the syntax.
 
-    Sem isto, todo emissor de selo sabota a si mesmo: `f"<!-- measured:
-    x={n} -->"` é lido como se afirmasse que `x` vale a string `{n}`. É a mesma
-    família de defeito que o controle negativo que sabota a si mesmo, e ela
-    reaparece em toda ferramenta que gera a própria sintaxe.
+    Without this, every seal emitter sabotages itself: `f"<!-- measured:
+    x={n} -->"` is read as claiming that `x` equals the string `{n}`. It is the
+    same family of defect as the negative control that sabotages itself, and it
+    reappears in every tool that generates its own syntax.
 
-    Usa `ast` — stdlib — em vez de heurística de aspas. Um regex que tentasse
-    achar string literal erraria em aspas aninhadas e em f-string com
-    expressão, e erraria calado, que é o pior modo de errar aqui.
+    Uses `ast` — stdlib — instead of a quote heuristic. A regex trying to find a
+    string literal would get it wrong on nested quotes and on an f-string with
+    an expression, and it would get it wrong silently, which is the worst way to
+    get it wrong here.
 
-    ⚠️ **Arquivo que não parseia não vira espécime.** Devolver tudo faria um
-    `.py` quebrado passar verde, calado. Devolver nada faz o selo ser julgado e,
-    se estiver malformado, a rodada reprova alto. Falhar barulhento é a direção
-    certa.
+    ⚠️ **A file that does not parse does not become a specimen.** Returning
+    everything would make a broken `.py` pass green, silently. Returning nothing
+    makes the seal get judged and, if it is malformed, the run fails loudly.
+    Failing noisily is the right direction.
     """
     try:
         arvore = ast.parse(texto)
@@ -68,16 +69,16 @@ def _linhas_de_literal(texto: str) -> set[int]:
 
 
 def _regioes_de_especime(linhas: list[str], markdown: bool, python: bool = False) -> set[int]:
-    """Linhas (1-based) que são espécime e não afirmação.
+    """Lines (1-based) that are a specimen and not a claim.
 
-    Três regras, todas declaradas e nenhuma adivinhada:
-      1. arquivo com a diretiva `loadline-ignore-file` — o arquivo inteiro;
-      2. em Markdown, o que está dentro de cerca de código — uma cerca É a
-         marca universal de "isto é ilustração", e ler ilustração como
-         afirmação inventa fatos que ninguém escreveu;
-      3. em Python, o que está dentro de string literal — ver
-         `_linhas_de_literal`. Comentário continua sendo julgado; a cerca é
-         sobre a string, não sobre o arquivo.
+    Three rules, all declared and none guessed:
+      1. a file with the `loadline-ignore-file` directive — the whole file;
+      2. in Markdown, what is inside a code fence — a fence IS the universal
+         mark for "this is an illustration", and reading an illustration as a
+         claim invents facts nobody wrote;
+      3. in Python, what is inside a string literal — see `_linhas_de_literal`.
+         A comment is still judged; the fence is about the string, not about the
+         file.
     """
     if any(DIRETIVA_ESPECIME in linha for linha in linhas):
         return set(range(1, len(linhas) + 1))
@@ -98,7 +99,7 @@ def _regioes_de_especime(linhas: list[str], markdown: bool, python: bool = False
 
 
 def carregar_sondas(raiz: Path) -> Path | None:
-    """Importa `sondas.py` da raiz do alvo, se existir. Devolve o caminho usado."""
+    """Imports `sondas.py` from the target root, if it exists. Returns the path used."""
     alvo = raiz / "sondas.py" if raiz.is_dir() else raiz.parent / "sondas.py"
     if not alvo.exists():
         return None
@@ -125,7 +126,7 @@ def _arquivos(raiz: Path) -> list[Path]:
 
 
 def varrer(raiz: str | Path, hoje: date | None = None) -> Relatorio:
-    """Lê todos os selos sob `raiz` e julga cada um contra o disco de hoje."""
+    """Reads every seal under `raiz` and judges each against today's disk."""
     raiz = Path(raiz)
     hoje = hoje or date.today()
     carregar_sondas(raiz)
@@ -135,7 +136,7 @@ def varrer(raiz: str | Path, hoje: date | None = None) -> Relatorio:
         try:
             texto = caminho.read_text(encoding="utf-8")
         except (OSError, UnicodeDecodeError) as exc:
-            relatorio.malformados.append(f"{caminho}: não deu para ler — {exc}")
+            relatorio.malformados.append(f"{caminho}: could not read — {exc}")
             continue
 
         relatorio.arquivos_lidos += 1
@@ -147,7 +148,7 @@ def varrer(raiz: str | Path, hoje: date | None = None) -> Relatorio:
             python=sufixo == ".py",
         )
         if especimes:
-            relatorio.especimes.append(f"{caminho}: {len(especimes)} linhas de espécime, não julgadas")
+            relatorio.especimes.append(f"{caminho}: {len(especimes)} specimen lines, not judged")
 
         tinha_selo = False
         do_arquivo: list[Selo] = []
@@ -166,14 +167,14 @@ def varrer(raiz: str | Path, hoje: date | None = None) -> Relatorio:
             do_arquivo.append(selo)
             relatorio.achados.extend(julgar(selo, hoje=hoje))
 
-        # O confronto prosa × selo é só de PROSA: em `.py` o que está ao redor
-        # de um selo é código, e cobrar eco de número em código acusaria todo
-        # literal vizinho. A estreiteza é declarada, não esquecida.
+        # The prose-vs-seal cross-check is PROSE only: in a `.py` what surrounds
+        # a seal is code, and demanding a prose echo of a number in code would
+        # flag every neighboring literal. The narrowness is declared, not
+        # forgotten.
         if sufixo in (".md", ".markdown", ".txt", ".rst"):
-            # A lista 3 — o que NENHUM selo cobre. Ela roda em todo arquivo de
-            # prosa, tenha ele selo ou não; num repositório recém-clonado ela é
-            # a única coisa que a ferramenta tem a dizer, e é o motivo de a
-            # primeira rodada ter deixado de devolver verde.
+            # List 3 — what NO seal covers. It runs on every prose file, seal or
+            # not; in a freshly cloned repository it is the only thing the tool
+            # has to say, and it is why the first run stopped returning green.
             relatorio.sem_prova_nenhuma.extend(
                 afirmacoes_sem_selo(linhas, do_arquivo, str(caminho), especimes)
             )

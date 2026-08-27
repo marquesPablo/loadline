@@ -1,6 +1,6 @@
 """A spec de um agente, e as oito recusas que impedem de compilar uma ruim.
 
-natureza: seguranca — toda decisão deste módulo é uma RECUSA, e ela falha
+nature: security — toda decisão deste módulo é uma RECUSA, e ela falha
 fechada. O que a forja não consegue decidir, ela se recusa a emitir; ela nunca
 emite "no melhor esforço" com um campo faltando. Um compilador de agente que
 falha aberto entrega exatamente o agente sem gate que ele existia para evitar.

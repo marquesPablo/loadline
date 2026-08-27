@@ -1,6 +1,6 @@
 """Os alvos de emissão — uma spec entra, sete artefatos saem.
 
-natureza: correcao — este módulo só formata texto a partir de uma spec JÁ
+nature: fix — este módulo só formata texto a partir de uma spec JÁ
 validada. Quem barra é `spec.validar`; aqui, exceção é defeito de formatação e
 aparece por inteiro em vez de virar artefato pela metade.
 
@@ -183,7 +183,7 @@ def hook(spec: Spec) -> tuple[str, str]:
     )
     corpo = '''"""Guarda PreToolUse de `%(slug)s` — GERADO pela forja, não editar à mão.
 
-natureza: seguranca — toda exceção BARRA. O que este guarda não consegue
+nature: security — toda exceção BARRA. O que este guarda não consegue
 decidir, ele nega: um guarda que libera quando quebra não é guarda, e a hora em
 que ele quebra é exatamente a hora em que alguém está tentando passar.
 

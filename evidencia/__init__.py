@@ -1,17 +1,17 @@
-"""evidencia — um relatório de linhas de CLI vira UMA página HTML autocontida.
+"""evidencia — a report of CLI lines becomes ONE self-contained HTML page.
 
-natureza: correcao — este módulo só formata o que a ferramenta já decidiu. Zero
-leitura de disco, zero rede: ele recebe as MESMAS linhas que já iam para o
-terminal, e devolve uma página que abre em qualquer navegador — sem servidor,
-sem CDN, sem `<script src=...>` nem `<link>` externo.
+nature: fix — this module only formats what the tool already decided. Zero
+disk reads, zero network: it receives the SAME lines that were already going
+to the terminal, and returns a page that opens in any browser — no server, no
+CDN, no `<script src=...>` and no external `<link>`.
 
     from evidencia import pagina
-    Path("relatorio.html").write_text(pagina("placar", str(alvo), hoje, linhas, codigo))
+    Path("report.html").write_text(pagina("placar", str(alvo), hoje, linhas, codigo))
 
-O contrato: cada linha do relatório já carrega sua própria marca — ⛔ ✅ ⚠️, ou a
-palavra PASSA/REPROVA/RECUSADO no fim. Esta página só LÊ essas marcas para
-colorir; ela nunca reavalia nada, e por isso não pode divergir do que o
-terminal já disse.
+The contract: every line of the report already carries its own mark — ⛔ ✅ ⚠️,
+or the word PASS/FAIL/REFUSED at the end. This page only READS those marks to
+colour; it never re-evaluates anything, and so it cannot diverge from what the
+terminal already said.
 """
 
 from __future__ import annotations
@@ -62,35 +62,40 @@ footer { max-width: 62rem; margin: 1rem auto 0; color: var(--neutro); font-size:
 
 
 def _classe(linha: str) -> str:
-    if "⛔" in linha or "REPROVA" in linha or "NO-GO" in linha or "RECUSADO" in linha:
+    # Matches both the English verdict words and, during the translation, the
+    # Portuguese ones the other CLIs still print. Over-matching a colouriser is
+    # harmless; a missed colour is not.
+    grave = ("REPROVA", "REPROVOU", "FAIL", "NO-GO", "RECUSADO", "REFUSED", "MALFORMAD", "MALFORMED")
+    ok = ("PASSA", "PASSOU", "PASS", "PASSED")
+    if "⛔" in linha or any(m in linha for m in grave):
         return "grave"
     if "⚠️" in linha:
         return "aviso"
-    if "✅" in linha or "PASSA" in linha:
+    if "✅" in linha or any(m in linha for m in ok):
         return "ok"
     return ""
 
 
 def pagina(comando: str, alvo: str, hoje: str, linhas: list[str], codigo: int) -> str:
-    """As MESMAS linhas que o terminal já imprimiu, numa página autocontida.
+    """The SAME lines the terminal already printed, in a self-contained page.
 
-    `codigo` é o código de saída da ferramenta (0/1/2, o mesmo contrato em
-    `forja`, `placar` e `loadline`): 0 vira PASSA, 2 vira RECUSADO (nada foi
-    lido), qualquer outro vira REPROVA.
+    `codigo` is the tool's exit code (0/1/2, the same contract in `forja`,
+    `placar` and `loadline`): 0 becomes PASS, 2 becomes REFUSED (nothing was
+    read), anything else becomes FAIL.
     """
     corpo = "\n".join(
         f'<span class="{_classe(linha)}">{_stdlib_html.escape(linha)}</span>' for linha in linhas
     )
     if codigo == 0:
-        veredito, cor = "PASSA", "ok"
+        veredito, cor = "PASS", "ok"
     elif codigo == 2:
-        veredito, cor = "RECUSADO", "grave"
+        veredito, cor = "REFUSED", "grave"
     else:
-        veredito, cor = "REPROVA", "grave"
+        veredito, cor = "FAIL", "grave"
     gerado_em = datetime.now().isoformat(timespec="seconds")
 
     return f"""<!doctype html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -100,13 +105,13 @@ def pagina(comando: str, alvo: str, hoje: str, linhas: list[str], codigo: int) -
 <body>
 <header>
   <h1>{_stdlib_html.escape(comando)} · {_stdlib_html.escape(alvo)}</h1>
-  <p class="meta">em {_stdlib_html.escape(hoje)} · página gerada {gerado_em} · código de saída {codigo}</p>
+  <p class="meta">on {_stdlib_html.escape(hoje)} · page generated {gerado_em} · exit code {codigo}</p>
   <p class="veredito {cor}">{veredito}</p>
 </header>
 <pre>{corpo}</pre>
 <footer>
-  <p>Página autocontida — sem servidor, sem chamada de rede, sem chave de API. As linhas acima
-     são exatamente as que o terminal imprimiu; esta página só as colore, nunca as reavalia.</p>
+  <p>Self-contained page — no server, no network call, no API key. The lines above
+     are exactly what the terminal printed; this page only colours them, it never re-evaluates.</p>
 </footer>
 </body>
 </html>

@@ -133,7 +133,7 @@ def _e():
     a = julgar(_selo("<!-- measured: x.y=3 nature=count on=2026-08-16 -->"), HOJE)[0]
     assert a.veredito == DRIFTED, f"esperava DRIFTED, veio {a.veredito}"
     assert not a.e_defeito, "contagem divergindo NÃO é defeito"
-    assert "resele" in a.acao.lower(), f"ação errada: {a.acao}"
+    assert "re-seal" in a.acao.lower(), f"ação errada: {a.acao}"
 
 
 @check("F", "divergência de RELAÇÃO é DEFEITO e manda PARAR — não resselar")
@@ -146,7 +146,7 @@ def _f():
         "relação divergindo passou como resselável — é aqui que se esconde o bug "
         "que o mecanismo inteiro existe para achar"
     )
-    assert "PARE" in a.acao, f"ação errada: {a.acao}"
+    assert "STOP" in a.acao, f"ação errada: {a.acao}"
 
 
 # ------------------------------------------------------------- vencimento
@@ -260,10 +260,10 @@ def _n():
 @check("O", "congelado não é recomputado, e carrega o motivo até o relatório")
 def _o():
     registro.limpar()
-    a = julgar(_selo('<!-- frozen: x.y=3 on=2020-01-01 reason="histórico do lançamento" -->'), HOJE)[0]
+    a = julgar(_selo('<!-- frozen: x.y=3 on=2020-01-01 reason="launch history" -->'), HOJE)[0]
     assert a.veredito == FROZEN, f"esperava FROZEN, veio {a.veredito}"
     assert a.verde, "congelado com motivo é verde"
-    assert "histórico do lançamento" in a.acao
+    assert "launch history" in a.acao
 
 
 @check("P", "o relatório declara o DENOMINADOR: arquivo sem selo nenhum é contado")
@@ -826,7 +826,7 @@ Temos 12 endpoints e 3 servicos.
         f"a lista 3 achou {sorted(a.numero for a in r.sem_prova_nenhuma)}"
     )
     assert r.codigo_de_saida == 2, f"código de saída tinha de ser 2, e veio {r.codigo_de_saida}"
-    assert r.veredito_da_corrida == "SEM DENOMINADOR", r.veredito_da_corrida
+    assert r.veredito_da_corrida == "NO DENOMINATOR", r.veredito_da_corrida
 
 
 @check("AS", "o que o `--selar` escreve volta a ser lido pelo próprio leitor")

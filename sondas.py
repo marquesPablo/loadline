@@ -1,6 +1,6 @@
 """As sondas deste projeto — de onde cada número do README é recomputado.
 
-natureza: correcao — sonda que estoura vira `SEM_PROVA` no relatório, com o
+nature: fix — sonda que estoura vira `SEM_PROVA` no relatório, com o
 erro por extenso. Ela nunca devolve um palpite.
 
 ⚠️ **A regra que faz o par valer alguma coisa:** o número do README é escrito

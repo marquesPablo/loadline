@@ -1,6 +1,6 @@
 """The verdict engine — what to do when the written and the measured disagree.
 
-natureza: correcao — this module classifies and reports; it does not write to
+nature: fix — this module classifies and reports; it does not write to
 disk and fixes nothing. Accusing without fixing is the contract.
 
 Seven verdicts, and the vocabulary is closed on purpose:
@@ -72,48 +72,48 @@ class Achado:
     @property
     def acao(self) -> str:
         if self.veredito == MATCHES:
-            return "nada a fazer"
+            return "nothing to do"
         if self.veredito == FROZEN:
-            return f"histórico, congelado por: {self.selo.reason}"
+            return f"history, frozen because: {self.selo.reason}"
         if self.veredito == ARBITRATED:
             quem = self.selo.by or "?"
             if quem.strip() in ("?", ""):
-                return "escolhido, e ninguém assinou ainda — preencha `by=`"
+                return "chosen, and nobody has signed it yet — fill in `by=`"
             derruba = self.selo.breaks
             return (
-                f"escolhido por {quem}"
-                + (f"; muda se: {derruba}" if derruba else "; sem `breaks=` — o que mudaria isto?")
+                f"chosen by {quem}"
+                + (f"; changes if: {derruba}" if derruba else "; no `breaks=` — what would change this?")
             )
         if self.veredito == EXPIRED:
-            return f"reconfira e resele — ninguém olha isto há {self.detalhe}"
+            return f"re-check and re-seal — nobody has looked at this for {self.detalhe}"
         if self.veredito == UNPROVEN:
-            return "escreva uma sonda para esta métrica, ou tire o número"
+            return "write a probe for this metric, or drop the number"
         if self.veredito == PROSE_DRIFT:
             return (
-                "corrija a FRASE, ou nomeie esta grandeza no selo — resselar o "
-                "comentário sozinho deixa o número errado no texto que se lê"
+                "fix the SENTENCE, or name this quantity in the seal — re-sealing the "
+                "comment alone leaves the wrong number in the text people read"
             )
         if self.natureza == "relation":
-            return "PARE. Relação divergindo é defeito — investigue antes de resselar"
-        return "resele: contagem divergindo quer dizer que alguém escreveu"
+            return "STOP. A relation diverging is a defect — investigate before re-sealing"
+        return "re-seal: a count diverging means someone wrote"
 
     def __str__(self) -> str:
         alvo = f"{self.selo.arquivo}:{self.selo.linha}"
         if self.veredito == PROSE_DRIFT:
             return (
-                f"{self.veredito:<10} {alvo}  a frase afirma {self.escrito} · "
-                f"o selo do bloco diz {self.medido}  → {self.acao}"
+                f"{self.veredito:<10} {alvo}  the sentence claims {self.escrito} · "
+                f"the block's seal says {self.medido}  → {self.acao}"
             )
         if self.medido is None:
             return f"{self.veredito:<9} {alvo}  {self.metrica}={self.escrito}  → {self.acao}"
         return (
             f"{self.veredito:<9} {alvo}  {self.metrica}: "
-            f"escrito={self.escrito} medido={self.medido}  → {self.acao}"
+            f"written={self.escrito} measured={self.medido}  → {self.acao}"
         )
 
 
 def julgar(selo: Selo, hoje: date | None = None) -> list[Achado]:
-    """Confronta um selo com o disco de hoje. Um achado por métrica."""
+    """Confronts a seal with today's disk. One finding per metric."""
     hoje = hoje or date.today()
 
     if selo.congelado:
@@ -123,10 +123,10 @@ def julgar(selo: Selo, hoje: date | None = None) -> list[Achado]:
         ]
 
     if selo.arbitrado:
-        # Não há sonda, e não deve haver: o número foi escolhido. O que se
-        # confere aqui é o PRAZO — a escolha continua valendo, ou já é hora de
-        # alguém reescolher? Sem isto a marca viraria a saída fácil para todo
-        # número incômodo.
+        # There is no probe, and there should not be: the number was chosen.
+        # What is checked here is the DEADLINE — is the choice still valid, or
+        # is it time for someone to re-choose? Without this the mark would be
+        # the easy way out for every awkward number.
         try:
             expirou = selo.vencido_em(hoje)
         except SeloMalformado as exc:
@@ -139,7 +139,7 @@ def julgar(selo: Selo, hoje: date | None = None) -> list[Achado]:
             return [
                 Achado(
                     EXPIRED, m, v, None, selo, selo.nature,
-                    f"{idade} dias (prazo: {selo.expires}) — escolha vencida, alguém reescolhe",
+                    f"{idade} days (deadline: {selo.expires}) — expired choice, someone re-chooses",
                 )
                 for m, v in (selo.metricas or {"—": "—"}).items()
             ]
@@ -189,7 +189,7 @@ def julgar(selo: Selo, hoje: date | None = None) -> list[Achado]:
                     str(medido),
                     selo,
                     selo.nature,
-                    f"{idade} dias (prazo: {selo.expires})",
+                    f"{idade} days (deadline: {selo.expires})",
                 )
             )
         else:
@@ -200,11 +200,11 @@ def julgar(selo: Selo, hoje: date | None = None) -> list[Achado]:
 
 @dataclass
 class Relatorio:
-    """O relatório de evidência de uma corrida.
+    """The evidence report of one run.
 
-    Ele declara o DENOMINADOR: quantos selos foram lidos, quantas métricas
-    ficaram sem sonda, e quais arquivos não têm selo nenhum. Métrica sem sonda
-    nunca é contada como verde — não medido não é zero.
+    It declares the DENOMINATOR: how many seals were read, how many metrics
+    have no probe, and which files have no seal at all. A metric with no probe
+    is never counted as green — not measured is not zero.
     """
 
     achados: list[Achado]
@@ -212,14 +212,14 @@ class Relatorio:
     arquivos_sem_selo: list[str] = None  # type: ignore[assignment]
     malformados: list[str] = None  # type: ignore[assignment]
     especimes: list[str] = None  # type: ignore[assignment]
-    #: Selos que declararam `echo=no` e ficaram fora do confronto prosa × selo.
-    #: Dispensa DECLARADA sai nomeada no relatório: é a diferença entre uma
-    #: exceção e um furo.
+    #: Seals that declared `echo=no` and stayed out of the prose-vs-seal check.
+    #: A DECLARED waiver is named in the report: it is the difference between an
+    #: exception and a hole.
     dispensados_do_eco: list[str] = None  # type: ignore[assignment]
-    #: A LISTA 3: afirmações numéricas que nenhum selo cobre. São SUSPEITAS, não
-    #: defeitos — um número que ninguém consegue conferir não é um número errado.
-    #: É esta lista que faz a primeira rodada valer alguma coisa antes de o
-    #: usuário escrever uma linha de configuração.
+    #: LIST 3: numeric claims that no seal covers. They are SUSPECTS, not
+    #: defects — a number nobody can verify is not a wrong number. It is this
+    #: list that makes the first run worth something before the user writes a
+    #: line of configuration.
     sem_prova_nenhuma: list = None  # type: ignore[assignment]
 
     def __post_init__(self) -> None:
@@ -238,49 +238,50 @@ class Relatorio:
 
     @property
     def bate(self) -> list[Achado]:
-        """Lista 1 — conferido, e bate."""
+        """List 1 — checked, and matches."""
         return [a for a in self.achados if a.verde]
 
     @property
     def nao_bate(self) -> list[Achado]:
-        """Lista 2 — conferido, e NÃO bate."""
+        """List 2 — checked, and does NOT match."""
         return [a for a in self.achados if not a.verde]
 
     @property
     def reprova(self) -> bool:
-        """Reprova com QUALQUER coisa que não seja verde — inclusive vencido.
+        """Fails on ANYTHING that is not green — including expired.
 
-        Vencido reprova de propósito. Um número certo que ninguém reconfere há
-        um ano é um número que ainda não errou, não um número verificado.
+        Expired fails on purpose. A right number that nobody has re-checked in
+        a year is a number that has not been wrong yet, not a verified number.
         """
         return bool(self.malformados) or any(not a.verde for a in self.achados)
 
     @property
     def sem_denominador(self) -> bool:
-        """Nada reprova, e mesmo assim há afirmação que ninguém consegue conferir.
+        """Nothing fails, and still there is a claim that nobody can verify.
 
-        Este é o estado que devolvia `PASSA` e código de saída 0 —
-        e era *não medido* virando *zero* dentro da ferramenta que existe
-        **não medido virando zero**. Um repositório que nunca anotou nada não
-        está aprovado; ele está por medir.
+        This is the state that used to return `PASS` and exit code 0 — which
+        was *not measured* turning into *zero* inside the tool that exists to
+        forbid **not measured turning into zero**. A repository that never
+        annotated anything is not approved; it is unmeasured.
         """
         return not self.reprova and bool(self.sem_prova_nenhuma)
 
     @property
     def codigo_de_saida(self) -> int:
-        """0 verde · 1 reprova · 2 sem denominador.
+        """0 green · 1 fail · 2 no denominator.
 
-        A ordem é monotônica de propósito: reprovar ganha de não ter
-        denominador, porque um defeito conhecido é pior que uma lacuna
-        conhecida. O 2 existe para o CI de quem adota distinguir *"suas
-        anotações estão erradas"* de *"você ainda não anotou nada"*.
+        The order is monotonic on purpose: failing beats having no denominator,
+        because a known defect is worse than a known gap. The 2 exists so the CI
+        of whoever adopts can tell *"your annotations are wrong"* from *"you
+        have not annotated anything yet"*.
         """
         if self.reprova:
             return 1
-        # Zero arquivo lido é `não olhei`, e `não olhei` nunca é verde. Sem esta
-        # linha, `loadline ./docs` numa pasta real e vazia — ou apontada para o
-        # lugar errado — devolvia `PASSA` com código 0: exatamente *não medido*
-        # virando *zero*, dentro da ferramenta que existe para proibir isso.
+        # Zero files read is `I did not look`, and `I did not look` is never
+        # green. Without this line, `loadline ./docs` on a real empty folder —
+        # or pointed at the wrong place — returned `PASS` with code 0: exactly
+        # *not measured* turning into *zero*, inside the tool that exists to
+        # forbid it.
         if not self.arquivos_lidos:
             return 2
         return 2 if self.sem_prova_nenhuma else 0
@@ -288,29 +289,29 @@ class Relatorio:
     @property
     def veredito_da_corrida(self) -> str:
         if self.reprova:
-            return "REPROVA"
+            return "FAIL"
         if not self.arquivos_lidos:
-            return "SEM DENOMINADOR — nenhum arquivo foi lido; confira o caminho"
-        return "SEM DENOMINADOR" if self.sem_prova_nenhuma else "PASSA"
+            return "NO DENOMINATOR — no file was read; check the path"
+        return "NO DENOMINATOR" if self.sem_prova_nenhuma else "PASS"
 
     def resumo(self) -> str:
         linhas = [
-            f"{len(self.achados)} métricas em {self.arquivos_lidos} arquivos"
-            f" · {len(self.arquivos_sem_selo)} arquivos sem selo nenhum"
-            f" · {len(self.sem_prova_nenhuma)} afirmações que ninguém confere"
-            f" · {len(self.especimes)} com região de espécime",
+            f"{len(self.achados)} metrics in {self.arquivos_lidos} files"
+            f" · {len(self.arquivos_sem_selo)} files with no seal at all"
+            f" · {len(self.sem_prova_nenhuma)} claims nobody verifies"
+            f" · {len(self.especimes)} with a specimen region",
         ]
         for v in (MATCHES, DRIFTED, EXPIRED, UNPROVEN, FROZEN, ARBITRATED, PROSE_DRIFT):
             n = len(self.por(v))
             if n:
                 linhas.append(f"  {v:<10} {n}")
         if self.defeitos:
-            linhas.append(f"  ⚠️  {len(self.defeitos)} de RELAÇÃO — isso é defeito, não resselo")
+            linhas.append(f"  ⚠️  {len(self.defeitos)} of RELATION — that is a defect, not a re-seal")
         if self.malformados:
-            linhas.append(f"  ⛔ {len(self.malformados)} selos malformados")
+            linhas.append(f"  ⛔ {len(self.malformados)} malformed seals")
         if self.dispensados_do_eco:
             linhas.append(
-                f"  ◻️  {len(self.dispensados_do_eco)} selo(s) com `echo=no` — "
-                "dispensados do confronto prosa × selo, por declaração"
+                f"  ◻️  {len(self.dispensados_do_eco)} seal(s) with `echo=no` — "
+                "waived from the prose-vs-seal check, by declaration"
             )
         return "\n".join(linhas)

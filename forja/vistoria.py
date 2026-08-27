@@ -1,6 +1,6 @@
 """Vistoria: lê os agentes que VOCÊ JÁ TEM, e diz o que falta no SISTEMA.
 
-natureza: correcao — a saída é sempre impressa por inteiro, inclusive quando
+nature: fix — a saída é sempre impressa por inteiro, inclusive quando
 reprova. Uma vistoria que só aparece quando passa não é vistoria.
 
 A forja compila spec → artefato. Esta é a direção contrária, e é por onde todo

@@ -1,10 +1,10 @@
-"""loadline — toda afirmação escrita vence, e este pacote faz ela dizer quando.
+"""loadline — every written claim expires, and this package makes it say when.
 
-    Aquilo que não está escrito não existe.
-    E aquilo que está escrito e não é reconferido, mente.
+    What is not written down does not exist.
+    And what is written down and not re-checked lies.
 
-Sem dependência. Só a stdlib. Sem LLM, sem embedding, sem banco vetorial:
-uma afirmação ou é recomputável por uma função, ou não é afirmável.
+No dependencies. Just the stdlib. No LLM, no embedding, no vector store:
+a claim is either recomputable by a function, or it is not claimable.
 """
 
 from .registro import SemSonda, achar, explicar, medir, sonda

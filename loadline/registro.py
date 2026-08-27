@@ -1,22 +1,24 @@
-"""O registro de sondas — quem sabe recomputar cada métrica.
+"""The probe registry — who knows how to recompute each metric.
 
-natureza: correcao — sonda que estoura vira veredito `SEM_PROVA`, com o erro
-escrito por extenso. Ela nunca derruba a rodada nem, pior, passa como verde.
+nature: fix — a probe that blows up becomes the verdict `UNPROVEN`, with
+the error written out. It never takes down the run nor, worse, passes as green.
 
-Uma sonda é uma função que devolve o valor de HOJE para uma métrica. Ela é o
-lado independente do par: o selo diz o que estava escrito, a sonda diz o que é.
+A probe is a function that returns TODAY's value for a metric. It is the
+independent side of the pair: the seal says what was written, the probe says
+what is.
 
     from loadline import sonda
 
-    @sonda("colisao.*")
-    def contar_colisao(metrica, selo):
-        return len(carregar(selo.source)[metrica.split(".")[-1]])
+    @sonda("collision.*")
+    def count_collision(metric, seal):
+        return len(load(seal.source)[metric.split(".")[-1]])
 
-⚠️ A regra que faz isso valer alguma coisa: **a sonda não pode ler a mesma
-fonte que produziu o número escrito.** Se os dois lados saem do mesmo lugar,
-o par passa verde travando o defeito em vez de achá-lo — é check espelho, e
-ele não verifica nada. `explicar()` existe para tornar isso auditável: toda
-sonda declara de onde tira o valor, e a declaração fica no relatório.
+⚠️ The rule that makes this worth anything: **the probe must not read the same
+source that produced the written number.** If both sides come from the same
+place, the pair passes green while locking the defect in instead of finding it
+— it is a mirror check, and it verifies nothing. `explicar()` exists to make
+this auditable: every probe declares where it takes its value from, and the
+declaration goes in the report.
 """
 
 from __future__ import annotations
@@ -35,21 +37,21 @@ Valor = str | int | float
 class Sonda:
     padrao: str
     funcao: Callable[..., Valor]
-    origem: str  # de onde ela tira o valor — auditável, obrigatório
+    origem: str  # where it takes its value from — auditable, required
 
 
 class SemSonda(LookupError):
-    """Nenhuma sonda cobre esta métrica. Vira `SEM_PROVA`, nunca `HOLDS`."""
+    """No probe covers this metric. Becomes `UNPROVEN`, never `MATCHES`."""
 
 
 _SONDAS: list[Sonda] = []
 
 
 def sonda(padrao: str, origem: str = "") -> Callable[[Callable[..., Valor]], Callable[..., Valor]]:
-    """Registra uma função como sonda das métricas que casam com `padrao`.
+    """Registers a function as the probe for the metrics that match `padrao`.
 
-    `padrao` aceita glob (`colisao.*`). Sondas mais específicas ganham das
-    mais genéricas, independente da ordem em que foram registradas.
+    `padrao` takes a glob (`collision.*`). More specific probes win over more
+    generic ones, regardless of the order they were registered in.
     """
 
     def decorar(funcao: Callable[..., Valor]) -> Callable[..., Valor]:
@@ -68,7 +70,7 @@ def sonda(padrao: str, origem: str = "") -> Callable[[Callable[..., Valor]], Cal
 
 
 def _especificidade(padrao: str) -> tuple[int, int]:
-    """Menos curinga ganha; empatou, o padrão mais longo ganha."""
+    """Fewer wildcards wins; on a tie, the longer pattern wins."""
     return (-padrao.count("*") - padrao.count("?"), len(padrao))
 
 
@@ -76,18 +78,18 @@ def achar(metrica: str) -> Sonda:
     candidatas = [s for s in _SONDAS if fnmatch.fnmatchcase(metrica, s.padrao)]
     if not candidatas:
         raise SemSonda(
-            f"nenhuma sonda cobre `{metrica}` — o valor escrito não pode ser confrontado, "
-            "e afirmar que ele vale seria inventar"
+            f"no probe covers `{metrica}` — the written value cannot be confronted, "
+            "and claiming it holds would be inventing"
         )
     return max(candidatas, key=lambda s: _especificidade(s.padrao))
 
 
 def medir(metrica: str, selo: Selo) -> Valor:
-    """Roda a sonda da métrica. Aceita `f(metrica, selo)`, `f(selo)` ou `f()`.
+    """Runs the metric's probe. Takes `f(metric, seal)`, `f(seal)` or `f()`.
 
-    A aridade sai da assinatura, não de tentativa-e-erro: engolir `TypeError`
-    para tentar de novo esconderia um `TypeError` de dentro da própria sonda,
-    e o veredito sairia errado sem ninguém ver.
+    The arity comes from the signature, not from trial and error: swallowing a
+    `TypeError` to try again would hide a `TypeError` from inside the probe
+    itself, and the verdict would come out wrong with nobody seeing.
     """
     alvo = achar(metrica).funcao
     posicionais = [
@@ -99,10 +101,10 @@ def medir(metrica: str, selo: Selo) -> Valor:
 
 
 def explicar() -> list[tuple[str, str]]:
-    """(padrão, de onde a sonda tira o valor) — para o relatório de evidência."""
+    """(pattern, where the probe takes its value from) — for the evidence report."""
     return sorted((s.padrao, s.origem) for s in _SONDAS)
 
 
 def limpar() -> None:
-    """Só para teste. Zera o registro."""
+    """Test only. Clears the registry."""
     _SONDAS.clear()

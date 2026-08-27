@@ -3,7 +3,7 @@
     $ python -m vitrine --colher nome-da-skill --diz "uma frase do que ela faz"
     $ python -m vitrine --colher nome-da-skill --diz "..." --pasta .claude/skills
 
-natureza: seguranca — a colheita é uma recusa antes de ser uma escrita: slug
+nature: security — a colheita é uma recusa antes de ser uma escrita: slug
 fora da gramática, slug já ocupado e descrição que colide com uma skill que
 já existe NUNCA viram arquivo. Uma ferramenta que "faz o melhor esforço" e
 escreve mesmo assim produz a skill nº2 brigando pelo mesmo despacho — o

@@ -5,7 +5,7 @@ here are specimens, not claims. Without this line the module reads its own
 documentation as if it declared facts — and the MALFORMED seal example,
 which has to be able to exist written out, would fail the run.
 
-natureza: correcao — this module only reads text and returns structure. It
+nature: fix — this module only reads text and returns structure. It
 decides nothing about security, and an exception here surfaces and warns
 instead of blocking.
 

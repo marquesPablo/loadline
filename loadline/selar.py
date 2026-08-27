@@ -1,36 +1,39 @@
-"""`--selar` — a anotação vira SAÍDA da primeira rodada, não pedágio dela.
+"""`--selar` — the annotation becomes the OUTPUT of the first run, not its toll.
 
-loadline-ignore-file: este arquivo ENSINA a sintaxe que emite, e os selos
-escritos aqui são espécimes, não afirmações. Sem esta linha o módulo lê o
-próprio gerador como se ele declarasse fatos.
+loadline-ignore-file: this file TEACHES the syntax it emits, and the seals
+written here are specimens, not claims. Without this line the module reads its
+own generator as if it declared facts.
 
-natureza: correcao — este módulo escreve, e por isso ele é o único do projeto
-que precisa falhar de forma conservadora: arquivo que não deu para ler ou
-escrever vira linha no relatório e a rodada segue, nunca uma exceção no meio de
-um lote que deixa metade dos arquivos alterados e metade não.
+nature: fix — this module writes, and that is why it is the only one in
+the project that has to fail conservatively: a file it could not read or write
+becomes a line in the report and the run carries on, never an exception in the
+middle of a batch that leaves half the files changed and half not.
 
-## Por que isto existe
+## Why this exists
 
-Sem `--selar`, o custo do produto é todo antecipado: o usuário precisa escrever
-o selo À MÃO **e** uma sonda para cada métrica, e o retorno só chega em 90 dias,
-quando o primeiro `vence=` dispara. É a forma de adoção que perde.
+Without `--selar`, the whole cost of the product is paid up front: the user has
+to write the seal BY HAND **and** a probe for every metric, and the return only
+arrives in 90 days, when the first `expires=` fires. It is the adoption path
+that loses.
 
-Com ele, o usuário roda uma vez, vê a lista do que ninguém consegue conferir, e
-sai da primeira sessão com o arquivo anotado. O que era pedágio virou produto.
+With it, the user runs once, sees the list of what nobody can verify, and walks
+out of the first session with the file annotated. What was a toll became a
+product.
 
-## Quatro regras, e cada uma tem um motivo
+## Four rules, and each has a reason
 
-1. **Só escreve com a bandeira.** Sem `--selar` o projeto inteiro é
-   somente-leitura, e é assim que ele é apresentado.
-2. **Emite `arbitrated:` e nunca `measured:`.** Ninguém mediu nada. Emitir
-   `measured:` seria a ferramenta inventando que houve medição — a mentira exata
-   que ela existe para perseguir.
-3. **`by=?` sai por escrito.** A ferramenta não sabe quem escolheu o número, e
-   fingir que sabe é a mesma família de defeito. O `?` parseia (o arquivo
-   continua válido) e o relatório cobra o preenchimento em toda rodada
-   seguinte — falha visível em vez de silenciosa.
-4. **Nunca sobrescreve e nunca escreve em espécime.** Se a linha seguinte já tem
-   selo, o lugar já tem dono e este módulo não encosta.
+1. **Only writes with the flag.** Without `--selar` the whole project is
+   read-only, and that is how it is presented.
+2. **Emits `arbitrated:` and never `measured:`.** Nobody measured anything.
+   Emitting `measured:` would be the tool inventing that a measurement happened
+   — the exact lie it exists to chase.
+3. **`by=?` is written out.** The tool does not know who chose the number, and
+   pretending it does is the same family of defect. The `?` parses (the file
+   stays valid) and the report demands it be filled in on every later run —
+   a visible failure instead of a silent one.
+4. **Never overwrites and never writes into a specimen.** If the next line
+   already has a seal, the spot already has an owner and this module does not
+   touch it.
 """
 
 from __future__ import annotations
@@ -40,10 +43,10 @@ from datetime import date
 from pathlib import Path
 
 from .eco import Afirmacao
-from .selo import _PADRAO  # o mesmo reconhecedor que lê — nunca uma segunda regra
+from .selo import _PADRAO  # the same recognizer that reads — never a second rule
 
-#: Prazo padrão do selo emitido. É, ele próprio, um número ARBITRADO — e o
-#: projeto seria incoerente se fingisse o contrário. Ver `LACUNAS.md`.
+#: Default deadline of the emitted seal. It is, itself, an ARBITRATED number —
+#: and the project would be incoherent if it pretended otherwise. See `LACUNAS.md`.
 VENCE_PADRAO = "90d"
 
 
@@ -55,17 +58,17 @@ class Escrito:
 
 
 def _ja_tem_selo(linhas: list[str], indice: int) -> bool:
-    """A linha logo abaixo já carrega selo? Então o lugar tem dono."""
+    """Does the line just below already carry a seal? Then the spot has an owner."""
     seguinte = indice + 1
     return seguinte < len(linhas) and bool(_PADRAO.search(linhas[seguinte]))
 
 
 def _nomes_unicos(afirmacoes: list[Afirmacao]) -> dict[int, list[tuple[str, str]]]:
-    """Agrupa por linha e desempata nomes repetidos dentro do mesmo arquivo.
+    """Groups by line and disambiguates repeated names within the same file.
 
-    Duas frases que dizem `endpoints` produziriam duas métricas de mesmo nome, e
-    o selo do segundo silenciaria o do primeiro. Sufixar é feio e é honesto; o
-    humano renomeia os dois quando for preencher o `by=`.
+    Two sentences that say `endpoints` would produce two metrics with the same
+    name, and the second's seal would silence the first's. Suffixing is ugly and
+    it is honest; the human renames both when filling in the `by=`.
     """
     usados: dict[str, int] = {}
     por_linha: dict[int, list[tuple[str, str]]] = {}
@@ -80,11 +83,11 @@ def _nomes_unicos(afirmacoes: list[Afirmacao]) -> dict[int, list[tuple[str, str]
 def selar_arquivo(
     caminho: Path, afirmacoes: list[Afirmacao], hoje: date, vence: str = VENCE_PADRAO
 ) -> list[Escrito]:
-    """Insere um selo `arbitrated:` depois de cada linha que afirma sem prova.
+    """Inserts an `arbitrated:` seal after every line that claims without proof.
 
-    Insere de baixo para cima: escrever de cima para baixo desloca todos os
-    números de linha seguintes, e o segundo selo cairia no lugar errado — em
-    silêncio, que é o modo caro de errar aqui.
+    Inserts bottom to top: writing top to bottom shifts every following line
+    number, and the second seal would land in the wrong place — silently, which
+    is the expensive way to get it wrong here.
     """
     texto = caminho.read_text(encoding="utf-8")
     linhas = texto.splitlines()
@@ -111,7 +114,7 @@ def selar_arquivo(
 
 
 def selar(afirmacoes: list[Afirmacao], hoje: date | None = None) -> tuple[list[Escrito], list[str]]:
-    """Escreve os selos de toda a lista 3. Devolve `(escritos, problemas)`."""
+    """Writes the seals for all of list 3. Returns `(written, problems)`."""
     hoje = hoje or date.today()
     por_arquivo: dict[str, list[Afirmacao]] = {}
     for af in afirmacoes:
@@ -123,5 +126,5 @@ def selar(afirmacoes: list[Afirmacao], hoje: date | None = None) -> tuple[list[E
         try:
             escritos.extend(selar_arquivo(Path(arquivo), lote, hoje))
         except (OSError, UnicodeDecodeError, UnicodeEncodeError) as exc:
-            problemas.append(f"{arquivo}: não deu para selar — {exc}")
+            problemas.append(f"{arquivo}: could not seal — {exc}")
     return escritos, problemas

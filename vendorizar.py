@@ -1,6 +1,6 @@
 """Gera `vendorizado/forja.py` — a vistoria inteira, sem clone, baixável por `curl -O`.
 
-natureza: correcao — este gerador só concatena código real do pacote `forja`
+nature: fix — este gerador só concatena código real do pacote `forja`
 (nunca reescreve nada à mão) e falha alto se o resultado não compilar. Um
 vendorizado que "quase" funciona é pior que nenhum: alguém confiou nele sem
 instalar mais nada.

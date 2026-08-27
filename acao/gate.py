@@ -1,6 +1,6 @@
 """O gate que a Action composite chama por último: decide o exit code do job.
 
-natureza: correcao — decide se o JOB quebra, nunca se algo é bug; isso é do
+nature: fix — decide se o JOB quebra, nunca se algo é bug; isso é do
 código de saída de cada ferramenta, já decidido antes deste script rodar.
 
 Por que isto é Python, e não mais um `if` dentro do YAML: a lógica de "qual

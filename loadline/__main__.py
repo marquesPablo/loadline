@@ -1,28 +1,28 @@
-"""CLI: `python -m loadline <caminho>` — o relatório de evidência de uma corrida.
+"""CLI: `python -m loadline <path>` — the evidence report of one run.
 
-natureza: correcao — a saída é sempre impressa por inteiro, mesmo quando
-reprova. Um relatório que só aparece quando passa não é evidência.
+nature: fix — the output is always printed in full, even when it
+fails. A report that only shows up when it passes is not evidence.
 
-    python -m loadline .              # varre o projeto
-    python -m loadline README.md      # varre um arquivo
-    python -m loadline . --sondas     # mostra de onde cada sonda tira o valor
-    python -m loadline . --selar      # ESCREVE: anota o que ninguém confere
-    python -m loadline . --html relatorio.html  # ESCREVE, além do terminal
-    python -m loadline . --hoje 2027-01-01   # simula o futuro; é assim que se
-                                             # prova que o vencimento reprova
+    python -m loadline .              # scans the project
+    python -m loadline README.md      # scans one file
+    python -m loadline . --sondas     # shows where each probe reads its value
+    python -m loadline . --selar      # WRITES: annotates what nobody can verify
+    python -m loadline . --html report.html  # WRITES, on top of the terminal
+    python -m loadline . --hoje 2027-01-01   # simulates the future; this is how
+                                             # you prove that expiry fails
 
-Toda rodada devolve TRÊS listas, e a terceira é a que faz a primeira execução
-valer alguma coisa num repositório que nunca anotou nada:
+Every run returns THREE lists, and the third is what makes the first run worth
+something in a repository that never annotated anything:
 
-    ✅ conferido e bate          o que uma sonda recomputou
-    ❌ conferido e NÃO bate      derivou, venceu, não tem sonda, prosa muda
-    ⚠️  ninguém confere isto     afirmação que nenhum selo cobre — SUSPEITA
+    ✅ checked and matches       what a probe recomputed
+    ❌ checked and does NOT match  drifted, expired, no probe, prose drift
+    ⚠️  nobody verifies this      a claim that no seal covers — SUSPECT
 
-Código de saída: 0 tudo verde · 1 reprova · 2 sem denominador (nada reprova, e
-há afirmação que ninguém consegue conferir). O 2 separa *"suas anotações estão
-erradas"* de *"você ainda não anotou nada"* — e antes dele as duas
-devolviam 0, que era não-medido virando zero dentro da ferramenta que existe
-para proibir isso.
+Exit code: 0 all green · 1 fail · 2 no denominator (nothing fails, and there
+is a claim nobody can verify). The 2 separates *"your annotations are wrong"*
+from *"you have not annotated anything yet"* — and before it both returned 0,
+which was not-measured turning into zero inside the tool that exists to
+forbid exactly that.
 """
 
 from __future__ import annotations
@@ -42,10 +42,10 @@ ORDEM = (DRIFTED, PROSE_DRIFT, EXPIRED, UNPROVEN, FROZEN, ARBITRATED, MATCHES)
 
 
 def _console_em_utf8() -> None:
-    """O console do Windows abre em cp1252 e estoura em `→`, `←`, `⚠️`.
+    """The Windows console opens in cp1252 and blows up on `→`, `←`, `⚠️`.
 
-    Um relatório de evidência que morre por causa de uma seta não é evidência.
-    Reconfigurar falha aberto: se o stream não aceitar, seguimos com o que der.
+    An evidence report that dies over an arrow is not evidence. Reconfigure
+    fails open: if the stream will not take it, we carry on with what we get.
     """
     for stream in (sys.stdout, sys.stderr):
         try:
@@ -88,52 +88,52 @@ def main(argv: list[str] | None = None) -> int:
     def fechar(codigo: int) -> int:
         if html_arg is not None:
             html_arg.write_text(evidencia.pagina("loadline", alvo, hoje.isoformat(), linhas, codigo), encoding="utf-8")
-            emitir(f"\nrelatório HTML autocontido escrito em {html_arg}")
+            emitir(f"\nself-contained HTML report written to {html_arg}")
         return codigo
 
-    # ⚠️ Alvo que não existe é RECUSA, nunca `PASSA`.
+    # ⚠️ A path that does not exist is a REFUSAL, never `PASS`.
     #
-    # Sem isto, `loadline ./sr` (por `./src`) varria zero arquivo, não achava
-    # nenhuma afirmação, e saía **verde com código 0** — um erro de digitação no
-    # CI deixava o gate aprovando para sempre. É exatamente *não medido* virando
-    # *zero*, no ponto de entrada da ferramenta cuja tese inteira é que isso não
-    # pode acontecer. Bandeira desconhecida cai aqui pelo mesmo caminho: ela é
-    # lida como caminho, e nenhum caminho chamado `--sondaz` existe.
+    # Without this, `loadline ./sr` (for `./src`) scanned zero files, found no
+    # claims, and exited **green with code 0** — a typo in CI left the gate
+    # approving forever. It is exactly *not measured* turning into *zero*, at
+    # the entry point of the tool whose whole thesis is that this must not
+    # happen. An unknown flag lands here the same way: it is read as a path,
+    # and no path called `--sondaz` exists.
     caminho_do_alvo = Path(alvo)
     if not caminho_do_alvo.exists():
-        emitir(f"loadline · {alvo} · em {hoje.isoformat()}")
+        emitir(f"loadline · {alvo} · on {hoje.isoformat()}")
         emitir("=" * 72)
         if alvo.startswith("-"):
-            emitir(f"`{alvo}` não é uma bandeira conhecida, e não existe como caminho.")
-            emitir("Bandeiras: --selar · --sondas · --html ARQUIVO · --hoje AAAA-MM-DD")
+            emitir(f"`{alvo}` is not a known flag, and does not exist as a path.")
+            emitir("Flags: --selar · --sondas · --html FILE · --hoje YYYY-MM-DD")
         else:
-            emitir(f"`{alvo}` não existe.")
+            emitir(f"`{alvo}` does not exist.")
         emitir()
-        emitir("RECUSADO — não varri nada, e não vou devolver verde por isso.   (exit 2)")
+        emitir("REFUSED — I scanned nothing, and I will not return green for that.   (exit 2)")
         return fechar(2)
 
     usado = carregar_sondas(caminho_do_alvo)
     if mostrar_sondas:
-        emitir(f"sondas carregadas de: {usado or '(nenhum sondas.py encontrado)'}")
+        emitir(f"probes loaded from: {usado or '(no sondas.py found)'}")
         for padrao, origem in explicar():
             emitir(f"  {padrao:<28} ← {origem}")
         emitir()
 
     relatorio = varrer(alvo, hoje=hoje)
 
-    emitir(f"loadline · {alvo} · em {hoje.isoformat()}")
+    emitir(f"loadline · {alvo} · on {hoje.isoformat()}")
     emitir("=" * 72)
     for veredito in ORDEM:
         for achado in relatorio.por(veredito):
             emitir(str(achado))
     for problema in relatorio.malformados:
-        emitir(f"MALFORMADO {problema}")
+        emitir(f"MALFORMED {problema}")
 
     if relatorio.sem_prova_nenhuma:
         emitir()
-        emitir("⚠️  NINGUÉM CONSEGUE CONFERIR ISTO — são suspeitas, não defeitos.")
-        emitir("    Um número que ninguém confere não é um número errado; é um número")
-        emitir("    sobre o qual nada aqui tem o que dizer. `--selar` anota todos eles.")
+        emitir("⚠️  NOBODY CAN VERIFY THIS — these are suspects, not defects.")
+        emitir("    A number nobody verifies is not a wrong number; it is a number")
+        emitir("    this tool has nothing to say about. `--selar` annotates all of them.")
         for afirmacao in relatorio.sem_prova_nenhuma:
             emitir(f"      {afirmacao}")
 
@@ -142,8 +142,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if relatorio.defeitos:
         emitir()
-        emitir("⚠️  Divergência de RELAÇÃO não se resela. Ela só anda se o medidor ou o")
-        emitir("    corpus quebrou — resselar aqui é esconder o defeito, não corrigi-lo:")
+        emitir("⚠️  A RELATION divergence is not re-sealed. It only moves if the meter or")
+        emitir("    the corpus broke — re-sealing here hides the defect, it does not fix it:")
         for achado in relatorio.defeitos:
             emitir(f"      {achado.selo.arquivo}:{achado.selo.linha}  {achado.metrica}")
 
@@ -153,17 +153,17 @@ def main(argv: list[str] | None = None) -> int:
         if escritos:
             arquivos = len({e.arquivo for e in escritos})
             emitir(
-                f"escrevi {len(escritos)} selo(s) em {arquivos} arquivo(s), todos como "
-                "`arbitrated:` — ninguém mediu nada ainda."
+                f"wrote {len(escritos)} seal(s) in {arquivos} file(s), all as "
+                "`arbitrated:` — nobody has measured anything yet."
             )
             for e in escritos:
                 emitir(f"  {e.arquivo}:{e.linha}  {e.texto}")
             emitir()
-            emitir("  Agora troque cada `por=?` por quem escolheu o número, e renomeie a")
-            emitir("  métrica se o nome que eu chutei não for o certo — ele saiu da palavra")
-            emitir("  ao lado do número, não de entender o que ele significa.")
+            emitir("  Now replace each `by=?` with whoever chose the number, and rename the")
+            emitir("  metric if the name I guessed is not right — it came from the word next")
+            emitir("  to the number, not from understanding what it means.")
         else:
-            emitir("nada a selar: ou não há afirmação sem prova, ou o lugar já tem selo.")
+            emitir("nothing to seal: either there is no unverified claim, or the spot already has a seal.")
         for problema in problemas:
             emitir(f"  ⛔ {problema}")
 

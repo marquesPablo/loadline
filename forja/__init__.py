@@ -1,7 +1,7 @@
 """forja — uma spec declarativa entra, um agente COM GATE sai.
 
-natureza: correcao — este módulo só reexporta. As decisões de barrar estão em
-`forja.spec`, que é `natureza: seguranca` e falha fechada.
+nature: fix — este módulo só reexporta. As decisões de barrar estão em
+`forja.spec`, que é `nature: security` e falha fechada.
 
     python -m forja exemplos/revisor-de-licenca.toml --saida build/
 

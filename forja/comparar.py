@@ -1,6 +1,6 @@
 """Modo comparação: `forja repoA repoB repoC` — vários repositórios, UMA tabela.
 
-natureza: correcao — a saída sempre lista TODO alvo pedido, inclusive o que não
+nature: fix — a saída sempre lista TODO alvo pedido, inclusive o que não
 tem pasta de agentes; um alvo que desapareceu da tabela em silêncio é o mesmo
 defeito que a vistoria de um repositório só já recusa há muito tempo.
 

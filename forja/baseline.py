@@ -1,6 +1,6 @@
 """`--baseline`: o achado de hoje vira "o que MUDOU desde a última vez".
 
-natureza: correcao — sem baseline gravado, a ferramenta RECUSA (não inventa
+nature: fix — sem baseline gravado, a ferramenta RECUSA (não inventa
 "nada mudou" comparando com o vazio); com baseline, ela nunca esconde um item
 novo atrás dos que já eram conhecidos.
 

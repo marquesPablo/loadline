@@ -1,6 +1,6 @@
 """Junta as sondas de duas ou mais operações num `sondas.py` só.
 
-natureza: correcao — quando ele não consegue juntar, ele diz o que colidiu e
+nature: fix — quando ele não consegue juntar, ele diz o que colidiu e
 não escreve nada. Um arquivo escrito pela metade é pior que arquivo nenhum.
 
     python operacoes/juntar.py instrucao-que-nao-mente readme-que-nao-mente \\

@@ -1,6 +1,6 @@
 """A vacina de vírus de ideia — o único parágrafo que a forja injeta sem perguntar.
 
-natureza: seguranca — este módulo é a razão de a forja recusar compilar sem
+nature: security — este módulo é a razão de a forja recusar compilar sem
 vacina. Exceção aqui BARRA: agente emitido sem o parágrafo é agente emitido
 sem a única defesa medida que existe, e falhar aberto aqui seria entregar
 exatamente o produto que este arquivo existe para impedir.
