@@ -1,43 +1,44 @@
-"""Um servidor MCP somente-leitura sobre as SUAS notas. Zero dependências.
+"""A read-only MCP server over YOUR notes. Zero dependencies.
 
-nature: security — toda decisão de caminho deste módulo é uma RECUSA, e ela
-falha fechada. Caminho que sai da raiz declarada não é lido; caminho que o
-servidor não consegue resolver não é lido. Um leitor de arquivos que falha
-aberto entrega o disco inteiro para quem pedir com `../` suficiente.
+nature: security — every path decision in this module is a REFUSAL, and it
+fails closed. A path that leaves the declared root is not read; a path the
+server cannot resolve is not read. A file reader that fails open hands the
+whole disk to anyone who asks with enough `../`.
 
-    $ python servidor.py --raiz ~/notas          # fala MCP por stdin/stdout
-    $ python servidor.py --raiz ~/notas --teste  # roda sem cliente, e imprime
+    $ python servidor.py --root ~/notes          # speaks MCP over stdin/stdout
+    $ python servidor.py --root ~/notes --test    # runs with no client, and prints
 
-Registre no seu cliente MCP (o exemplo é o formato do Claude Code, em
-`.mcp.json`; outros clientes usam o mesmo trio comando/argumentos/ambiente):
+Register it in your MCP client (the example is the Claude Code format, in
+`.mcp.json`; other clients use the same command/args/env trio):
 
     {
       "mcpServers": {
-        "notas": {
+        "notes": {
           "command": "python",
-          "args": ["servidor.py", "--raiz", "/caminho/das/suas/notas"]
+          "args": ["servidor.py", "--root", "/path/to/your/notes"]
         }
       }
     }
 
-## As três decisões que fazem este arquivo caber numa página
+## The three decisions that make this file fit on a page
 
-1. **Somente leitura, e isso é estrutural.** Não há ferramenta que escreva. Não
-   é uma promessa no prompt — é a ausência do código.
-2. **Sem modelo, sem chave, sem rede.** A inteligência é do cliente MCP que já
-   está pago. Este processo é um leitor de arquivos com contrato.
-3. **A raiz é declarada e o caminho é resolvido contra ela.** Tudo o mais é
-   consequência disso.
+1. **Read-only, and it is structural.** There is no tool that writes. It is not
+   a promise in the prompt — it is the absence of the code.
+2. **No model, no key, no network.** The intelligence belongs to the MCP client
+   that is already paid for. This process is a file reader with a contract.
+3. **The root is declared and the path is resolved against it.** Everything
+   else is a consequence of that.
 
-## A armadilha que custa caro, e ela não dá erro
+## The trap that costs dearly, and it gives no error
 
-`rg`, `grep -r` e `find` **não atravessam junction do Windows nem symlink de
-diretório**, e não avisam. A busca volta plausível, sem erro, e sem os arquivos
-de dentro. `os.walk` do Python **atravessa**. Se as suas notas moram em pastas
-ligadas — e num vault de conhecimento elas quase sempre moram —, uma busca feita
-com a ferramenta errada responde com metade do corpus e a mesma cara de certa.
+`rg`, `grep -r` and `find` **do not cross a Windows junction or a directory
+symlink**, and they do not warn. The search comes back plausible, with no
+error, and without the files inside. Python's `os.walk` **does cross**. If your
+notes live in linked folders — and in a knowledge vault they almost always do —
+a search done with the wrong tool answers with half the corpus and the same
+look of being right.
 
-Por isso `buscar` aqui é `os.walk`, e não um `subprocess` chamando `grep`.
+That is why `search` here is `os.walk`, and not a `subprocess` calling `grep`.
 """
 
 from __future__ import annotations
@@ -51,23 +52,23 @@ from pathlib import Path
 VERSAO = "1.0.0"
 PROTOCOLO = "2024-11-05"
 
-#: Extensões servidas. Fechada de propósito: um servidor que serve qualquer
-#: arquivo serve `.env` e chave privada. Acrescente conscientemente.
+#: Served extensions. Closed on purpose: a server that serves any file serves
+#: `.env` and a private key. Add to it consciously.
 EXTENSOES = (".md", ".markdown", ".txt", ".org")
 
-#: Nunca descer aqui, mesmo que esteja sob a raiz.
+#: Never descend here, even if it is under the root.
 IGNORAR = {".git", ".obsidian", "node_modules", "__pycache__", ".venv", ".trash"}
 
 LIMITE_DE_BUSCA = 200
-LIMITE_DE_NOTA = 400_000  # bytes; acima disso a nota sai truncada COM AVISO
+LIMITE_DE_NOTA = 400_000  # bytes; above this the note comes out truncated WITH A WARNING
 
 
 class ForaDaRaiz(ValueError):
-    """O caminho pedido não cai sob a raiz declarada. Recusa, nunca leitura."""
+    """The requested path does not fall under the declared root. A refusal, never a read."""
 
 
 # ---------------------------------------------------------------------------
-# O corpus
+# The corpus
 # ---------------------------------------------------------------------------
 
 
@@ -75,25 +76,25 @@ class Corpus:
     def __init__(self, raiz: Path) -> None:
         self.raiz = raiz.expanduser().resolve()
         if not self.raiz.is_dir():
-            raise SystemExit(f"a raiz `{self.raiz}` não é uma pasta que existe")
+            raise SystemExit(f"the root `{self.raiz}` is not a folder that exists")
 
     def resolver(self, relativo: str) -> Path:
-        """Caminho relativo -> absoluto, ou `ForaDaRaiz`.
+        """A relative path -> absolute, or `ForaDaRaiz`.
 
-        `resolve()` nos DOIS lados antes de comparar. Comparar a string crua
-        deixaria passar `..`, link e maiúsculas em sistema que não diferencia —
-        e é assim que um leitor de notas vira um leitor de `~/.ssh`.
+        `resolve()` on BOTH sides before comparing. Comparing the raw string
+        would let `..`, a link and uppercase through on a case-insensitive
+        system — and that is how a notes reader becomes a reader of `~/.ssh`.
         """
         alvo = (self.raiz / relativo).resolve()
         if alvo != self.raiz and self.raiz not in alvo.parents:
             raise ForaDaRaiz(
-                f"`{relativo}` resolve para fora da raiz declarada. Este servidor lê "
-                f"debaixo de `{self.raiz}` e nada mais."
+                f"`{relativo}` resolves outside the declared root. This server reads "
+                f"under `{self.raiz}` and nothing else."
             )
         return alvo
 
     def notas(self) -> list[Path]:
-        """Toda nota servível, ordenada. `os.walk` porque ele ATRAVESSA junction."""
+        """Every servable note, sorted. `os.walk` because it CROSSES a junction."""
         achadas: list[Path] = []
         for pasta, subpastas, arquivos in os.walk(self.raiz, followlinks=True):
             subpastas[:] = sorted(s for s in subpastas if s not in IGNORAR and not s.startswith("."))
@@ -107,7 +108,7 @@ class Corpus:
 
 
 # ---------------------------------------------------------------------------
-# As quatro ferramentas
+# The four tools
 # ---------------------------------------------------------------------------
 
 
@@ -119,18 +120,18 @@ def mapa(corpus: Corpus) -> str:
         pastas[chave] = pastas.get(chave, 0) + 1
 
     linhas = [
-        f"raiz: {corpus.raiz}",
-        f"notas servíveis: {len(notas)}  (extensões: {', '.join(EXTENSOES)})",
+        f"root: {corpus.raiz}",
+        f"servable notes: {len(notas)}  (extensions: {', '.join(EXTENSOES)})",
         "",
-        "por pasta de primeiro nível:",
+        "by first-level folder:",
     ]
     linhas += [f"  {nome:<40} {n:>5}" for nome, n in sorted(pastas.items(), key=lambda p: -p[1])]
     linhas += [
         "",
-        "como ler uma nota inteira:  ler_nota(caminho)  — o caminho sai de listar_notas ou buscar",
+        "how to read a whole note:  read_note(path)  — the path comes from list_notes or search",
         "",
-        "⚠️ este mapa conta o que ESTE servidor serve. Arquivo de outra extensão, ou dentro de "
-        f"{sorted(IGNORAR)}, existe no disco e não aparece aqui — é denominador declarado, não ausência.",
+        "⚠️ this map counts what THIS server serves. A file with another extension, or inside "
+        f"{sorted(IGNORAR)}, exists on disk and does not show up here — it is a declared denominator, not an absence.",
     ]
     return "\n".join(linhas)
 
@@ -139,37 +140,37 @@ def listar_notas(corpus: Corpus, pasta: str = "") -> str:
     alvo = corpus.resolver(pasta) if pasta else corpus.raiz
     dentro = [n for n in corpus.notas() if alvo == n or alvo in n.parents]
     if not dentro:
-        return f"nenhuma nota sob `{pasta or '.'}` — a pasta existe e está vazia para este servidor"
+        return f"no note under `{pasta or '.'}` — the folder exists and is empty for this server"
     return "\n".join(f"{corpus.relativo(n)}  ({n.stat().st_size} bytes)" for n in dentro)
 
 
 def ler_nota(corpus: Corpus, caminho: str) -> str:
     alvo = corpus.resolver(caminho)
     if not alvo.is_file():
-        return f"`{caminho}` não é um arquivo. Use listar_notas para ver o que existe."
+        return f"`{caminho}` is not a file. Use list_notes to see what exists."
     if not alvo.name.lower().endswith(EXTENSOES):
         return (
-            f"`{caminho}` não tem extensão servível ({', '.join(EXTENSOES)}). "
-            "Este servidor não lê arquivo arbitrário — é a recusa, não uma falha."
+            f"`{caminho}` has no servable extension ({', '.join(EXTENSOES)}). "
+            "This server does not read an arbitrary file — it is the refusal, not a failure."
         )
     bruto = alvo.read_bytes()
     texto = bruto[:LIMITE_DE_NOTA].decode("utf-8", errors="replace")
     if len(bruto) > LIMITE_DE_NOTA:
         texto += (
-            f"\n\n⚠️ TRUNCADA — esta nota tem {len(bruto)} bytes e foram servidos "
-            f"{LIMITE_DE_NOTA}. O resto existe e não está aqui."
+            f"\n\n⚠️ TRUNCATED — this note has {len(bruto)} bytes and {LIMITE_DE_NOTA} were "
+            "served. The rest exists and is not here."
         )
     return texto
 
 
 def buscar(corpus: Corpus, termo: str) -> str:
-    """Busca literal, sem índice. Devolve `caminho:linha` e a linha inteira.
+    """A literal search, no index. Returns `path:line` and the whole line.
 
-    Sem índice de propósito: um índice defasa, e a defasagem é silenciosa —
-    ele responde com o corpus de ontem e com a confiança de hoje.
+    No index on purpose: an index falls behind, and the lag is silent — it
+    answers with yesterday's corpus and today's confidence.
     """
     if not termo.strip():
-        return "termo vazio — não vou devolver o corpus inteiro fingindo que foi uma busca"
+        return "empty term — I will not return the whole corpus pretending it was a search"
     agulha = termo.lower()
     achados: list[str] = []
     lidas = 0
@@ -184,76 +185,77 @@ def buscar(corpus: Corpus, termo: str) -> str:
                 achados.append(f"{corpus.relativo(nota)}:{numero}: {linha.strip()[:200]}")
                 if len(achados) >= LIMITE_DE_BUSCA:
                     achados.append(
-                        f"⚠️ PAREI em {LIMITE_DE_BUSCA} ocorrências. Há mais, e elas não estão "
-                        "aqui — refine o termo em vez de tratar isto como a lista completa."
+                        f"⚠️ STOPPED at {LIMITE_DE_BUSCA} matches. There are more, and they are not "
+                        "here — refine the term instead of treating this as the complete list."
                     )
                     return "\n".join(achados)
     if not achados:
-        return f"não encontrei `{termo}` em nenhuma das {lidas} notas servidas."
+        return f"did not find `{termo}` in any of the {lidas} served notes."
     return "\n".join(achados)
 
 
 FERRAMENTAS = [
     {
-        "name": "mapa",
+        "name": "map",
         "description": (
-            "O mapa do corpus: a raiz, quantas notas são servidas e como elas se distribuem por "
-            "pasta. CHAME PRIMEIRO, em toda sessão — é de aqui que saem os caminhos que as outras "
-            "ferramentas aceitam."
+            "The corpus map: the root, how many notes are served and how they are spread across "
+            "folders. CALL FIRST, every session — this is where the paths the other tools accept "
+            "come from."
         ),
         "inputSchema": {"type": "object", "properties": {}},
     },
     {
-        "name": "listar_notas",
-        "description": "Lista as notas de uma pasta (ou de todo o corpus), com o tamanho de cada uma.",
+        "name": "list_notes",
+        "description": "Lists the notes in a folder (or the whole corpus), with the size of each.",
         "inputSchema": {
             "type": "object",
             "properties": {
-                "pasta": {"type": "string", "description": "caminho relativo à raiz; vazio = tudo"}
+                "folder": {"type": "string", "description": "a path relative to the root; empty = everything"}
             },
         },
     },
     {
-        "name": "ler_nota",
-        "description": "Devolve o texto integral de uma nota. O caminho é relativo à raiz.",
+        "name": "read_note",
+        "description": "Returns the full text of a note. The path is relative to the root.",
         "inputSchema": {
             "type": "object",
-            "properties": {"caminho": {"type": "string"}},
-            "required": ["caminho"],
+            "properties": {"path": {"type": "string"}},
+            "required": ["path"],
         },
     },
     {
-        "name": "buscar",
+        "name": "search",
         "description": (
-            "Procura um termo literal em todas as notas e devolve `caminho:linha` com a linha "
-            "inteira. Atravessa junction e symlink de diretório, que é onde `grep -r` mente."
+            "Searches for a literal term across all notes and returns `path:line` with the whole "
+            "line. Crosses a junction and a directory symlink, which is where `grep -r` lies."
         ),
         "inputSchema": {
             "type": "object",
-            "properties": {"termo": {"type": "string"}},
-            "required": ["termo"],
+            "properties": {"term": {"type": "string"}},
+            "required": ["term"],
         },
     },
 ]
 
 DESPACHO = {
-    "mapa": lambda c, a: mapa(c),
-    "listar_notas": lambda c, a: listar_notas(c, a.get("pasta", "")),
-    "ler_nota": lambda c, a: ler_nota(c, a.get("caminho", "")),
-    "buscar": lambda c, a: buscar(c, a.get("termo", "")),
+    "map": lambda c, a: mapa(c),
+    "list_notes": lambda c, a: listar_notas(c, a.get("folder", "")),
+    "read_note": lambda c, a: ler_nota(c, a.get("path", "")),
+    "search": lambda c, a: buscar(c, a.get("term", "")),
 }
 
 
 # ---------------------------------------------------------------------------
-# O protocolo
+# The protocol
 # ---------------------------------------------------------------------------
 
 
 def responder(corpus: Corpus, pedido: dict) -> dict | None:
-    """Um pedido JSON-RPC -> uma resposta, ou None quando é notificação.
+    """One JSON-RPC request -> one response, or None when it is a notification.
 
-    Notificação (pedido sem `id`) NÃO recebe resposta. Responder a uma quebra
-    clientes que contam mensagens, e o sintoma aparece longe da causa.
+    A notification (a request with no `id`) does NOT get a response. Answering
+    one breaks clients that count messages, and the symptom shows up far from
+    the cause.
     """
     metodo = pedido.get("method", "")
     ident = pedido.get("id")
@@ -271,18 +273,18 @@ def responder(corpus: Corpus, pedido: dict) -> dict | None:
         nome = parametros.get("name", "")
         argumentos = parametros.get("arguments") or {}
         if nome not in DESPACHO:
-            return _erro(ident, -32601, f"ferramenta desconhecida: {nome}")
+            return _erro(ident, -32601, f"unknown tool: {nome}")
         try:
             texto = DESPACHO[nome](corpus, argumentos)
         except ForaDaRaiz as exc:
-            texto = f"RECUSADO: {exc}"
-        except Exception as exc:  # a ferramenta estourou: diga qual e por quê
-            texto = f"a ferramenta `{nome}` estourou: {type(exc).__name__}: {exc}"
+            texto = f"REFUSED: {exc}"
+        except Exception as exc:  # the tool blew up: say which and why
+            texto = f"the tool `{nome}` blew up: {type(exc).__name__}: {exc}"
         resultado = {"content": [{"type": "text", "text": texto}]}
     elif ident is None:
-        return None  # notificação que não nos interessa (`notifications/initialized`)
+        return None  # a notification we do not care about (`notifications/initialized`)
     else:
-        return _erro(ident, -32601, f"método não implementado: {metodo}")
+        return _erro(ident, -32601, f"method not implemented: {metodo}")
 
     if ident is None:
         return None
@@ -294,11 +296,11 @@ def _erro(ident, codigo: int, mensagem: str) -> dict:
 
 
 def servir(corpus: Corpus, entrada=None, saida=None) -> None:
-    """O laço stdio. Uma mensagem JSON por linha.
+    """The stdio loop. One JSON message per line.
 
-    ⚠️ Nada aqui pode escrever em stdout além de resposta JSON. Um `print` de
-    depuração perdido corrompe o canal do protocolo, e o cliente relata «servidor
-    não respondeu» sem nunca mostrar o texto que você imprimiu.
+    ⚠️ Nothing here may write to stdout other than a JSON response. A stray
+    debug `print` corrupts the protocol channel, and the client reports "the
+    server did not answer" without ever showing the text you printed.
     """
     entrada = entrada or sys.stdin
     saida = saida or sys.stdout
@@ -309,7 +311,7 @@ def servir(corpus: Corpus, entrada=None, saida=None) -> None:
         try:
             pedido = json.loads(linha)
         except json.JSONDecodeError:
-            continue  # lixo no canal não derruba o servidor
+            continue  # junk on the channel does not take the server down
         resposta = responder(corpus, pedido)
         if resposta is not None:
             saida.write(json.dumps(resposta, ensure_ascii=False) + "\n")
@@ -318,11 +320,13 @@ def servir(corpus: Corpus, entrada=None, saida=None) -> None:
 
 def main() -> int:
     analisador = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    analisador.add_argument("--raiz", required=True, help="a pasta das suas notas")
+    analisador.add_argument("--root", "--raiz", dest="raiz", required=True, help="the folder of your notes")
     analisador.add_argument(
+        "--test",
         "--teste",
+        dest="teste",
         action="store_true",
-        help="não fala MCP: chama as quatro ferramentas e imprime, para você ver que funciona",
+        help="does not speak MCP: calls the four tools and prints, so you can see it works",
     )
     argumentos = analisador.parse_args()
     corpus = Corpus(Path(argumentos.raiz))
@@ -333,22 +337,22 @@ def main() -> int:
                 stream.reconfigure(encoding="utf-8", errors="replace")
             except (AttributeError, ValueError, OSError):
                 pass
-        print("=== mapa() ===")
+        print("=== map() ===")
         print(mapa(corpus))
         notas = corpus.notas()
         if notas:
             primeira = corpus.relativo(notas[0])
-            print(f"\n=== ler_nota({primeira!r}) — primeiras 15 linhas ===")
+            print(f"\n=== read_note({primeira!r}) — first 15 lines ===")
             print("\n".join(ler_nota(corpus, primeira).splitlines()[:15]))
-        print("\n=== buscar('todo') ===")
+        print("\n=== search('todo') ===")
         print("\n".join(buscar(corpus, "todo").splitlines()[:10]))
-        print("\n=== a recusa, provada ===")
+        print("\n=== the refusal, proven ===")
         try:
             corpus.resolver("../../../etc/passwd")
         except ForaDaRaiz as exc:
-            print(f"RECUSADO, como tem de ser: {exc}")
+            print(f"REFUSED, as it must: {exc}")
         else:
-            print("⚠️ NÃO RECUSOU — isto é um defeito, não um detalhe")
+            print("⚠️ DID NOT REFUSE — this is a defect, not a detail")
         return 0
 
     servir(corpus)

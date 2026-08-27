@@ -1,175 +1,177 @@
-# Operações prontas
+# Ready-made operations
 
-> Uma **operação** não é um exemplo. É um trabalho inteiro, pré-montado: as sondas que recomputam,
-> os selos que vencem, o agente com gate que mantém tudo, e o job de CI que reprova quando envelhece.
+> An **operation** is not an example. It is a whole job, pre-assembled: the probes that recompute,
+> the seals that expire, the gated agent that keeps it all up, and the CI job that fails when it ages.
 >
-> Você ajusta o que a `RECEITA.md` mandar ajustar — na maioria delas, no máximo dois campos — e roda.
+> You adjust what the `RECEITA.md` tells you to adjust — in most of them, at most two fields — and run it.
 
-O núcleo do `loadline` responde *"isto que está escrito continua sendo verdade hoje?"*. Sozinho, ele
-é um motor sem carga: chega num repositório novo, não conhece nenhuma métrica dele, e a primeira
-coisa que pede é trabalho — **escreva sua sonda**.
+The `loadline` core answers *"is what is written still true today?"*. On its own, it is an engine
+with no load: it arrives at a new repository, knows none of its metrics, and the first thing it asks
+for is work — **write your probe**.
 
-Esta pasta é a carga.
+This folder is the load.
 
 ---
 
-## As sete, por família
+## The seven, by family
 
 <!-- measured: operacoes.total=7 nature=count on=2026-08-26 expires=never source=operacoes/ -->
 
-As operações não são numeradas: a prateleira muda por decisão, e número que alguém decorou
-envelhece. Elas são referidas pelo nome.
+The operations are not numbered: the shelf changes by decision, and a number someone memorized ages.
+They are referred to by name.
 
-### 🔧 Capacidade — o que você **passa a conseguir fazer**
+### 🔧 Capability — what you **become able to do**
 
-Estas instalam um trabalho que você não fazia. Comece por aqui.
+These install a job you were not doing. Start here.
 
-| Operação | O que você ganha ao clonar | Ajuste |
+| Operation | What you get by cloning | Adjust |
 |---|---|---:|
-| [`cerebro-local`](cerebro-local/) | um **servidor MCP somente-leitura sobre as suas notas**, num arquivo, sem chave de API, sem nuvem | **1 campo** |
-| [`vitrine`](vitrine/) | um agente decide carregar sua skill lendo só `name` e `description` — **26 de 31 skills oficiais da Anthropic** não declaram quando não usar, e uma tem `name` divergente da própria pasta | **1 campo** |
+| [`cerebro-local`](cerebro-local/) | a **read-only MCP server over your notes**, in one file, no API key, no cloud | **1 field** |
+| [`vitrine`](vitrine/) | an agent decides to load your skill by reading only `name` and `description` — **26 of 31 official Anthropic skills** do not declare when not to use them, and one has a `name` that diverges from its own folder | **1 field** |
 
-### 🩺 Higiene — o que **para de mentir** no seu repositório
+### 🩺 Hygiene — what **stops lying** in your repository
 
-Estas medem coisas que já existem e envelheceram caladas.
+These measure things that already exist and aged silently.
 
-| Operação | A dor | Ajuste |
+| Operation | The pain | Adjust |
 |---|---|---:|
-| [`instrucao-que-nao-mente`](instrucao-que-nao-mente/) | seu `AGENTS.md` manda rodar um comando que não existe mais, e editar uma pasta deletada | **0 campos** |
-| [`readme-que-nao-mente`](readme-que-nao-mente/) | o README afirma números que ninguém recomputa desde que foram escritos | **0 campos** |
-| [`handoff-que-mede-o-disco`](handoff-que-mede-o-disco/) | o arquivo de retomada passa a ser **escrito do disco** — commits desde, caminho morto, comando sem alvo, deriva de git | **1 campo** |
-| [`sala-de-decisao`](sala-de-decisao/) | um registro de decisões que responde **o que está parado esperando você, e há quantos dias** | **1 campo** |
-| [`suite-que-acusa`](suite-que-acusa/) | a régua que responde **quais dos seus testes passariam se o mecanismo fosse removido** | **2 campos** |
+| [`instrucao-que-nao-mente`](instrucao-que-nao-mente/) | your `AGENTS.md` tells you to run a command that no longer exists, and to edit a deleted folder | **0 fields** |
+| [`readme-que-nao-mente`](readme-que-nao-mente/) | the README claims numbers nobody has recomputed since they were written | **0 fields** |
+| [`handoff-que-mede-o-disco`](handoff-que-mede-o-disco/) | the handoff file starts being **written from the disk** — commits since, a dead path, a command with no target, git drift | **1 field** |
+| [`sala-de-decisao`](sala-de-decisao/) | a decision record that answers **what is stuck waiting on you, and for how many days** | **1 field** |
+| [`suite-que-acusa`](suite-que-acusa/) | the rule that answers **which of your tests would pass if the mechanism were removed** | **2 fields** |
 
-> **A prateleira cresce por decisão, não por acúmulo.** Ela nasceu com dez candidatas; quatro
-> saíram. `dependencia-com-veredito` e `revisao-de-seguranca`, por serem puro alarme — a primeira
-> não lê licença nenhuma, a segunda pressupõe um `.md` por achado onde scanner real cospe SARIF.
-> `fronteira-de-agente` e `fabrica-de-agentes`, porque a vistoria de roster (`python -m forja`,
-> na raiz do repositório) já produz o que as duas prometiam.
+> **The shelf grows by decision, not by accumulation.** It was born with ten candidates; four left.
+> `dependencia-com-veredito` and `revisao-de-seguranca`, for being pure alarm — the first reads no
+> license, the second assumes one `.md` per finding where a real scanner spits SARIF.
+> `fronteira-de-agente` and `fabrica-de-agentes`, because the roster survey (`python -m forja`, at
+> the repository root) already produces what the two promised.
 
 ---
 
-## A anatomia é fixa: se você aprendeu uma, aprendeu todas
+## The anatomy is fixed: if you learned one, you learned them all
 
 <!-- measured: operacoes.arquivos_por_operacao=5 nature=relation on=2026-08-21 expires=never source=operacoes/ -->
 
-| Arquivo | O que é |
+| File | What it is |
 |---|---|
-| `RECEITA.md` | a dor, o que ajustar (numerado), como rodar, e o que você vê na tela |
-| `sondas.py` | as sondas prontas — **copie para a raiz do seu repositório** |
-| `agente.toml` | a spec da forja; compila para os 7 artefatos, incluindo o hook que nega |
-| `selos.md` | os selos que esta operação instala, com a natureza e o prazo de cada um |
-| `ci.yml` | o job que faz isso reprovar no CI, para copiar em `.github/workflows/` |
+| `RECEITA.md` | the pain, what to adjust (numbered), how to run it, and what you see on screen |
+| `sondas.py` | the ready-made probes — **copy to the root of your repository** |
+| `agente.toml` | the forge spec; compiles to the 7 artifacts, including the hook that denies |
+| `selos.md` | the seals this operation installs, with the nature and deadline of each |
+| `ci.yml` | the job that makes it fail in CI, to copy into `.github/workflows/` |
 
-Uma operação pode trazer **mais** do que os cinco — a `cerebro-local` traz o `servidor.py`. O que
-ela não pode é trazer **menos**: a sonda da anatomia estoura quando falta um.
+An operation can carry **more** than the five — `cerebro-local` carries `servidor.py`. What it
+cannot do is carry **less**: the anatomy probe blows up when one is missing.
 
 ---
 
-## Os 60 segundos
+## The 60 seconds
 
 ```console
-$ git clone <este repo> && cd loadline
+$ git clone <this repo> && cd loadline
 
-$ cp operacoes/instrucao-que-nao-mente/sondas.py /caminho/do/seu/repo/sondas.py
-$ cd /caminho/do/seu/repo
+$ cp operacoes/instrucao-que-nao-mente/sondas.py /path/to/your/repo/sondas.py
+$ cd /path/to/your/repo
 
-$ PYTHONPATH=/caminho/para/loadline python -m loadline .
+$ PYTHONPATH=/path/to/loadline python -m loadline .
 ```
 
-### Como o `loadline` fica alcançável de dentro do SEU repositório
+### How `loadline` becomes reachable from inside YOUR repository
 
-Duas formas, e as duas funcionam. **Nenhuma baixa nada da internet.**
+Two ways, and both work. **Neither downloads anything from the internet.**
 
-| | Como | Quando |
+| | How | When |
 |---|---|---|
-| **sem instalar** | `PYTHONPATH=/caminho/para/loadline python -m loadline .` | experimentar, CI efêmero, máquina que você não administra |
-| **instalando** | `pip install -e /caminho/para/loadline`, e depois só `loadline .` | uso diário; o `pyproject.toml` declara o comando e **zero dependências** |
+| **without installing** | `PYTHONPATH=/path/to/loadline python -m loadline .` | trying it out, ephemeral CI, a machine you do not administer |
+| **installing** | `pip install -e /path/to/loadline`, and then just `loadline .` | daily use; the `pyproject.toml` declares the command and **zero dependencies** |
 
-Os exemplos das receitas usam a primeira forma, porque ela é a que funciona em qualquer lugar sem
-pedir permissão a ninguém. Se você instalou, troque `PYTHONPATH=... python -m loadline` por `loadline`
-em todos eles.
+The recipe examples use the first way, because it is the one that works anywhere without asking
+anyone's permission. If you installed, swap `PYTHONPATH=... python -m loadline` for `loadline` in
+all of them.
 
-A primeira execução **não pede nada de você**. Ela devolve três listas, e a terceira é a que
-importa: toda afirmação numérica dos seus arquivos que nenhum selo cobre, com arquivo, linha e o
-selo pronto para colar.
+The first run **asks nothing of you**. It returns three lists, and the third is the one that
+matters: every numeric claim in your files that no seal covers, with the file, the line and the seal
+ready to paste.
 
 ```console
 $ python -m loadline . --selar
 ```
 
-Isso escreve os selos, todos como `arbitrated:` — porque ninguém mediu nada ainda. Onde a operação
-já traz sonda pronta, você troca `arbitrated:` por `measured:` e o número passa a ser **recomputado**
-em vez de escolhido. A `RECEITA.md` de cada operação diz exatamente quais.
+This writes the seals, all as `arbitrated:` — because nobody has measured anything yet. Where the
+operation already ships a ready probe, you swap `arbitrated:` for `measured:` and the number starts
+being **recomputed** instead of chosen. Each operation's `RECEITA.md` says exactly which.
 
-### Usando duas operações no mesmo repositório
+### Using two operations in the same repository
 
-As sondas são escritas para poderem conviver. Cada operação usa um prefixo próprio nas funções
-auxiliares, e **nenhum padrão de métrica colide** entre elas — isso é gateado por um check com
-controle negativo, porque uma colisão sombrearia a sonda mais velha sem erro nenhum.
+The probes are written to coexist. Each operation uses its own prefix on the helper functions, and
+**no metric pattern collides** between them — this is gated by a check with a negative control,
+because a collision would shadow the older probe with no error at all.
 
-**Mas não junte com `cat`.** Todo `sondas.py` abre com `from __future__ import annotations`, e o
-Python exige que essa linha seja a primeira instrução do arquivo. Concatenado, o segundo arquivo
-põe a dele no meio, e o resultado morre com `SyntaxError` na importação — depois de já ter
-sobrescrito o `sondas.py` de quem tentou. Medido: **todos os pares possíveis quebram.**
+**But do not join them with `cat`.** Every `sondas.py` opens with `from __future__ import
+annotations`, and Python requires that line to be the first statement in the file. Concatenated, the
+second file puts its own in the middle, and the result dies with `SyntaxError` on import — after it
+has already overwritten the `sondas.py` of whoever tried. Measured: **every possible pair breaks.**
 
 ```console
 $ python operacoes/juntar.py instrucao-que-nao-mente readme-que-nao-mente \
-      --saida /caminho/do/seu/repo/sondas.py
-✓ /caminho/do/seu/repo/sondas.py  ·  2 operações, 20 sondas, 0 colisões
+      --saida /path/to/your/repo/sondas.py
+✓ /path/to/your/repo/sondas.py  ·  2 operations, 20 probes, 0 collisions
 ```
 
-Ele sobe os imports para o topo, deduplica, e **recusa** se duas operações registrarem o mesmo
-padrão de métrica — em Python a segunda sombrearia a primeira sem erro nenhum, e a métrica
-sombreada sumiria do relatório sem nunca ter reprovado. Quando ele recusa, não escreve nada: um
-`sondas.py` pela metade importa, roda, e devolve verde sobre o que ficou de fora.
+It lifts the imports to the top, deduplicates, and **refuses** if two operations register the same
+metric pattern — in Python the second would shadow the first with no error at all, and the shadowed
+metric would disappear from the report without ever having failed. When it refuses, it writes
+nothing: a half-written `sondas.py` imports, runs, and returns green over what was left out.
 
 ---
 
-## O que estas operações NÃO fazem
+## What these operations do NOT do
 
-Cada operação declara as suas lacunas no `LACUNAS.md` que a forja emite ao compilar o agente. Três
-valem para todas, e ficam escritas aqui para ninguém descobri-las usando:
+Each operation declares its gaps in the `LACUNAS.md` the forge emits when it compiles the agent.
+Three hold for all of them, and are written here so nobody discovers them by using:
 
-1. **A sonda prova coerência interna, nunca a verdade do mundo.** Ela recomputa de uma fonte no
-   disco. Se a fonte estiver errada, o par passa verde com os dois lados errados juntos. É para isso
-   que serve o `vence=`: ele é o único mecanismo aqui que obriga alguém a sair da máquina.
+1. **The probe proves internal coherence, never the truth of the world.** It recomputes from a
+   source on disk. If the source is wrong, the pair passes green with both sides wrong together.
+   That is what `expires=` is for: it is the only mechanism here that forces someone to leave the
+   machine.
 
-2. **Nenhuma delas julga se a métrica era a certa.** *"Este número ainda bate?"* e *"esta frase o
-   repete certo?"* são as duas perguntas. Se a afirmação importava, continua sendo julgamento de
-   quem escreve.
+2. **None of them judges whether the metric was the right one.** *"Does this number still match?"*
+   and *"does this sentence repeat it right?"* are the two questions. If the claim mattered, that
+   stays a judgment for whoever writes.
 
-3. **Nenhuma delas instala, baixa, envia ou telefona para lugar nenhum.** Zero dependências, zero
-   rede, zero chave de API, zero telemetria. Se uma sonda precisar da internet, ela vira `UNPROVEN`
-   com o erro escrito — nunca um palpite com cara de medida.
+3. **None of them installs, downloads, sends or phones anywhere.** Zero dependencies, zero network,
+   zero API key, zero telemetry. If a probe needs the internet, it becomes `UNPROVEN` with the error
+   written out — never a guess dressed as a measurement.
 
-**E uma quarta, que vale para a operação que traz heurística** (`suite-que-acusa`): **ela erra nos
-dois sentidos, e diz isso.** O número que a sonda `suite.sem_controle_negativo` produz é uma **lista
-de leitura**, não um veredito — ela não deve reprovar o CI sozinha. Uma régua heurística que reprova
-treina o time a escrever código para agradar a régua, e aí ela parou de medir o código.
+**And a fourth, which holds for the operation that carries a heuristic** (`suite-que-acusa`): **it
+gets it wrong both ways, and it says so.** The number the `suite.sem_controle_negativo` probe
+produces is a **reading list**, not a verdict — it should not fail CI on its own. A heuristic rule
+that fails trains the team to write code to please the rule, and then it has stopped measuring the
+code.
 
 ---
 
-## Escrevendo a sua
+## Writing your own
 
-Uma operação é uma pasta com os cinco arquivos acima. O que faz uma boa:
+An operation is a folder with the five files above. What makes a good one:
 
-- **A sonda não pode ler a fonte que produziu o número escrito.** Se os dois lados saem do mesmo
-  lugar, o par passa verde **travando** o defeito em vez de achá-lo. Toda sonda daqui declara o
-  `origem=` justamente para essa regra ser auditável de fora.
-- **`natureza` é obrigatória, e ela muda o que fazer com o vermelho.** `contagem` anda quando alguém
-  escreve — divergiu, resele e siga. `relacao` só anda se o medidor ou o repositório quebrou —
-  divergiu, **pare e investigue**. Sem a distinção, todo vermelho vira ruído e a resposta a todo
-  vermelho vira "resela".
-- **Estourar é melhor que devolver zero.** *"Não olhei"* e *"olhei e não há"* dizem coisas opostas.
-  Uma sonda que devolve `0` quando a pasta não existe transformou o primeiro no segundo — que é o
-  defeito que este projeto inteiro existe para proibir.
-- **O `agente.toml` compila ou é recusado.** A forja tem oito recusas e todas falham fechadas. Se a
-  sua spec pede rede sem declarar domínio, ou escrita sem declarar caminho, ela não sai — e a recusa
-  vem com o conserto escrito.
+- **The probe must not read the source that produced the written number.** If both sides come from
+  the same place, the pair passes green **locking** the defect in instead of finding it. Every probe
+  here declares `origem=` precisely so that rule is auditable from outside.
+- **`nature` is required, and it changes what to do with the red.** `count` moves when someone
+  writes — it diverged, re-seal and move on. `relation` only moves if the meter or the repository
+  broke — it diverged, **stop and investigate**. Without the distinction, every red is noise and
+  the answer to every red becomes "re-seal".
+- **Blowing up is better than returning zero.** *"I did not look"* and *"I looked and there is
+  nothing"* say opposite things. A probe that returns `0` when the folder does not exist turned the
+  first into the second — the defect this whole project exists to forbid.
+- **The `agente.toml` compiles or is refused.** The forge has eight refusals and all of them fail
+  closed. If your spec asks for network without declaring a domain, or write without declaring a
+  path, it does not come out — and the refusal carries the fix written out.
 
-Uma sonda de domínio nova entra por PR em [`comunidade/`](../comunidade/), revisada por decisão
-humana — nunca só por CI verde.
+A new domain probe comes in by PR to [`comunidade/`](../comunidade/), reviewed by human decision —
+never by green CI alone.
 
-> *As operações desta prateleira nasceram em 2026-08-21, e até essa data nenhuma tinha sido
-> executada por outra pessoa. Isso é denominador declarado, não modéstia.*
+> *The operations on this shelf were born on 2026-08-21, and up to that date none had been run by
+> anyone else. That is a declared denominator, not modesty.*

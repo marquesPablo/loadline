@@ -1063,8 +1063,8 @@ def _ax():
                     "id": 3,
                     "method": "tools/call",
                     "params": {
-                        "name": "ler_nota",
-                        "arguments": {"caminho": "../../../../etc/passwd"},
+                        "name": "read_note",
+                        "arguments": {"path": "../../../../etc/passwd"},
                     },
                 }
             ),
@@ -1089,12 +1089,12 @@ def _ax():
     assert len(respostas) == 3, f"3 respostas para 3 pedidos com id, vieram {len(respostas)}"
     assert respostas[0]["result"]["serverInfo"]["name"] == "cerebro-local"
     nomes = [f["name"] for f in respostas[1]["result"]["tools"]]
-    assert nomes == ["mapa", "listar_notas", "ler_nota", "buscar"], nomes
+    assert nomes == ["map", "list_notes", "read_note", "search"], nomes
 
     # O defeito, reintroduzido: a travessia de caminho tem de ser RECUSADA. Sem
     # isto, o laço acima passaria igual num servidor que serve o disco inteiro.
     texto = respostas[2]["result"]["content"][0]["text"]
-    assert texto.startswith("RECUSADO"), f"a travessia NÃO foi recusada: {texto[:120]}"
+    assert texto.startswith("REFUSED"), f"a travessia NÃO foi recusada: {texto[:120]}"
 
 
 @check("AY", "fonte declarada que não existe ESTOURA — «não medido» nunca vira zero")

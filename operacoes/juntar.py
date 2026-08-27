@@ -1,25 +1,25 @@
-"""Junta as sondas de duas ou mais operações num `sondas.py` só.
+"""Joins the probes of two or more operations into a single `sondas.py`.
 
-nature: fix — quando ele não consegue juntar, ele diz o que colidiu e
-não escreve nada. Um arquivo escrito pela metade é pior que arquivo nenhum.
+nature: fix — when it cannot join, it says what collided and writes nothing.
+A half-written file is worse than no file.
 
     python operacoes/juntar.py instrucao-que-nao-mente readme-que-nao-mente \\
-        --saida /caminho/do/seu/repo/sondas.py
+        --saida /path/to/your/repo/sondas.py
 
-Por que isto existe, e não é um `cat`: todo `sondas.py` de operação abre com
-`from __future__ import annotations`, e o Python exige que essa linha seja a
-PRIMEIRA instrução do arquivo. Concatenar dois arquivos com `cat` põe a segunda
-no meio, e o resultado morre com `SyntaxError` na hora de importar — depois de
-já ter sobrescrito o `sondas.py` de quem tentou.
+Why this exists, and is not a `cat`: every operation `sondas.py` opens with
+`from __future__ import annotations`, and Python requires that line to be the
+FIRST statement in the file. Concatenating two files with `cat` puts the second
+one in the middle, and the result dies with `SyntaxError` on import — after it
+has already overwritten the `sondas.py` of whoever tried.
 
-O que ele faz, em três regras:
+What it does, in three rules:
 
-  1. `from __future__` sai de todos e volta uma vez só, no topo.
-  2. Os demais `import` são reunidos, deduplicados e ordenados.
-  3. Colisão de PADRÃO DE MÉTRICA entre duas operações é RECUSA. Duas sondas
-     registrando o mesmo padrão não dão erro em Python: a segunda sombreia a
-     primeira em silêncio, e a métrica sombreada some do relatório sem nunca
-     ter reprovado.
+  1. `from __future__` comes out of all of them and comes back once, at the top.
+  2. The other `import`s are gathered, deduplicated and sorted.
+  3. A METRIC PATTERN collision between two operations is a REFUSAL. Two probes
+     registering the same pattern do not error in Python: the second shadows
+     the first silently, and the shadowed metric disappears from the report
+     without ever having failed.
 """
 
 from __future__ import annotations
@@ -36,11 +36,11 @@ _PADRAO = re.compile(r'^@sonda\(\s*\n?\s*"([^"]+)"', re.M)
 
 
 class Colisao(ValueError):
-    """Duas operações registram o mesmo padrão de métrica. Recusa, nunca aviso."""
+    """Two operations register the same metric pattern. A refusal, never a warning."""
 
 
 def _corpo(texto: str) -> str:
-    """O arquivo sem as linhas de import — elas sobem para o topo do resultado."""
+    """The file without the import lines — they go to the top of the result."""
     sem_future = _FUTURE.sub("", texto)
     return _IMPORT.sub("", sem_future)
 
@@ -50,7 +50,7 @@ def _imports(texto: str) -> list[str]:
 
 
 def padroes(texto: str) -> list[str]:
-    """Os padrões de métrica que este arquivo registra."""
+    """The metric patterns this file registers."""
     return _PADRAO.findall(texto)
 
 
@@ -59,12 +59,13 @@ def juntar(nomes: list[str], raiz: Path = AQUI) -> str:
     for nome in nomes:
         arquivo = raiz / nome / "sondas.py"
         if not arquivo.is_file():
-            # ⚠️ Operação que não existe é RECUSA, e nunca um arquivo a menos
-            # escrito em silêncio: `foja` por `forja` produziria metade das
-            # sondas pedidas, sem erro, e ninguém contaria as que faltaram.
+            # ⚠️ An operation that does not exist is a REFUSAL, and never one
+            # file less written silently: `foja` for `forja` would produce half
+            # the requested probes, with no error, and nobody would count the
+            # ones that were missing.
             disponiveis = sorted(p.name for p in raiz.iterdir() if (p / "sondas.py").is_file())
             raise FileNotFoundError(
-                f"`{nome}` não é uma operação com sondas. Existem: {', '.join(disponiveis)}"
+                f"`{nome}` is not an operation with probes. There are: {', '.join(disponiveis)}"
             )
         fontes[nome] = arquivo.read_text(encoding="utf-8")
 
@@ -73,18 +74,18 @@ def juntar(nomes: list[str], raiz: Path = AQUI) -> str:
         for padrao in padroes(texto):
             if padrao in dono:
                 raise Colisao(
-                    f"`{padrao}` é registrado por `{dono[padrao]}` e por `{nome}`. "
-                    "Em Python a segunda sombreia a primeira sem erro nenhum, e a métrica "
-                    "sombreada some do relatório sem nunca ter reprovado. Renomeie uma "
-                    "das duas antes de juntar."
+                    f"`{padrao}` is registered by `{dono[padrao]}` and by `{nome}`. "
+                    "In Python the second shadows the first with no error at all, and the shadowed "
+                    "metric disappears from the report without ever having failed. Rename one of "
+                    "the two before joining."
                 )
             dono[padrao] = nome
 
     cabeca = [
-        '"""Sondas de: ' + ", ".join(nomes) + ".",
+        '"""Probes from: ' + ", ".join(nomes) + ".",
         "",
-        "Gerado por `operacoes/juntar.py`. Editar aqui é legítimo — este arquivo é seu,",
-        "e a partir daqui ele não volta para a ferramenta que o escreveu.",
+        "Generated by `operacoes/juntar.py`. Editing here is legitimate — this file is yours,",
+        "and from here on it does not go back to the tool that wrote it.",
         '"""',
         "",
         "from __future__ import annotations",
@@ -105,10 +106,10 @@ def juntar(nomes: list[str], raiz: Path = AQUI) -> str:
 
 
 def _console_em_utf8() -> None:
-    """O console do Windows abre em cp1252 e estoura no `✓` e no `⛔`.
+    """The Windows console opens in cp1252 and blows up on `✓` and `⛔`.
 
-    Falha aberto: se o stream não aceitar, seguimos com o que der. Uma recusa
-    que morre por causa de um símbolo não é uma recusa — é um traceback.
+    Fails open: if the stream will not take it, we carry on with what we get. A
+    refusal that dies over a symbol is not a refusal — it is a traceback.
     """
     for stream in (sys.stdout, sys.stderr):
         try:
@@ -132,10 +133,10 @@ def main(argv: list[str] | None = None) -> int:
     try:
         texto = juntar(nomes)
     except (Colisao, FileNotFoundError) as recusa:
-        print(f"⛔ RECUSADO  {recusa}")
+        print(f"⛔ REFUSED  {recusa}")
         print()
-        print("   Nada foi escrito. Um `sondas.py` pela metade é pior que nenhum:")
-        print("   ele importa, roda, e devolve verde sobre o que ficou de fora.")
+        print("   Nothing was written. A half-written `sondas.py` is worse than none:")
+        print("   it imports, runs, and returns green over what was left out.")
         return 1
 
     quantos = len(padroes(texto))
@@ -144,9 +145,9 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     saida.parent.mkdir(parents=True, exist_ok=True)
     saida.write_text(texto, encoding="utf-8")
-    print(f"✓ {saida}  ·  {len(nomes)} operações, {quantos} sondas, 0 colisões")
+    print(f"✓ {saida}  ·  {len(nomes)} operations, {quantos} probes, 0 collisions")
     print()
-    print("  Confira com:  python -m loadline /caminho/do/seu/repo --sondas")
+    print("  Check with:  python -m loadline /path/to/your/repo --sondas")
     return 0
 
 
