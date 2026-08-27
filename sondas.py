@@ -262,3 +262,97 @@ def achados_da_vistoria() -> int:
 
     texto = (RAIZ / "forja" / "vistoria.py").read_text(encoding="utf-8")
     return len(set(re.findall(r'^\s+"(V\d+)",$', texto, re.MULTILINE)))
+
+
+# ----------------------------------------------------------------- o blind ---
+# O `blind` afirma dois números na própria `blind/LACUNAS.md` e nenhum tinha
+# sonda — era uma das quatro `UNPROVEN` que faziam `python -m loadline .`
+# reprovar o próprio repositório. Os dois lados são independentes: o número
+# mora em prosa na `LACUNAS.md`, a sonda o recomputa da estrutura de
+# `blind/limites.py`, que é o que o campo `fonte=` do selo já declara.
+
+
+@sonda("blind.causas", origem="parágrafos `**Causa N —` no docstring de blind/limites.py")
+def blind_causas() -> int:
+    """As causas nomeadas de fronteira que uma varredura ingênua não vê —
+    estrutural (reparse point) e política (`.gitignore`).
+
+    Lida do módulo que as implementa, nunca da `blind/LACUNAS.md` que as
+    narra. É de contagem: sobe quando alguém documenta uma terceira causa.
+    """
+    import re
+
+    texto = (RAIZ / "blind" / "limites.py").read_text(encoding="utf-8")
+    return len(re.findall(r"(?m)^\*\*Causa \d+ ", texto))
+
+
+@sonda("blind.declaracao", origem="len(ARQUIVOS_DE_DECLARACAO), lido por ast em blind/limites.py")
+def blind_declaracao() -> int:
+    """Quantos NOMES DE ARQUIVO o `blind` reconhece como declaração.
+
+    ⚠️ Lido por `ast`, sem importar o módulo. A pasta `.claude/` entra à parte
+    (`PASTA_DE_DECLARACAO`) e não conta aqui — o número da `LACUNAS.md` é só o
+    `frozenset` de cinco nomes.
+    """
+    import ast
+
+    arvore = ast.parse((RAIZ / "blind" / "limites.py").read_text(encoding="utf-8"))
+    for no in arvore.body:
+        if (
+            isinstance(no, ast.Assign)
+            and no.targets
+            and isinstance(no.targets[0], ast.Name)
+            and no.targets[0].id == "ARQUIVOS_DE_DECLARACAO"
+            and isinstance(no.value, ast.Call)
+            and no.value.args
+            and isinstance(no.value.args[0], (ast.Set, ast.List, ast.Tuple))
+        ):
+            return len(no.value.args[0].elts)
+    raise LookupError(
+        "`ARQUIVOS_DE_DECLARACAO` não é um `frozenset({...})` literal no topo de blind/limites.py"
+    )
+
+
+# ---------------------------------------------------------------- o placar ---
+
+
+@sonda("placar.portas", origem="tamanho da lista `portas` em placar.portas.avaliar(), lido por ast")
+def placar_portas() -> int:
+    """As sete portas de "Would you ship this AI agent?".
+
+    Lida da lista que `avaliar()` monta — a fonte autoritativa do que roda de
+    verdade —, nunca do README que as anuncia. É de contagem: sobe se uma
+    oitava porta for cabeada.
+    """
+    import ast
+
+    arvore = ast.parse((RAIZ / "placar" / "portas.py").read_text(encoding="utf-8"))
+    for no in ast.walk(arvore):
+        if isinstance(no, ast.FunctionDef) and no.name == "avaliar":
+            for filho in ast.walk(no):
+                if (
+                    isinstance(filho, ast.Assign)
+                    and any(getattr(t, "id", "") == "portas" for t in filho.targets)
+                    and isinstance(filho.value, (ast.List, ast.Tuple))
+                ):
+                    return len(filho.value.elts)
+    raise LookupError("`portas = [...]` não é uma lista literal dentro de placar.portas.avaliar()")
+
+
+# ----------------------------------------------------------- o censo datado ---
+
+
+@sonda("censo.edicao", origem="posição 1-based da data deste arquivo entre censo/edicoes/*.json")
+def censo_edicao(metrica: str, selo) -> int:
+    """O número de ordem de uma edição do censo.
+
+    O `.md` escreve o número em prosa; esta sonda o deriva da lista de
+    snapshots `.json` — o OUTRO arquivo que `censo/edicao.py` grava por
+    edição, e o único que a próxima rodada lê de volta. Contar o `.md` seria
+    check espelho.
+    """
+    arquivo = Path(selo.arquivo)
+    datas = sorted(p.stem for p in arquivo.parent.glob("*.json"))
+    if arquivo.stem not in datas:
+        raise LookupError(f"não há snapshot `{arquivo.stem}.json` ao lado de {arquivo.name}")
+    return datas.index(arquivo.stem) + 1

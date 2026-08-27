@@ -238,6 +238,14 @@ antes de precisar ser reconferida de novo.
 - [`loadline/`](loadline/) — a mesma régua aplicada ao **texto**: uma afirmação escrita ganha prazo de
   validade e uma sonda que a recomputa, e a sonda **não pode ler a fonte que produziu o número**.
   `python -m loadline .`
+
+  > A primeira rodada num repositório que nunca anotou nada — **este inclusive** — devolve uma lista
+  > longa de `SEM PROVA`: número na prosa que os selos não cobrem. Isso é **esperado, e não é
+  > reprovação** — é a terceira lista (*o que ninguém consegue conferir*), e o código de saída é o
+  > que a ferramenta reserva para *você ainda não anotou nada*, distinto do código de reprovação.
+  > Sele à mão o que importa; `python -m loadline . --selar` anota o resto de uma vez, para você
+  > assinar depois.
+
 - [`operacoes/`](operacoes/) — sete trabalhos prontos que rodam no seu repositório sem configuração.
   <!-- measured: operacoes.total=7 natureza=contagem em=2026-08-26 vence=nunca fonte=operacoes/ -->
 - [`censo/`](censo/) — um registro do ecossistema de agentes de IA onde cada entrada **vence**.
