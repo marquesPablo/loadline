@@ -7,10 +7,10 @@ Cole **no README do seu vault** — o arquivo que descreve o que o corpus é e o
 ```markdown
 Este servidor expõe quatro ferramentas somente-leitura sobre as minhas notas, sem nenhuma
 dependência de terceiros, e o grafo não tem aresta para o vazio.
-<!-- measured: cerebro.ferramentas=4 natureza=relacao em=AAAA-MM-DD vence=nunca fonte=servidor.py -->
-<!-- measured: cerebro.dependencias=0 natureza=relacao em=AAAA-MM-DD vence=nunca fonte=servidor.py -->
-<!-- measured: cerebro.links_quebrados=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=corpus -->
-<!-- measured: cerebro.orfas=0 natureza=relacao em=AAAA-MM-DD vence=90d fonte=corpus -->
+<!-- measured: cerebro.ferramentas=4 nature=relation on=AAAA-MM-DD expires=never source=servidor.py -->
+<!-- measured: cerebro.dependencias=0 nature=relation on=AAAA-MM-DD expires=never source=servidor.py -->
+<!-- measured: cerebro.links_quebrados=0 nature=relation on=AAAA-MM-DD expires=30d source=corpus -->
+<!-- measured: cerebro.orfas=0 nature=relation on=AAAA-MM-DD expires=90d source=corpus -->
 ```
 
 **`cerebro.dependencias=0` é o selo mais valioso desta operação**, e o menos óbvio. *"Zero
@@ -25,8 +25,8 @@ mesma métrica reprovar por duas razões diferentes, e o vermelho deixaria de di
 ## As duas contagens do corpus
 
 ```markdown
-<!-- measured: cerebro.notas=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=corpus -->
-<!-- measured: cerebro.pastas=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=corpus -->
+<!-- measured: cerebro.notas=N nature=count on=AAAA-MM-DD expires=90d source=corpus -->
+<!-- measured: cerebro.pastas=N nature=count on=AAAA-MM-DD expires=90d source=corpus -->
 ```
 
 Estas andam toda vez que você escreve. Divergiram, resele e siga — é o caso em que o vermelho
@@ -49,8 +49,8 @@ colchetes duplos**.
 
 ```markdown
 O grafo de notas é reconferido a cada 30 dias.
-<!-- arbitrated: cerebro.prazo=30 por="quem adotou a operação" em=AAAA-MM-DD vence=180d
-     derruba="um vault que só recebe notas novas, ou um em que várias pessoas renomeiam arquivo" -->
+<!-- arbitrated: cerebro.prazo=30 by="quem adotou a operação" on=AAAA-MM-DD expires=180d
+     breaks="um vault que só recebe notas novas, ou um em que várias pessoas renomeiam arquivo" -->
 ```
 
 Trinta dias para link quebrado e noventa para órfã não é simetria esquecida: **link quebrado nasce

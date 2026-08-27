@@ -87,9 +87,9 @@ def _selo(texto: str):
 @check("A", "selo com métrica e SEM `natureza` é RECUSADO, não aceito calado")
 def _a():
     try:
-        _selo("<!-- measured: x.y=3 em=2026-08-16 -->")
+        _selo("<!-- measured: x.y=3 on=2026-08-16 -->")
     except SeloMalformado as exc:
-        assert "natureza" in str(exc), f"recusou pelo motivo errado: {exc}"
+        assert "nature" in str(exc), f"recusou pelo motivo errado: {exc}"
         return
     raise AssertionError(
         "aceitou selo sem natureza — aí todo vermelho vira ruído e a resposta a "
@@ -100,7 +100,7 @@ def _a():
 @check("B", "`natureza` fora do vocabulário fechado é RECUSADA")
 def _b():
     try:
-        _selo("<!-- measured: x.y=3 natureza=talvez em=2026-08-16 -->")
+        _selo("<!-- measured: x.y=3 nature=talvez on=2026-08-16 -->")
     except SeloMalformado:
         return
     raise AssertionError("aceitou `natureza=talvez`; o vocabulário não é fechado de verdade")
@@ -109,9 +109,9 @@ def _b():
 @check("C", "`frozen:` sem `motivo` é RECUSADO")
 def _c():
     try:
-        _selo('<!-- frozen: x.y=3 em=2020-01-01 -->')
+        _selo('<!-- frozen: x.y=3 on=2020-01-01 -->')
     except SeloMalformado as exc:
-        assert "motivo" in str(exc), f"recusou pelo motivo errado: {exc}"
+        assert "reason" in str(exc), f"recusou pelo motivo errado: {exc}"
         return
     raise AssertionError("congelar sem dizer por quê é o mesmo que apagar a medida")
 
@@ -120,7 +120,7 @@ def _c():
 def _d():
     registro.limpar()
     sonda("x.y", origem="teste")(lambda: 3)
-    achados = julgar(_selo("<!-- measured: x.y=3 natureza=contagem em=2026-08-16 vence=semana -->"), HOJE)
+    achados = julgar(_selo("<!-- measured: x.y=3 nature=count on=2026-08-16 expires=semana -->"), HOJE)
     assert achados[0].veredito == UNPROVEN, f"esperava UNPROVEN, veio {achados[0].veredito}"
 
 
@@ -130,7 +130,7 @@ def _d():
 def _e():
     registro.limpar()
     sonda("x.y", origem="teste")(lambda: 9)
-    a = julgar(_selo("<!-- measured: x.y=3 natureza=contagem em=2026-08-16 -->"), HOJE)[0]
+    a = julgar(_selo("<!-- measured: x.y=3 nature=count on=2026-08-16 -->"), HOJE)[0]
     assert a.veredito == DRIFTED, f"esperava DRIFTED, veio {a.veredito}"
     assert not a.e_defeito, "contagem divergindo NÃO é defeito"
     assert "resele" in a.acao.lower(), f"ação errada: {a.acao}"
@@ -140,7 +140,7 @@ def _e():
 def _f():
     registro.limpar()
     sonda("x.y", origem="teste")(lambda: 9)
-    a = julgar(_selo("<!-- measured: x.y=3 natureza=relacao em=2026-08-16 -->"), HOJE)[0]
+    a = julgar(_selo("<!-- measured: x.y=3 nature=relation on=2026-08-16 -->"), HOJE)[0]
     assert a.veredito == DRIFTED, f"esperava DRIFTED, veio {a.veredito}"
     assert a.e_defeito, (
         "relação divergindo passou como resselável — é aqui que se esconde o bug "
@@ -156,7 +156,7 @@ def _g():
     registro.limpar()
     sonda("x.y", origem="teste")(lambda: 3)
     a = julgar(
-        _selo("<!-- measured: x.y=3 natureza=contagem em=2026-01-01 vence=30d -->"), HOJE
+        _selo("<!-- measured: x.y=3 nature=count on=2026-01-01 expires=30d -->"), HOJE
     )[0]
     assert a.veredito == EXPIRED, (
         f"esperava EXPIRED, veio {a.veredito} — um número que ninguém reconfere há meses "
@@ -169,7 +169,7 @@ def _g():
 def _h():
     registro.limpar()
     sonda("x.y", origem="teste")(lambda: 3)
-    a = julgar(_selo("<!-- measured: x.y=3 natureza=relacao em=2001-01-01 vence=nunca -->"), HOJE)[0]
+    a = julgar(_selo("<!-- measured: x.y=3 nature=relation on=2001-01-01 expires=never -->"), HOJE)[0]
     assert a.veredito == MATCHES, f"esperava MATCHES, veio {a.veredito}"
 
 
@@ -178,7 +178,7 @@ def _h():
 @check("I", "métrica sem sonda vira UNPROVEN, NUNCA MATCHES")
 def _i():
     registro.limpar()
-    a = julgar(_selo("<!-- measured: nao.existe=3 natureza=contagem em=2026-08-16 -->"), HOJE)[0]
+    a = julgar(_selo("<!-- measured: nao.existe=3 nature=count on=2026-08-16 -->"), HOJE)[0]
     assert a.veredito == UNPROVEN, f"esperava UNPROVEN, veio {a.veredito}"
     assert not a.verde, "não medido virou verde — é o defeito de contar ausência como zero"
 
@@ -191,7 +191,7 @@ def _j():
         raise RuntimeError("o disco sumiu")
 
     sonda("x.y", origem="teste")(quebrada)
-    a = julgar(_selo("<!-- measured: x.y=3 natureza=contagem em=2026-08-16 -->"), HOJE)[0]
+    a = julgar(_selo("<!-- measured: x.y=3 nature=count on=2026-08-16 -->"), HOJE)[0]
     assert a.veredito == UNPROVEN, f"esperava UNPROVEN, veio {a.veredito}"
     assert "o disco sumiu" in a.detalhe, f"engoliu o erro: {a.detalhe}"
 
@@ -204,7 +204,7 @@ def _k():
         return 1 + "dois"  # noqa: RUF005
 
     sonda("x.y", origem="teste")(erra_por_dentro)
-    a = julgar(_selo("<!-- measured: x.y=3 natureza=contagem em=2026-08-16 -->"), HOJE)[0]
+    a = julgar(_selo("<!-- measured: x.y=3 nature=count on=2026-08-16 -->"), HOJE)[0]
     assert a.veredito == UNPROVEN, f"esperava UNPROVEN, veio {a.veredito}"
     assert "TypeError" in a.detalhe, (
         f"o TypeError da sonda foi engolido pelo despacho de aridade: {a.detalhe}"
@@ -219,7 +219,7 @@ def _l():
     with tempfile.TemporaryDirectory() as tmp:
         alvo = Path(tmp) / "doc.md"
         alvo.write_text(
-            "# doc\n\n```\n<!-- measured: inventado=99 natureza=contagem em=2026-08-16 -->\n```\n",
+            "# doc\n\n```\n<!-- measured: inventado=99 nature=count on=2026-08-16 -->\n```\n",
             encoding="utf-8",
         )
         r = varrer(alvo, hoje=HOJE)
@@ -233,7 +233,7 @@ def _m():
     with tempfile.TemporaryDirectory() as tmp:
         alvo = Path(tmp) / "doc.md"
         alvo.write_text(
-            "# doc\n\n<!-- measured: inventado=99 natureza=contagem em=2026-08-16 -->\n",
+            "# doc\n\n<!-- measured: inventado=99 nature=count on=2026-08-16 -->\n",
             encoding="utf-8",
         )
         r = varrer(alvo, hoje=HOJE)
@@ -260,7 +260,7 @@ def _n():
 @check("O", "congelado não é recomputado, e carrega o motivo até o relatório")
 def _o():
     registro.limpar()
-    a = julgar(_selo('<!-- frozen: x.y=3 em=2020-01-01 motivo="histórico do lançamento" -->'), HOJE)[0]
+    a = julgar(_selo('<!-- frozen: x.y=3 on=2020-01-01 reason="histórico do lançamento" -->'), HOJE)[0]
     assert a.veredito == FROZEN, f"esperava FROZEN, veio {a.veredito}"
     assert a.verde, "congelado com motivo é verde"
     assert "histórico do lançamento" in a.acao
@@ -283,12 +283,12 @@ def _p():
 def _q():
     from loadline import escrever
 
-    velho = _selo("<!-- measured: x.y=3 natureza=contagem em=2026-01-01 vence=30d -->")
-    novo = escrever(velho, **{"x.y": 9, "em": "2026-08-16"})
+    velho = _selo("<!-- measured: x.y=3 nature=count on=2026-01-01 expires=30d -->")
+    novo = escrever(velho, **{"x.y": 9, "on": "2026-08-16"})
     assert "x.y=9" in novo, novo
-    assert "em=2026-08-16" in novo, novo
+    assert "on=2026-08-16" in novo, novo
     assert "x.y=3" not in novo and "2026-01-01" not in novo, f"sobrou metade do selo velho: {novo}"
-    assert "natureza=contagem" in novo and "vence=30d" in novo, f"perdeu campo no resselo: {novo}"
+    assert "nature=count" in novo and "expires=30d" in novo, f"perdeu campo no resselo: {novo}"
 
 
 # ------------------------------------------------------------------- forja --
@@ -622,7 +622,7 @@ def _ah():
 def _ai():
     fonte = (
         "def emitir(n):\n"
-        '    return f"<!-- measured: forja.artefatos={n} natureza=contagem em=2026-08-16 -->"\n'
+        '    return f"<!-- measured: forja.artefatos={n} nature=count on=2026-08-16 -->"\n'
         "\n"
         'DOC = """exemplo malformado que precisa poder existir escrito:\n'
         "<!-- measured: x.y=1 -->\n"
@@ -646,8 +646,8 @@ def _aj():
     registro.limpar()
     sonda("emissor.x")(lambda: 4)
     fonte = (
-        'DOC = """dentro da string, espécime: <!-- measured: emissor.x=99 natureza=contagem -->"""\n'
-        "# measured: emissor.x=1 natureza=contagem em=2026-08-16 vence=nunca\n"
+        'DOC = """dentro da string, espécime: <!-- measured: emissor.x=99 nature=count -->"""\n'
+        "# measured: emissor.x=1 nature=count on=2026-08-16 expires=never\n"
     )
     with tempfile.TemporaryDirectory() as tmp:
         (Path(tmp) / "misto.py").write_text(fonte, encoding="utf-8")
@@ -664,7 +664,7 @@ def _aj():
 def _ak():
     registro.limpar()
     sonda("quebrado.x")(lambda: 1)
-    fonte = "def ( isto não é python\n# measured: quebrado.x=1 natureza=contagem em=2026-08-16\n"
+    fonte = "def ( isto não é python\n# measured: quebrado.x=1 nature=count on=2026-08-16\n"
     with tempfile.TemporaryDirectory() as tmp:
         (Path(tmp) / "quebrado.py").write_text(fonte, encoding="utf-8")
         r = varrer(Path(tmp), hoje=HOJE)
@@ -687,7 +687,7 @@ def _al():
 $ python autoteste.py
 33 passaram
 ```
-<!-- measured: nucleo.checks=36 natureza=contagem em=2026-08-16 vence=nunca -->
+<!-- measured: nucleo.checks=36 nature=count on=2026-08-16 expires=never -->
 """
     with tempfile.TemporaryDirectory() as tmp:
         (Path(tmp) / "leia.md").write_text(fonte, encoding="utf-8")
@@ -718,10 +718,10 @@ def _am():
     registro.limpar()
     sonda("x.y")(lambda: 1)
     fonte = """Um registro do ecossistema, e os dois lados saem da mesma fonte.
-<!-- measured: x.y=1 natureza=contagem em=2026-08-16 vence=nunca -->
+<!-- measured: x.y=1 nature=count on=2026-08-16 expires=never -->
 
 Prosa inteira que descreve o mecanismo e não afirma quantidade.
-<!-- measured: x.y=1 natureza=contagem em=2026-08-16 vence=nunca -->
+<!-- measured: x.y=1 nature=count on=2026-08-16 expires=never -->
 """
     with tempfile.TemporaryDirectory() as tmp:
         (Path(tmp) / "leia.md").write_text(fonte, encoding="utf-8")
@@ -740,7 +740,7 @@ def _an():
     registro.limpar()
     sonda("nucleo.checks")(lambda: 36)
     fonte = """33 passaram, e este número é ilustração, não afirmação.
-<!-- measured: nucleo.checks=36 eco=nao natureza=contagem em=2026-08-16 vence=nunca -->
+<!-- measured: nucleo.checks=36 echo=no nature=count on=2026-08-16 expires=never -->
 """
     with tempfile.TemporaryDirectory() as tmp:
         (Path(tmp) / "leia.md").write_text(fonte, encoding="utf-8")
@@ -753,8 +753,8 @@ def _an():
         "a dispensa tem de aparecer no relatório — uma exceção que não se vê "
         "é indistinguível de um mecanismo que não roda"
     )
-    assert "eco" not in [a.metrica for a in r.achados], (
-        "`eco` é chave reservada; lê-la como métrica pediria uma sonda para ela"
+    assert "echo" not in [a.metrica for a in r.achados], (
+        "`echo` é chave reservada; lê-la como métrica pediria uma sonda para ela"
     )
 
 
@@ -764,9 +764,9 @@ def _an():
 @check("AO", "`arbitrated:` sem `por=` é MALFORMADO — escolha sem dono é palpite")
 def _ao():
     try:
-        _selo("<!-- arbitrated: retry.max=3 em=2026-08-16 vence=90d -->")
+        _selo("<!-- arbitrated: retry.max=3 on=2026-08-16 expires=90d -->")
     except SeloMalformado as exc:
-        assert "por=" in str(exc), f"a recusa tem de dizer o que falta, e disse: {exc}"
+        assert "by=" in str(exc), f"a recusa tem de dizer o que falta, e disse: {exc}"
     else:
         raise AssertionError(
             "`arbitrated:` sem `por=` passou — um número escolhido e anônimo é "
@@ -777,7 +777,7 @@ def _ao():
 @check("AP", "`arbitrated:` no prazo é verde, e NÃO chama sonda nenhuma")
 def _ap():
     registro.limpar()  # nenhuma sonda registrada: se ele medir, estoura
-    selo = _selo('<!-- arbitrated: retry.max=3 por="plataforma" em=2026-08-16 vence=90d -->')
+    selo = _selo('<!-- arbitrated: retry.max=3 by="plataforma" on=2026-08-16 expires=90d -->')
     achados = julgar(selo, hoje=HOJE)
     assert [a.veredito for a in achados] == [ARBITRATED], (
         f"escolha no prazo tem de ser ARBITRATED, e veio {[a.veredito for a in achados]}"
@@ -790,7 +790,7 @@ def _ap():
 
 @check("AQ", "`arbitrated:` EXPIRED reprova — escolha sem prazo é escolha esquecida")
 def _aq():
-    selo = _selo('<!-- arbitrated: teto=10 por="board" em=2026-08-16 vence=30d -->')
+    selo = _selo('<!-- arbitrated: teto=10 by="board" on=2026-08-16 expires=30d -->')
     achados = julgar(selo, hoje=date(2026, 12, 1))
     assert [a.veredito for a in achados] == [EXPIRED], (
         f"escolha fora do prazo tem de vencer, e veio {[a.veredito for a in achados]}"
@@ -849,7 +849,7 @@ Temos 12 endpoints.
             "tem de emitir `arbitrated:` e nunca `measured:` — ninguém mediu nada, e "
             "emitir a outra marca seria a ferramenta inventando que houve medição"
         )
-        assert "por=?" in escritos[0].texto, (
+        assert "by=?" in escritos[0].texto, (
             "o `por=?` sai por escrito para o humano preencher; a ferramenta não "
             "sabe quem escolheu, e fingir que sabe é a mesma família de defeito"
         )
@@ -892,9 +892,9 @@ def _at():
     fonte = """# t
 
 Temos 12 endpoints.
-<!-- arbitrated: endpoints=12 por="a" em=2026-08-16 vence=90d -->
+<!-- arbitrated: endpoints=12 by="a" on=2026-08-16 expires=90d -->
 Temos 40 testes.
-<!-- arbitrated: testes=40 por="a" em=2026-08-16 vence=90d -->
+<!-- arbitrated: testes=40 by="a" on=2026-08-16 expires=90d -->
 """
     with tempfile.TemporaryDirectory() as tmp:
         (Path(tmp) / "leia.md").write_text(fonte, encoding="utf-8")
@@ -1977,7 +1977,7 @@ def _ce():
     registro.limpar()
     sonda("licenca.padroes")(lambda: 70)
     fonte = """O projeto usa Apache-2.0, testado em Python 3.14, e o script antigo era v1.2.
-<!-- measured: licenca.padroes=70 natureza=contagem em=2026-08-25 vence=nunca -->
+<!-- measured: licenca.padroes=70 nature=count on=2026-08-25 expires=never -->
 """
     with tempfile.TemporaryDirectory() as tmp:
         (Path(tmp) / "leia.md").write_text(fonte, encoding="utf-8")

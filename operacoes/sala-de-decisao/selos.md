@@ -8,9 +8,9 @@ acervo. O selo tem de morar no arquivo que ele julga.
 ```markdown
 Toda decisão deste acervo declara se está em vigor, diz o que foi recusado, e nenhuma revogação
 foi declarada de um lado só.
-<!-- measured: decisao.sem_status=0 natureza=relacao em=AAAA-MM-DD vence=90d fonte=decisoes/ -->
-<!-- measured: decisao.revogacao_de_um_lado_so=0 natureza=relacao em=AAAA-MM-DD vence=90d fonte=decisoes/ -->
-<!-- measured: decisao.sem_alternativa=0 natureza=relacao em=AAAA-MM-DD vence=90d fonte=decisoes/ -->
+<!-- measured: decisao.sem_status=0 nature=relation on=AAAA-MM-DD expires=90d source=decisoes/ -->
+<!-- measured: decisao.revogacao_de_um_lado_so=0 nature=relation on=AAAA-MM-DD expires=90d source=decisoes/ -->
+<!-- measured: decisao.sem_alternativa=0 nature=relation on=AAAA-MM-DD expires=90d source=decisoes/ -->
 ```
 
 **Os três de `relacao`, e nenhum deles deve andar quando você escreve uma decisão nova.** Se um saiu
@@ -20,8 +20,8 @@ de zero, alguma coisa ficou pela metade — e a resposta certa é abrir o arquiv
 
 ```markdown
 Há N itens esperando uma decisão, e o mais antigo espera há D dias.
-<!-- measured: decisao.gates_abertos=N natureza=contagem em=AAAA-MM-DD vence=7d fonte=decisoes/ -->
-<!-- measured: decisao.gate_mais_velho_dias=D natureza=contagem em=AAAA-MM-DD vence=7d fonte=decisoes/ -->
+<!-- measured: decisao.gates_abertos=N nature=count on=AAAA-MM-DD expires=7d source=decisoes/ -->
+<!-- measured: decisao.gate_mais_velho_dias=D nature=count on=AAAA-MM-DD expires=7d source=decisoes/ -->
 ```
 
 ⚠️ **`vence=7d` nos dois, e é o prazo mais curto de toda a prateleira.** Não é rigor: é que o valor
@@ -35,9 +35,9 @@ nada.** Ela é de contagem — divergiu, resele —, mas leia o número antes de
 ## As três contagens do acervo
 
 ```markdown
-<!-- measured: decisao.total=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=decisoes/ -->
-<!-- measured: decisao.aceitas=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=decisoes/ -->
-<!-- measured: decisao.revogadas=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=decisoes/ -->
+<!-- measured: decisao.total=N nature=count on=AAAA-MM-DD expires=90d source=decisoes/ -->
+<!-- measured: decisao.aceitas=N nature=count on=AAAA-MM-DD expires=90d source=decisoes/ -->
+<!-- measured: decisao.revogadas=N nature=count on=AAAA-MM-DD expires=90d source=decisoes/ -->
 ```
 
 ⚠️ **Não escreva as três numa frase que também afirme a soma.** *"São 44 decisões: 41 aceitas e 3
@@ -51,8 +51,8 @@ frase e o selo passam a falar da mesma coisa.
 
 ```markdown
 Um item esperando decisão é revisto toda semana.
-<!-- arbitrated: decisao.prazo_de_fila=7 por="quem toca a sala de decisão" em=AAAA-MM-DD vence=180d
-     derruba="uma equipe que decide em rodadas mensais, ou um item cujo custo de espera é zero" -->
+<!-- arbitrated: decisao.prazo_de_fila=7 by="quem toca a sala de decisão" on=AAAA-MM-DD expires=180d
+     breaks="uma equipe que decide em rodadas mensais, ou um item cujo custo de espera é zero" -->
 ```
 
 Sete dias é o padrão desta operação, não uma medida. Um número escolhido sem dono é um palpite com

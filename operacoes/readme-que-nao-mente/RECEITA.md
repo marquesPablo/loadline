@@ -26,7 +26,7 @@ nenhuma delas lê `.md` nenhum — todas leem código, manifesto ou `git`.
 | `repo.maior_arquivo` | linhas do maior arquivo — o número que ninguém quer ver |
 | `repo.contribuidores` · `repo.commits` | de `git`, não de arquivo |
 
-<!-- measured: operacao.readme.sondas=13 natureza=contagem em=2026-08-21 vence=nunca fonte=operacoes/readme-que-nao-mente/sondas.py -->
+<!-- measured: operacao.readme.sondas=13 nature=count on=2026-08-21 expires=never source=operacoes/readme-que-nao-mente/sondas.py -->
 
 ## O ajuste
 

@@ -151,7 +151,7 @@ def gerar(hoje: date | None = None) -> str:
     A("> **Este arquivo é gerado.** Não o edite à mão — edite `censo/ecossistema.json` e rode")
     A("> `python censo/gerar.py`. O verificador reprova se os dois saírem de sincronia.")
     A("")
-    A(f"<!-- measured: censo.gerado_em_dia=1 natureza=relacao em={hoje.isoformat()} vence=nunca fonte=censo/gerar.py -->")
+    A(f"<!-- measured: censo.gerado_em_dia=1 nature=relation on={hoje.isoformat()} expires=never source=censo/gerar.py -->")
     A("")
     A("Uma lista `awesome-*` não reprova quando envelhece. Este censo reprova.")
     A("")

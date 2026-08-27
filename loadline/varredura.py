@@ -186,7 +186,7 @@ def varrer(raiz: str | Path, hoje: date | None = None) -> Relatorio:
                         numero,
                         ", ".join(sorted(no_selo)) or "—",
                         selo,
-                        selo.natureza,
+                        selo.nature,
                     )
                 )
             for selo in dispensados:

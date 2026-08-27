@@ -9,7 +9,7 @@ no disco, não conserta a frase, e exceção aqui libera e avisa em vez de barra
 O defeito que ele existe para pegar, medido neste repositório em 2026-08-20:
 
     33 passaram · 0 reprovaram
-    <!-- measured: nucleo.checks=36 natureza=contagem em=2026-08-16 vence=nunca -->
+    <!-- measured: nucleo.checks=36 nature=count on=2026-08-16 expires=never -->
 
 O selo diz 36. A sonda mede 36. **O verificador devolve `MATCHES`** — e a frase
 três linhas acima diz 33, para sempre, sem nada olhando.
@@ -44,7 +44,7 @@ condições dentro da função: uma regra que não se lê não se audita.
 
 ## A saída declarada
 
-Um selo pode declarar `eco=nao` e ficar de fora. Isso é decisão explícita, sai
+Um selo pode declarar `echo=no` e ficar de fora. Isso é decisão explícita, sai
 NOMEADA no relatório, e é a diferença entre uma exceção e um furo.
 """
 
@@ -278,8 +278,8 @@ def confrontar(
     Julgar um por um acusaria cada selo do empilhamento pelos números dos
     outros — verde-falso ao contrário, e igualmente inútil.
     """
-    dispensados = [s for s in selos if s.eco == "nao"]
-    ativos = [s for s in selos if s.eco != "nao"]
+    dispensados = [s for s in selos if s.echo == "no"]
+    ativos = [s for s in selos if s.echo != "no"]
 
     por_bloco: dict[tuple[int, int], list[Selo]] = {}
     for selo in ativos:

@@ -25,7 +25,7 @@ sai da primeira sessão com o arquivo anotado. O que era pedágio virou produto.
 2. **Emite `arbitrated:` e nunca `measured:`.** Ninguém mediu nada. Emitir
    `measured:` seria a ferramenta inventando que houve medição — a mentira exata
    que ela existe para perseguir.
-3. **`por=?` sai por escrito.** A ferramenta não sabe quem escolheu o número, e
+3. **`by=?` sai por escrito.** A ferramenta não sabe quem escolheu o número, e
    fingir que sabe é a mesma família de defeito. O `?` parseia (o arquivo
    continua válido) e o relatório cobra o preenchimento em toda rodada
    seguinte — falha visível em vez de silenciosa.
@@ -65,7 +65,7 @@ def _nomes_unicos(afirmacoes: list[Afirmacao]) -> dict[int, list[tuple[str, str]
 
     Duas frases que dizem `endpoints` produziriam duas métricas de mesmo nome, e
     o selo do segundo silenciaria o do primeiro. Sufixar é feio e é honesto; o
-    humano renomeia os dois quando for preencher o `por=`.
+    humano renomeia os dois quando for preencher o `by=`.
     """
     usados: dict[str, int] = {}
     por_linha: dict[int, list[tuple[str, str]]] = {}
@@ -99,8 +99,8 @@ def selar_arquivo(
         recuo = original[: len(original) - len(original.lstrip())]
         metricas = " ".join(f"{nome}={valor}" for nome, valor in pares)
         selo = (
-            f"{recuo}<!-- arbitrated: {metricas} por=? "
-            f"em={hoje.isoformat()} vence={vence} -->"
+            f"{recuo}<!-- arbitrated: {metricas} by=? "
+            f"on={hoje.isoformat()} expires={vence} -->"
         )
         linhas.insert(indice + 1, selo)
         escritos.append(Escrito(str(caminho), numero_da_linha, selo.strip()))

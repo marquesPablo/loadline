@@ -3,7 +3,7 @@
 > **Este arquivo é gerado.** Não o edite à mão — edite `censo/ecossistema.json` e rode
 > `python censo/gerar.py`. O verificador reprova se os dois saírem de sincronia.
 
-<!-- measured: censo.gerado_em_dia=1 natureza=relacao em=2026-08-26 vence=nunca fonte=censo/gerar.py -->
+<!-- measured: censo.gerado_em_dia=1 nature=relation on=2026-08-26 expires=never source=censo/gerar.py -->
 
 Uma lista `awesome-*` não reprova quando envelhece. Este censo reprova.
 

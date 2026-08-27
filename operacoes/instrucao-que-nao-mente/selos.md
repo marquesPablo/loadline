@@ -9,8 +9,8 @@ o `vence=` significar alguma coisa.
 ## O que este arquivo promete
 
 Todo comando citado aqui existe, e todo caminho citado aqui existe.
-<!-- measured: instrucao.comandos_quebrados=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=package.json -->
-<!-- measured: instrucao.caminhos_quebrados=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=disco -->
+<!-- measured: instrucao.comandos_quebrados=0 nature=relation on=AAAA-MM-DD expires=30d source=package.json -->
+<!-- measured: instrucao.caminhos_quebrados=0 nature=relation on=AAAA-MM-DD expires=30d source=disco -->
 ```
 
 **Por que `relacao` e não `contagem`.** Uma grandeza de contagem anda quando alguém escreve — subiu,
@@ -23,20 +23,20 @@ padrão desta operação, não uma medida — e por isso a linha abaixo é um `a
 
 ```markdown
 O prazo de reconferência do arquivo de instrução é 30 dias.
-<!-- arbitrated: instrucao.prazo=30 por="quem adotou a operação" em=AAAA-MM-DD vence=180d
-     derruba="um repositório em que a instrução fique meses estável, ou um em que quebre toda semana" -->
+<!-- arbitrated: instrucao.prazo=30 by="quem adotou a operação" on=AAAA-MM-DD expires=180d
+     breaks="um repositório em que a instrução fique meses estável, ou um em que quebre toda semana" -->
 ```
 
 ## O completo (as sete)
 
 ```markdown
-<!-- measured: instrucao.arquivos=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=raiz -->
-<!-- measured: instrucao.linhas=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=arquivos-de-instrucao -->
-<!-- measured: instrucao.comandos=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=cercas-de-codigo -->
-<!-- measured: instrucao.comandos_quebrados=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=package.json -->
-<!-- measured: instrucao.caminhos=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=crases -->
-<!-- measured: instrucao.caminhos_quebrados=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=disco -->
-<!-- measured: instrucao.divergencia=N natureza=contagem em=AAAA-MM-DD vence=60d fonte=titulos -->
+<!-- measured: instrucao.arquivos=N nature=count on=AAAA-MM-DD expires=90d source=raiz -->
+<!-- measured: instrucao.linhas=N nature=count on=AAAA-MM-DD expires=90d source=arquivos-de-instrucao -->
+<!-- measured: instrucao.comandos=N nature=count on=AAAA-MM-DD expires=90d source=cercas-de-codigo -->
+<!-- measured: instrucao.comandos_quebrados=0 nature=relation on=AAAA-MM-DD expires=30d source=package.json -->
+<!-- measured: instrucao.caminhos=N nature=count on=AAAA-MM-DD expires=90d source=crases -->
+<!-- measured: instrucao.caminhos_quebrados=0 nature=relation on=AAAA-MM-DD expires=30d source=disco -->
+<!-- measured: instrucao.divergencia=N nature=count on=AAAA-MM-DD expires=60d source=titulos -->
 ```
 
 Não sabe qual `N` escrever? Não escreva. Rode `python -m loadline . --selar` e a ferramenta escreve

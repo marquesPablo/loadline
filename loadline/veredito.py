@@ -1,34 +1,34 @@
-"""O motor de veredito — o que fazer quando o escrito e o medido discordam.
+"""The verdict engine — what to do when the written and the measured disagree.
 
-natureza: correcao — este módulo classifica e relata; ele não escreve no
-disco e não conserta nada. Acusar sem consertar é o contrato.
+natureza: correcao — this module classifies and reports; it does not write to
+disk and fixes nothing. Accusing without fixing is the contract.
 
-Sete vereditos, e o vocabulário é fechado de propósito:
+Seven verdicts, and the vocabulary is closed on purpose:
 
-    MATCHES      escrito == medido, e dentro do prazo.
-    DRIFTED      escrito != medido. O que fazer depende da `natureza`:
-                   contagem -> alguém escreveu. Resele e siga.
-                   relacao  -> DEFEITO. Investigue ANTES de resselar.
-    EXPIRED      passou do `vence`, mesmo com o valor batendo. Ninguém
-                 reconferiu; o número pode estar certo por acidente.
-    UNPROVEN     não há sonda para a métrica. Nunca vira verde.
-    FROZEN       histórico declarado, com motivo. Não se recomputa.
-    ARBITRATED   número ESCOLHIDO, com dono declarado e dentro do prazo.
-                 Ninguém mediu, e ninguém vai medir — mas alguém assinou.
-    PROSE_DRIFT  a FRASE afirma um número que nenhum selo do bloco cobre.
+    MATCHES      written == measured, and within the deadline.
+    DRIFTED      written != measured. What to do depends on `nature`:
+                   count    -> someone wrote. Re-seal and move on.
+                   relation -> DEFECT. Investigate BEFORE re-sealing.
+    EXPIRED      past `expires`, even with the value matching. Nobody
+                 re-checked; the number may be right by accident.
+    UNPROVEN     there is no probe for the metric. Never turns green.
+    FROZEN       declared history, with a reason. Does not recompute.
+    ARBITRATED   number CHOSEN, with a declared owner and within the deadline.
+                 Nobody measured, and nobody will — but someone signed it.
+    PROSE_DRIFT  the SENTENCE claims a number that no seal in the block covers.
 
-Três são verdes: `MATCHES`, `FROZEN` e `ARBITRATED`. Os três dizem coisas
-diferentes sobre a mesma linha — *eu medi*, *isto é história*, *eu escolhi* — e
-é a distinção entre eles que faz o relatório valer mais que um booleano.
+Three are green: `MATCHES`, `FROZEN` and `ARBITRATED`. The three say different
+things about the same line — *I measured*, *this is history*, *I chose* — and it
+is the distinction between them that makes the report worth more than a boolean.
 
-`DRIFTED` sozinho não diz nada. É o par (veredito, natureza) que diz, e é por
-isso que `natureza` é obrigatória em selo com métrica.
+`DRIFTED` alone says nothing. It is the pair (verdict, nature) that says, and
+that is why `nature` is required on a seal with a metric.
 
-`PROSE_DRIFT` é o veredito que fecha o buraco que os outros cinco deixavam: eles
-todos olham o VALOR dentro do comentário, e nenhum olhava a FRASE ao lado dele.
-Quem resela mexe no comentário — que é o que reprova — e esquece o texto, que é
-o que a pessoa lê. Este projeto passou verde por quatro dias com `36` no selo e
-`33` na linha de cima. Ver `eco.py`.
+`PROSE_DRIFT` is the verdict that closes the hole the other five left: they all
+look at the VALUE inside the comment, and none looked at the SENTENCE next to
+it. Whoever re-seals touches the comment — which is what fails — and forgets the
+text, which is what people read. This project went green for four days with `36`
+in the seal and `33` on the line above. See `eco.py`.
 """
 
 from __future__ import annotations
@@ -66,23 +66,23 @@ class Achado:
 
     @property
     def e_defeito(self) -> bool:
-        """Divergência de RELAÇÃO é bug. Divergência de contagem não é."""
-        return self.veredito == DRIFTED and self.natureza == "relacao"
+        """A RELATION divergence is a bug. A count divergence is not."""
+        return self.veredito == DRIFTED and self.natureza == "relation"
 
     @property
     def acao(self) -> str:
         if self.veredito == MATCHES:
             return "nada a fazer"
         if self.veredito == FROZEN:
-            return f"histórico, congelado por: {self.selo.motivo}"
+            return f"histórico, congelado por: {self.selo.reason}"
         if self.veredito == ARBITRATED:
-            quem = self.selo.por or "?"
+            quem = self.selo.by or "?"
             if quem.strip() in ("?", ""):
-                return "escolhido, e ninguém assinou ainda — preencha `por=`"
-            derruba = self.selo.derruba
+                return "escolhido, e ninguém assinou ainda — preencha `by=`"
+            derruba = self.selo.breaks
             return (
                 f"escolhido por {quem}"
-                + (f"; muda se: {derruba}" if derruba else "; sem `derruba=` — o que mudaria isto?")
+                + (f"; muda se: {derruba}" if derruba else "; sem `breaks=` — o que mudaria isto?")
             )
         if self.veredito == EXPIRED:
             return f"reconfira e resele — ninguém olha isto há {self.detalhe}"
@@ -93,7 +93,7 @@ class Achado:
                 "corrija a FRASE, ou nomeie esta grandeza no selo — resselar o "
                 "comentário sozinho deixa o número errado no texto que se lê"
             )
-        if self.natureza == "relacao":
+        if self.natureza == "relation":
             return "PARE. Relação divergindo é defeito — investigue antes de resselar"
         return "resele: contagem divergindo quer dizer que alguém escreveu"
 
@@ -118,7 +118,7 @@ def julgar(selo: Selo, hoje: date | None = None) -> list[Achado]:
 
     if selo.congelado:
         return [
-            Achado(FROZEN, m, v, None, selo, selo.natureza, selo.motivo or "")
+            Achado(FROZEN, m, v, None, selo, selo.nature, selo.reason or "")
             for m, v in (selo.metricas or {"—": "—"}).items()
         ]
 
@@ -131,20 +131,20 @@ def julgar(selo: Selo, hoje: date | None = None) -> list[Achado]:
             expirou = selo.vencido_em(hoje)
         except SeloMalformado as exc:
             return [
-                Achado(UNPROVEN, m, v, None, selo, selo.natureza, str(exc))
+                Achado(UNPROVEN, m, v, None, selo, selo.nature, str(exc))
                 for m, v in (selo.metricas or {"—": "—"}).items()
             ]
         if expirou:
             idade = selo.idade_dias(hoje)
             return [
                 Achado(
-                    EXPIRED, m, v, None, selo, selo.natureza,
-                    f"{idade} dias (prazo: {selo.vence}) — escolha vencida, alguém reescolhe",
+                    EXPIRED, m, v, None, selo, selo.nature,
+                    f"{idade} dias (prazo: {selo.expires}) — escolha vencida, alguém reescolhe",
                 )
                 for m, v in (selo.metricas or {"—": "—"}).items()
             ]
         return [
-            Achado(ARBITRATED, m, v, None, selo, selo.natureza, selo.por or "")
+            Achado(ARBITRATED, m, v, None, selo, selo.nature, selo.by or "")
             for m, v in (selo.metricas or {"—": "—"}).items()
         ]
 
@@ -153,7 +153,7 @@ def julgar(selo: Selo, hoje: date | None = None) -> list[Achado]:
         try:
             medido = registro.medir(metrica, selo)
         except registro.SemSonda as exc:
-            achados.append(Achado(UNPROVEN, metrica, escrito, None, selo, selo.natureza, str(exc)))
+            achados.append(Achado(UNPROVEN, metrica, escrito, None, selo, selo.nature, str(exc)))
             continue
         except Exception as exc:  # sonda quebrada nunca passa como verde
             achados.append(
@@ -163,20 +163,20 @@ def julgar(selo: Selo, hoje: date | None = None) -> list[Achado]:
                     escrito,
                     None,
                     selo,
-                    selo.natureza,
+                    selo.nature,
                     f"a sonda estourou: {type(exc).__name__}: {exc}",
                 )
             )
             continue
 
         if str(medido).strip() != escrito.strip():
-            achados.append(Achado(DRIFTED, metrica, escrito, str(medido), selo, selo.natureza))
+            achados.append(Achado(DRIFTED, metrica, escrito, str(medido), selo, selo.nature))
             continue
 
         try:
             expirou = selo.vencido_em(hoje)
         except SeloMalformado as exc:
-            achados.append(Achado(UNPROVEN, metrica, escrito, str(medido), selo, selo.natureza, str(exc)))
+            achados.append(Achado(UNPROVEN, metrica, escrito, str(medido), selo, selo.nature, str(exc)))
             continue
 
         if expirou:
@@ -188,12 +188,12 @@ def julgar(selo: Selo, hoje: date | None = None) -> list[Achado]:
                     escrito,
                     str(medido),
                     selo,
-                    selo.natureza,
-                    f"{idade} dias (prazo: {selo.vence})",
+                    selo.nature,
+                    f"{idade} dias (prazo: {selo.expires})",
                 )
             )
         else:
-            achados.append(Achado(MATCHES, metrica, escrito, str(medido), selo, selo.natureza))
+            achados.append(Achado(MATCHES, metrica, escrito, str(medido), selo, selo.nature))
 
     return achados
 
@@ -212,7 +212,7 @@ class Relatorio:
     arquivos_sem_selo: list[str] = None  # type: ignore[assignment]
     malformados: list[str] = None  # type: ignore[assignment]
     especimes: list[str] = None  # type: ignore[assignment]
-    #: Selos que declararam `eco=nao` e ficaram fora do confronto prosa × selo.
+    #: Selos que declararam `echo=no` e ficaram fora do confronto prosa × selo.
     #: Dispensa DECLARADA sai nomeada no relatório: é a diferença entre uma
     #: exceção e um furo.
     dispensados_do_eco: list[str] = None  # type: ignore[assignment]
@@ -310,7 +310,7 @@ class Relatorio:
             linhas.append(f"  ⛔ {len(self.malformados)} selos malformados")
         if self.dispensados_do_eco:
             linhas.append(
-                f"  ◻️  {len(self.dispensados_do_eco)} selo(s) com `eco=nao` — "
+                f"  ◻️  {len(self.dispensados_do_eco)} selo(s) com `echo=no` — "
                 "dispensados do confronto prosa × selo, por declaração"
             )
         return "\n".join(linhas)

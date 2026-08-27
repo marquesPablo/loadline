@@ -36,7 +36,7 @@ def _NOME_exemplo(metrica, selo):
 
     Estoura (levanta exceção) se a fonte declarada não existir — nunca devolve
     0 para "não encontrei". "Não olhei" e "olhei e não há" são coisas opostas.
-    `metrica` é o nome completo casado pelo padrão; `selo` traz `selo.fonte` e
+    `metrica` é o nome completo casado pelo padrão; `selo` traz `selo.source` e
     o resto do que foi escrito no comentário `measured:`/`arbitrated:`.
     """
     raise NotImplementedError("preencha esta sonda antes de abrir o PR")

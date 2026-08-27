@@ -16,7 +16,7 @@ formato, situação). Não descreva a solução aqui — só a dor.
 
 TODO — a tabela de sondas, no mesmo formato das outras:
 
-<!-- measured: operacao.NOME.sondas=N natureza=contagem em=AAAA-MM-DD vence=nunca fonte=comunidade/nome-da-sua-operacao/sondas.py -->
+<!-- measured: operacao.NOME.sondas=N nature=count on=AAAA-MM-DD expires=never source=comunidade/nome-da-sua-operacao/sondas.py -->
 
 | Métrica | O que recomputa | Natureza |
 |---|---|---|

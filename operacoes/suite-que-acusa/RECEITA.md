@@ -48,7 +48,7 @@ possível, e a menos provável.
 ## O que esta operação instala
 
 Seis sondas sobre a sua pasta de testes:
-<!-- measured: operacao.suite.sondas=6 natureza=contagem em=2026-08-21 vence=nunca fonte=operacoes/suite-que-acusa/sondas.py -->
+<!-- measured: operacao.suite.sondas=6 nature=count on=2026-08-21 expires=never source=operacoes/suite-que-acusa/sondas.py -->
 
 | Métrica | O que recomputa | Natureza |
 |---|---|---|

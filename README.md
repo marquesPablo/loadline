@@ -47,7 +47,7 @@ $ python -m forja /caminho/do/seu/projeto
 **Zero dependência.** Só a biblioteca padrão do Python 3.10+. Sem LLM, sem chave de API, sem
 serviço. Um verificador que depende de um modelo não é um verificador — é uma segunda opinião.
 
-<!-- measured: nucleo.dependencias=0 natureza=relacao em=2026-08-22 vence=nunca fonte=pyproject.toml -->
+<!-- measured: nucleo.dependencias=0 nature=relation on=2026-08-22 expires=never source=pyproject.toml -->
 
 ---
 
@@ -66,7 +66,7 @@ um arquivo você lê.
 Os cinco primeiros são sobre **um** agente. Os dois últimos só existem porque há **mais de um**, e
 são a razão de isto existir.
 
-<!-- measured: vistoria.achados=7 natureza=relacao em=2026-08-22 vence=nunca fonte=forja/vistoria.py -->
+<!-- measured: vistoria.achados=7 nature=relation on=2026-08-22 expires=never source=forja/vistoria.py -->
 
 | | O que ele acha | Por que dói |
 |---|---|---|
@@ -131,7 +131,7 @@ recusa que não diz a saída treina quem a lê a contorná-la.
 | `R3` | não diz o que nunca faz | `R7` | toca alvo externo sem autorização |
 | `R4` | não diz o que não cobre | `R8` | slug que vira nome de arquivo inválido |
 
-<!-- measured: forja.recusas=8 natureza=contagem em=2026-08-22 vence=nunca fonte=forja/spec.py -->
+<!-- measured: forja.recusas=8 nature=count on=2026-08-22 expires=never source=forja/spec.py -->
 
 ---
 
@@ -204,7 +204,7 @@ quando os dois mudarem. Escrever e testar a Action local não depende de nenhum 
 
 As quinze lacunas declaradas estão em [`LACUNAS.md`](LACUNAS.md).
 
-<!-- measured: nucleo.lacunas=15 natureza=contagem em=2026-08-24 vence=nunca fonte=LACUNAS.md -->
+<!-- measured: nucleo.lacunas=15 nature=count on=2026-08-24 expires=never source=LACUNAS.md -->
 
 Toda ferramenta publica o que passou e o que falhou; quase nenhuma publica **o que nunca olhou**, e
 é essa terceira lista que decide se um verde significa alguma coisa.
@@ -247,7 +247,7 @@ antes de precisar ser reconferida de novo.
   > assinar depois.
 
 - [`operacoes/`](operacoes/) — sete trabalhos prontos que rodam no seu repositório sem configuração.
-  <!-- measured: operacoes.total=7 natureza=contagem em=2026-08-26 vence=nunca fonte=operacoes/ -->
+  <!-- measured: operacoes.total=7 nature=count on=2026-08-26 expires=never source=operacoes/ -->
 - [`censo/`](censo/) — um registro do ecossistema de agentes de IA onde cada entrada **vence**.
 - [`blind/`](blind/) — a fronteira que uma varredura ingênua atravessa em silêncio: junction,
   symlink de diretório, e a regra de `.gitignore` que esconde mesmo de quem atravessa a fronteira
@@ -255,7 +255,7 @@ antes de precisar ser reconferida de novo.
 - [`placar/`](placar/) — as sete portas de "Would you ship this AI agent?" (OBJECTIVE · IDENTITY ·
   AUTHORITY · FAILURE · APPROVAL · TRACEABILITY · CONTAINMENT), cada uma conferida com evidência de
   disco, nunca opinião. Reprovar IDENTITY, AUTHORITY ou CONTAINMENT é NO-GO. `python -m placar .`
-  <!-- measured: placar.portas=7 natureza=contagem em=2026-08-23 vence=nunca fonte=placar/portas.py -->
+  <!-- measured: placar.portas=7 nature=count on=2026-08-23 expires=never source=placar/portas.py -->
 
 ---
 
@@ -267,7 +267,7 @@ $ python autoteste.py
 PASSOU
 ```
 
-<!-- measured: nucleo.checks=82 nucleo.fora=0 natureza=contagem em=2026-08-26 vence=nunca fonte=autoteste.py -->
+<!-- measured: nucleo.checks=82 nucleo.fora=0 nature=count on=2026-08-26 expires=never source=autoteste.py -->
 
 **Cada check reintroduz o defeito que ele existe para pegar.** Um check que só confirma o caminho
 feliz passa igual se o mecanismo for removido — ele não prova nada, e o custo dele é dar a alguém a

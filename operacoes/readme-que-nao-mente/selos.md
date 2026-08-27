@@ -17,8 +17,8 @@ Depois do passo 3, para cada selo cujo nome de métrica apareça na lista de son
 `arbitrated:` por `measured:`, acrescente `natureza=` e `fonte=`, e apague o `por=`.
 
 ```diff
-- <!-- arbitrated: testes=84 por=? em=2026-08-21 vence=90d -->
-+ <!-- measured: repo.testes=84 natureza=contagem em=2026-08-21 vence=90d fonte=codigo -->
+- <!-- arbitrated: testes=84 by=? on=2026-08-21 expires=90d -->
++ <!-- measured: repo.testes=84 nature=count on=2026-08-21 expires=90d source=codigo -->
 ```
 
 ⚠️ **O nome da métrica que o `--selar` escreve é um chute.** Ele sai da palavra logo depois do
@@ -29,19 +29,19 @@ sugestão declarada como sugestão.
 ## Os treze com sonda pronta
 
 ```markdown
-<!-- measured: repo.arquivos=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=disco -->
-<!-- measured: repo.fontes=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=disco -->
-<!-- measured: repo.linhas=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=codigo -->
-<!-- measured: repo.linguagens=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=extensoes -->
-<!-- measured: repo.testes=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=codigo -->
-<!-- measured: repo.arquivos_de_teste=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=disco -->
-<!-- measured: repo.dependencias=N natureza=contagem em=AAAA-MM-DD vence=60d fonte=manifesto -->
-<!-- measured: repo.dependencias_dev=N natureza=contagem em=AAAA-MM-DD vence=60d fonte=manifesto -->
-<!-- measured: repo.workflows=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=.github/workflows -->
-<!-- measured: repo.pendencias=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=codigo -->
-<!-- measured: repo.maior_arquivo=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=codigo -->
-<!-- measured: repo.contribuidores=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=git -->
-<!-- measured: repo.commits=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=git -->
+<!-- measured: repo.arquivos=N nature=count on=AAAA-MM-DD expires=90d source=disco -->
+<!-- measured: repo.fontes=N nature=count on=AAAA-MM-DD expires=90d source=disco -->
+<!-- measured: repo.linhas=N nature=count on=AAAA-MM-DD expires=90d source=codigo -->
+<!-- measured: repo.linguagens=N nature=count on=AAAA-MM-DD expires=90d source=extensoes -->
+<!-- measured: repo.testes=N nature=count on=AAAA-MM-DD expires=90d source=codigo -->
+<!-- measured: repo.arquivos_de_teste=N nature=count on=AAAA-MM-DD expires=90d source=disco -->
+<!-- measured: repo.dependencias=N nature=count on=AAAA-MM-DD expires=60d source=manifesto -->
+<!-- measured: repo.dependencias_dev=N nature=count on=AAAA-MM-DD expires=60d source=manifesto -->
+<!-- measured: repo.workflows=N nature=count on=AAAA-MM-DD expires=90d source=.github/workflows -->
+<!-- measured: repo.pendencias=N nature=count on=AAAA-MM-DD expires=90d source=codigo -->
+<!-- measured: repo.maior_arquivo=N nature=count on=AAAA-MM-DD expires=90d source=codigo -->
+<!-- measured: repo.contribuidores=N nature=count on=AAAA-MM-DD expires=90d source=git -->
+<!-- measured: repo.commits=N nature=count on=AAAA-MM-DD expires=90d source=git -->
 ```
 
 Todas são de **contagem**: elas andam quando alguém escreve código. Divergiu, resele e siga — é o
@@ -50,8 +50,8 @@ comportamento normal, não defeito. Se você quiser que uma delas *não* ande �
 
 ```markdown
 Nenhum arquivo deste repositório passa de 400 linhas.
-<!-- arbitrated: repo.teto_de_arquivo=400 por="time de plataforma" em=AAAA-MM-DD vence=180d
-     derruba="o primeiro arquivo que só fique legível acima disso" -->
+<!-- arbitrated: repo.teto_de_arquivo=400 by="time de plataforma" on=AAAA-MM-DD expires=180d
+     breaks="o primeiro arquivo que só fique legível acima disso" -->
 ```
 
 ## O que NÃO selar

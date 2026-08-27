@@ -15,7 +15,7 @@ Esta pasta é a carga.
 
 ## As sete, por família
 
-<!-- measured: operacoes.total=7 natureza=contagem em=2026-08-26 vence=nunca fonte=operacoes/ -->
+<!-- measured: operacoes.total=7 nature=count on=2026-08-26 expires=never source=operacoes/ -->
 
 As operações não são numeradas: a prateleira muda por decisão, e número que alguém decorou
 envelhece. Elas são referidas pelo nome.
@@ -51,7 +51,7 @@ Estas medem coisas que já existem e envelheceram caladas.
 
 ## A anatomia é fixa: se você aprendeu uma, aprendeu todas
 
-<!-- measured: operacoes.arquivos_por_operacao=5 natureza=relacao em=2026-08-21 vence=nunca fonte=operacoes/ -->
+<!-- measured: operacoes.arquivos_por_operacao=5 nature=relation on=2026-08-21 expires=never source=operacoes/ -->
 
 | Arquivo | O que é |
 |---|---|

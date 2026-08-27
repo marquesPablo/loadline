@@ -17,7 +17,7 @@ envelhece.
 ## O que esta operação instala
 
 Sete sondas que conferem as promessas do arquivo de instrução contra o disco — não contra ele mesmo:
-<!-- measured: operacao.instrucao.sondas=7 natureza=contagem em=2026-08-21 vence=nunca fonte=operacoes/instrucao-que-nao-mente/sondas.py -->
+<!-- measured: operacao.instrucao.sondas=7 nature=count on=2026-08-21 expires=never source=operacoes/instrucao-que-nao-mente/sondas.py -->
 
 | Métrica | O que recomputa | Natureza |
 |---|---|---|
@@ -56,8 +56,8 @@ Depois, cole no fim do seu `AGENTS.md`:
 ## O que este arquivo promete
 
 Todo comando citado aqui existe, e todo caminho citado aqui existe.
-<!-- measured: instrucao.comandos_quebrados=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=package.json -->
-<!-- measured: instrucao.caminhos_quebrados=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=disco -->
+<!-- measured: instrucao.comandos_quebrados=0 nature=relation on=AAAA-MM-DD expires=30d source=package.json -->
+<!-- measured: instrucao.caminhos_quebrados=0 nature=relation on=AAAA-MM-DD expires=30d source=disco -->
 ```
 
 Troque `AAAA-MM-DD` por hoje. Pronto — a operação está no ar.

@@ -10,7 +10,7 @@ lado independente do par: o selo diz o que estava escrito, a sonda diz o que é.
 
     @sonda("colisao.*")
     def contar_colisao(metrica, selo):
-        return len(carregar(selo.fonte)[metrica.split(".")[-1]])
+        return len(carregar(selo.source)[metrica.split(".")[-1]])
 
 ⚠️ A regra que faz isso valer alguma coisa: **a sonda não pode ler a mesma
 fonte que produziu o número escrito.** Se os dois lados saem do mesmo lugar,

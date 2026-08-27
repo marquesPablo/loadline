@@ -7,7 +7,7 @@
 
 ## 1 · Duas causas nomeadas, e só essas duas
 
-<!-- measured: blind.causas=2 natureza=contagem em=2026-08-26 vence=nunca fonte=blind/limites.py -->
+<!-- measured: blind.causas=2 nature=count on=2026-08-26 expires=never source=blind/limites.py -->
 
 `blind` sabe procurar reparse point (junction/symlink) e regra de `.gitignore`
 dentro de repositório git real. Ele **não** procura:
@@ -40,7 +40,7 @@ qualquer coisa sob uma pasta `.claude/`. É a lista de nomes que os harnesses
 de hoje usam — **não** um padrão do formato. Um harness que inventar outro
 nome de arquivo de instrução não é reconhecido aqui.
 
-<!-- measured: blind.declaracao=5 natureza=contagem em=2026-08-23 vence=nunca fonte=blind/limites.py -->
+<!-- measured: blind.declaracao=5 nature=count on=2026-08-23 expires=never source=blind/limites.py -->
 
 ## 4 · `blind` não prova o que a SUA ferramenta faz
 

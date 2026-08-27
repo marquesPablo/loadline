@@ -13,9 +13,9 @@ Um selo sobre o handoff guardado no README é um aviso pendurado na porta errada
 ```markdown
 Este arquivo foi escrito lendo o disco: nenhum caminho citado está morto, nenhum comando perdeu o
 alvo, e o que ele diz sobre o estado do repositório é o que o git diz.
-<!-- measured: handoff.caminhos_mortos=0 natureza=relacao em=AAAA-MM-DD vence=7d fonte=disco -->
-<!-- measured: handoff.comandos_sem_alvo=0 natureza=relacao em=AAAA-MM-DD vence=7d fonte=disco -->
-<!-- measured: handoff.deriva_de_git=0 natureza=relacao em=AAAA-MM-DD vence=7d fonte=git -->
+<!-- measured: handoff.caminhos_mortos=0 nature=relation on=AAAA-MM-DD expires=7d source=disco -->
+<!-- measured: handoff.comandos_sem_alvo=0 nature=relation on=AAAA-MM-DD expires=7d source=disco -->
+<!-- measured: handoff.deriva_de_git=0 nature=relation on=AAAA-MM-DD expires=7d source=git -->
 ```
 
 **`vence=7d` nos três, e é o prazo mais curto de toda a prateleira** — junto com o da fila de
@@ -31,8 +31,8 @@ coisa sobre o estado e o git afirma outra?"*. Se o documento **não afirma nada*
 
 ```markdown
 Escrito depois do commit N. Nada entrou desde então.
-<!-- measured: handoff.commits_desde=0 natureza=contagem em=AAAA-MM-DD vence=7d fonte=git -->
-<!-- measured: handoff.sessoes_desde=0 natureza=contagem em=AAAA-MM-DD vence=7d fonte=harness -->
+<!-- measured: handoff.commits_desde=0 nature=count on=AAAA-MM-DD expires=7d source=git -->
+<!-- measured: handoff.sessoes_desde=0 nature=count on=AAAA-MM-DD expires=7d source=harness -->
 ```
 
 De contagem: elas andam sozinhas, todo dia, e é essa a graça. **Divergiram, resele — mas leia o
@@ -47,9 +47,9 @@ operação, leia a advertência que está no `ci.yml`.
 
 ```markdown
 Este arquivo cabe em 400 linhas. Passou disso, alguma coisa aqui virou histórico e devia sair.
-<!-- arbitrated: handoff.teto_de_linhas=400 por="quem cuida do projeto" em=AAAA-MM-DD vence=180d
-     derruba="um projeto com muitas frentes paralelas, ou um handoff que passou a ser lido por gente de fora" -->
-<!-- measured: handoff.linhas=N natureza=contagem em=AAAA-MM-DD vence=30d fonte=disco -->
+<!-- arbitrated: handoff.teto_de_linhas=400 by="quem cuida do projeto" on=AAAA-MM-DD expires=180d
+     breaks="um projeto com muitas frentes paralelas, ou um handoff que passou a ser lido por gente de fora" -->
+<!-- measured: handoff.linhas=N nature=count on=AAAA-MM-DD expires=30d source=disco -->
 ```
 
 **O teto é uma escolha, não uma medida** — por isso a terceira marca. Um handoff morre de duas

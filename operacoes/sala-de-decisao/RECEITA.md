@@ -25,7 +25,7 @@ arquivos estão certos, cada um por si. **O defeito mora entre eles.**
 ## O que esta operação instala
 
 Oito sondas sobre uma pasta de arquivos markdown:
-<!-- measured: operacao.sala.sondas=8 natureza=contagem em=2026-08-21 vence=nunca fonte=operacoes/sala-de-decisao/sondas.py -->
+<!-- measured: operacao.sala.sondas=8 nature=count on=2026-08-21 expires=never source=operacoes/sala-de-decisao/sondas.py -->
 
 | Métrica | O que recomputa | Natureza |
 |---|---|---|

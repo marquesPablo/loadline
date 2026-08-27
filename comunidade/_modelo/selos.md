@@ -5,7 +5,7 @@ num relatório à parte).
 
 ```markdown
 TODO — a frase em prosa que a métrica sustenta.
-<!-- measured: NOME.exemplo=N natureza=contagem-ou-relacao em=AAAA-MM-DD vence=90d fonte=caminho/relativo/ -->
+<!-- measured: NOME.exemplo=N nature=count-ou-relacao on=AAAA-MM-DD expires=90d source=caminho/relativo/ -->
 ```
 
 ## Sobre `natureza`

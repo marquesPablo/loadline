@@ -1,50 +1,53 @@
-"""Leitura e escrita de selos — a gramática de uma afirmação que se reconfere.
+"""Reading and writing seals — the grammar of a claim that re-checks itself.
 
-loadline-ignore-file: este arquivo ENSINA a sintaxe, e os selos escritos
-aqui são espécimes, não afirmações. Sem esta linha o módulo lê a própria
-documentação como se ela declarasse fatos — e o exemplo de selo MALFORMADO,
-que precisa poder existir escrito, derrubaria a rodada.
+loadline-ignore-file: this file TEACHES the syntax, and the seals written
+here are specimens, not claims. Without this line the module reads its own
+documentation as if it declared facts — and the MALFORMED seal example,
+which has to be able to exist written out, would fail the run.
 
-natureza: correcao — este módulo só lê texto e devolve estrutura. Ele não
-decide nada de segurança, e exceção aqui libera e avisa em vez de barrar.
+natureza: correcao — this module only reads text and returns structure. It
+decides nothing about security, and an exception here surfaces and warns
+instead of blocking.
 
-Um selo é um comentário legível por máquina, colado à afirmação que ele cobre:
+A seal is a machine-readable comment, glued to the claim it covers:
 
-    Seis projetos independentes usam o nome AgentGuard.
-    <!-- measured: colisao.agentguard=6 natureza=contagem em=2026-08-16 vence=90d -->
+    Six independent projects use the name AgentGuard.
+    <!-- measured: collision.agentguard=6 nature=count on=2026-08-16 expires=90d -->
 
-Três marcas, e a diferença entre elas é QUEM produziu o número:
+Three marks, and the difference between them is WHO produced the number:
 
-    measured:    alguém MEDIU, e dá para medir de novo. Tem sonda.
-    frozen:      isto é história, e não se recomputa. Exige `motivo=`.
-    arbitrated:  alguém ESCOLHEU. Ninguém mediu, e nunca vai medir.
+    measured:    someone MEASURED, and it can be measured again. Has a probe.
+    frozen:      this is history, and it does not recompute. Requires `reason=`.
+    arbitrated:  someone CHOSE. Nobody measured, and nobody ever will.
 
-`arbitrated:` é a marca que faltava, e a ausência dela era a lacuna mais funda
-deste projeto: as outras duas **pressupõem que o número um dia foi medido**.
-Limiar, teto, prazo, `vence=90d` — todos são escolhas vestidas de medidas, e um
-número escolhido sem dono é um palpite com cara de fato:
+`arbitrated:` is the mark that was missing, and its absence was the deepest gap
+in this project: the other two **assume the number was measured at some point**.
+Threshold, ceiling, deadline, `expires=90d` — all of them are choices dressed up
+as measurements, and a number chosen without an owner is a guess wearing the
+face of a fact:
 
-    O limite de retentativas é 3.
-    <!-- arbitrated: retry.max=3 por="time de plataforma" em=2026-08-20 vence=180d
-         derruba="qualquer incidente em que 3 não bastou" -->
+    The retry limit is 3.
+    <!-- arbitrated: retry.max=3 by="platform team" on=2026-08-20 expires=180d
+         breaks="any incident where 3 was not enough" -->
 
-Chaves reservadas (não são métrica):
+Reserved keys (not metrics):
 
-    natureza  contagem | relacao   — decide o QUE significa divergir
-    em        AAAA-MM-DD           — quando foi conferido pela última vez
-    vence     Nd | Nm | nunca      — validade; sem isto o selo nunca expira
-    fonte     caminho ou URL       — de onde a métrica é recomputada
-    motivo    texto                — obrigatório em `frozen:`
-    por       quem escolheu        — obrigatório em `arbitrated:`
-    derruba   o que mudaria a escolha — opcional, e é a parte mais valiosa
-    eco       nao                  — dispensa o bloco do confronto prosa × selo
+    nature   count | relation    — decides what DIVERGING means
+    on       YYYY-MM-DD          — when it was last checked
+    expires  Nd | Nm | never     — validity; without this the seal never expires
+    source   path or URL         — where the metric is recomputed from
+    reason   text                — required on `frozen:`
+    by       who chose it        — required on `arbitrated:`
+    breaks   what would overturn the choice — optional, and the most valuable part
+    echo     no                  — waives the prose-vs-seal cross-check
 
-Todo o resto é `metrica=valor`, e é isso que o verificador recomputa.
+Everything else is `metric=value`, and that is what the verifier recomputes.
 
-A diferença entre `contagem` e `relacao` é o coração da coisa, e ela foi
-aprendida caro antes deste projeto: grandeza de CONTAGEM anda quando alguém
-escreve — divergir é normal, resele e siga. Grandeza de RELAÇÃO só anda se o
-medidor ou o corpus quebrou — divergir é DEFEITO, e resselar esconde o bug.
+The difference between `count` and `relation` is the heart of it, and it was
+learned the hard way before this project: a COUNT quantity moves when someone
+writes — diverging is normal, re-seal and move on. A RELATION quantity only
+moves if the meter or the corpus broke — diverging is a DEFECT, and re-sealing
+hides the bug.
 """
 
 from __future__ import annotations
@@ -53,51 +56,51 @@ import re
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 
-RESERVADAS = frozenset({"natureza", "em", "vence", "fonte", "motivo", "por", "derruba", "eco"})
-NATUREZAS = frozenset({"contagem", "relacao"})
+RESERVADAS = frozenset({"nature", "on", "expires", "source", "reason", "by", "breaks", "echo"})
+NATUREZAS = frozenset({"count", "relation"})
 TIPOS = ("measured", "frozen", "arbitrated")
 
-#: A alternação das marcas, DERIVADA da tupla acima e nunca escrita à mão duas
-#: vezes. Ela é usada aqui e no confronto de prosa (`eco.py`), e a segunda cópia
-#: já dessincronizou uma vez: quando `arbitrated` nasceu, o reconhecedor de bloco
-#: continuou enxergando só duas marcas e passou a fundir parágrafos que o selo
-#: novo separava — verde-falso do lado errado. Uma quarta marca não pode ter
-#: como repetir isso.
+#: The alternation of the marks, DERIVED from the tuple above and never written
+#: out by hand twice. It is used here and in the prose cross-check (`eco.py`),
+#: and the second copy already desynced once: when `arbitrated` was born, the
+#: block recognizer kept seeing only two marks and started merging paragraphs
+#: that the new seal separated — false-green on the wrong side. A fourth mark
+#: must not be able to repeat this.
 MARCAS_RE = "|".join(TIPOS)
 
-# `<!-- measured: ... -->` em Markdown/HTML, `# measured: ...` em código.
+# `<!-- measured: ... -->` in Markdown/HTML, `# measured: ...` in code.
 _PADRAO = re.compile(
     rf"(?:<!--|#|//)\s*(?P<tipo>{MARCAS_RE})\s*:\s*(?P<corpo>.*?)\s*(?:-->|$)",
     re.IGNORECASE,
 )
 
-#: "esta linha carrega um selo?" — sem capturar o corpo. Mesma fonte de verdade.
+#: "does this line carry a seal?" — without capturing the body. Same source of truth.
 SELO_NA_LINHA = re.compile(rf"(?:<!--|#|//)\s*(?:{MARCAS_RE})\s*:", re.IGNORECASE)
 
-# `chave=valor` ou `chave="valor com espaço"`.
+# `key=value` or `key="value with spaces"`.
 _PAR = re.compile(r'(?P<k>[\w.\-]+)\s*=\s*(?:"(?P<qv>[^"]*)"|(?P<v>\S+))')
 
 _DURACAO = re.compile(r"^(?P<n>\d+)(?P<u>[dm])$")
 
 
 class SeloMalformado(ValueError):
-    """O selo existe mas não se deixa ler. Nunca vira 'sem selo'."""
+    """The seal exists but will not be read. It never becomes 'no seal'."""
 
 
 @dataclass(frozen=True)
 class Selo:
-    """Um selo lido do disco, com a linha de onde ele saiu."""
+    """A seal read from disk, with the line it came from."""
 
     tipo: str  # "measured" | "frozen" | "arbitrated"
     metricas: dict[str, str]
-    natureza: str | None = None
-    em: date | None = None
-    vence: str | None = None
-    fonte: str | None = None
-    motivo: str | None = None
-    por: str | None = None
-    derruba: str | None = None
-    eco: str | None = None
+    nature: str | None = None
+    on: date | None = None
+    expires: str | None = None
+    source: str | None = None
+    reason: str | None = None
+    by: str | None = None
+    breaks: str | None = None
+    echo: str | None = None
     arquivo: str = ""
     linha: int = 0
     bruto: str = ""
@@ -108,51 +111,52 @@ class Selo:
 
     @property
     def arbitrado(self) -> bool:
-        """O número foi ESCOLHIDO. Não há sonda, e nunca vai haver.
+        """The number was CHOSEN. There is no probe, and there never will be.
 
-        Ele não se recomputa — mas ele VENCE, e é isso que separa a marca de uma
-        desculpa: escolha sem prazo é escolha esquecida, e bastaria chamar de
-        arbitrated todo número incômodo para nunca mais olhar para ele.
+        It does not recompute — but it EXPIRES, and that is what separates the
+        mark from an excuse: a choice with no deadline is a forgotten choice,
+        and it would be enough to call every awkward number arbitrated to never
+        look at it again.
         """
         return self.tipo == "arbitrated"
 
     def vencido_em(self, hoje: date) -> bool:
-        """Vencimento é do selo, não do valor.
+        """Expiry is the seal's, not the value's.
 
-        Um selo pode estar com o número CERTO e ainda assim vencido: ninguém
-        reconferiu dentro do prazo que o próprio selo declarou. É a metade que
-        falta em toda lista `awesome-*` — elas envelhecem sem nunca reprovar.
+        A seal can have the RIGHT number and still be expired: nobody re-checked
+        within the deadline the seal itself declared. It is the half that every
+        `awesome-*` list is missing — they age without ever failing.
         """
         prazo = self.prazo()
-        if prazo is None or self.em is None:
+        if prazo is None or self.on is None:
             return False
-        return hoje > self.em + prazo
+        return hoje > self.on + prazo
 
     def prazo(self) -> timedelta | None:
-        """`90d` -> 90 dias. `6m` -> 180 dias. `nunca` / ausente -> None."""
-        if not self.vence or self.vence.lower() == "nunca":
+        """`90d` -> 90 days. `6m` -> 180 days. `never` / absent -> None."""
+        if not self.expires or self.expires.lower() == "never":
             return None
-        m = _DURACAO.match(self.vence.strip())
+        m = _DURACAO.match(self.expires.strip())
         if not m:
             raise SeloMalformado(
-                f"{self.arquivo}:{self.linha}: `vence={self.vence}` não é `Nd`, `Nm` nem `nunca`"
+                f"{self.arquivo}:{self.linha}: `expires={self.expires}` is not `Nd`, `Nm` or `never`"
             )
         n = int(m.group("n"))
         return timedelta(days=n if m.group("u") == "d" else n * 30)
 
     def idade_dias(self, hoje: date) -> int | None:
-        return None if self.em is None else (hoje - self.em).days
+        return None if self.on is None else (hoje - self.on).days
 
 
 def _data(bruta: str, onde: str) -> date:
     try:
         return date.fromisoformat(bruta)
     except ValueError as exc:
-        raise SeloMalformado(f"{onde}: `em={bruta}` não é uma data AAAA-MM-DD") from exc
+        raise SeloMalformado(f"{onde}: `on={bruta}` is not a YYYY-MM-DD date") from exc
 
 
 def ler_linha(texto: str, arquivo: str = "", linha: int = 0) -> Selo | None:
-    """Lê UM selo de uma linha. Devolve None se não houver selo nenhum."""
+    """Reads ONE seal from a line. Returns None if there is no seal at all."""
     m = _PADRAO.search(texto)
     if not m:
         return None
@@ -165,43 +169,43 @@ def ler_linha(texto: str, arquivo: str = "", linha: int = 0) -> Selo | None:
         campos[par.group("k").lower()] = valor if valor is not None else par.group("v")
 
     if not campos:
-        raise SeloMalformado(f"{onde}: selo sem nenhum `chave=valor`")
+        raise SeloMalformado(f"{onde}: seal with no `key=value` at all")
 
     metricas = {k: v for k, v in campos.items() if k not in RESERVADAS}
     tipo = m.group("tipo").lower()
 
-    natureza = campos.get("natureza")
-    if natureza is not None and natureza not in NATUREZAS:
+    nature = campos.get("nature")
+    if nature is not None and nature not in NATUREZAS:
         raise SeloMalformado(
-            f"{onde}: `natureza={natureza}` fora do vocabulário fechado {sorted(NATUREZAS)}"
+            f"{onde}: `nature={nature}` is outside the closed vocabulary {sorted(NATUREZAS)}"
         )
-    if tipo == "measured" and metricas and natureza is None:
+    if tipo == "measured" and metricas and nature is None:
         raise SeloMalformado(
-            f"{onde}: selo com métrica precisa declarar `natureza=contagem` ou `natureza=relacao` "
-            "— sem isso ninguém sabe se divergir quer dizer 'resele' ou 'investigue'"
+            f"{onde}: a seal with a metric must declare `nature=count` or `nature=relation` "
+            "— without it nobody knows whether diverging means 're-seal' or 'investigate'"
         )
-    if tipo == "frozen" and not campos.get("motivo"):
+    if tipo == "frozen" and not campos.get("reason"):
         raise SeloMalformado(
-            f"{onde}: `frozen:` exige `motivo=\"...\"` — congelar sem dizer por quê "
-            "é o mesmo que apagar a medida"
+            f'{onde}: `frozen:` requires `reason="..."` — freezing without saying why '
+            "is the same as deleting the measurement"
         )
-    if tipo == "arbitrated" and not campos.get("por"):
+    if tipo == "arbitrated" and not campos.get("by"):
         raise SeloMalformado(
-            f'{onde}: `arbitrated:` exige `por="..."` — número escolhido sem dono é '
-            "palpite vestido de medida, que é exatamente o que esta marca existe para desmascarar"
+            f'{onde}: `arbitrated:` requires `by="..."` — a number chosen with no owner is '
+            "a guess dressed as a measurement, which is exactly what this mark exists to unmask"
         )
 
     return Selo(
         tipo=tipo,
         metricas=metricas,
-        natureza=natureza,
-        em=_data(campos["em"], onde) if "em" in campos else None,
-        vence=campos.get("vence"),
-        fonte=campos.get("fonte"),
-        motivo=campos.get("motivo"),
-        por=campos.get("por"),
-        derruba=campos.get("derruba"),
-        eco=campos.get("eco"),
+        nature=nature,
+        on=_data(campos["on"], onde) if "on" in campos else None,
+        expires=campos.get("expires"),
+        source=campos.get("source"),
+        reason=campos.get("reason"),
+        by=campos.get("by"),
+        breaks=campos.get("breaks"),
+        echo=campos.get("echo"),
         arquivo=arquivo,
         linha=linha,
         bruto=m.group(0),
@@ -209,7 +213,7 @@ def ler_linha(texto: str, arquivo: str = "", linha: int = 0) -> Selo | None:
 
 
 def ler_texto(texto: str, arquivo: str = "") -> list[Selo]:
-    """Todos os selos de um texto, na ordem em que aparecem."""
+    """Every seal in a text, in the order they appear."""
     achados: list[Selo] = []
     for n, linha in enumerate(texto.splitlines(), start=1):
         selo = ler_linha(linha, arquivo=arquivo, linha=n)
@@ -219,32 +223,32 @@ def ler_texto(texto: str, arquivo: str = "") -> list[Selo]:
 
 
 def escrever(selo: Selo, **mudancas: object) -> str:
-    """Devolve o texto de um selo com campos trocados — para o resselo.
+    """Returns the text of a seal with fields swapped — for the re-seal.
 
-    Reescreve o selo INTEIRO a partir da estrutura. Editar o comentário com
-    replace de string é como se perde a metade do par: mexe-se no cabeçalho e
-    esquece-se a prosa, ou o contrário.
+    Rewrites the WHOLE seal from the structure. Editing the comment with a
+    string replace is how half of the pair gets lost: you touch the header and
+    forget the prose, or the other way around.
     """
     metricas = dict(selo.metricas)
     reservadas = {
-        "natureza": selo.natureza,
-        "em": selo.em.isoformat() if selo.em else None,
-        "vence": selo.vence,
-        "fonte": selo.fonte,
-        "motivo": selo.motivo,
-        "por": selo.por,
-        "derruba": selo.derruba,
+        "nature": selo.nature,
+        "on": selo.on.isoformat() if selo.on else None,
+        "expires": selo.expires,
+        "source": selo.source,
+        "reason": selo.reason,
+        "by": selo.by,
+        "breaks": selo.breaks,
     }
     for chave, valor in mudancas.items():
         alvo = reservadas if chave in RESERVADAS else metricas
         alvo[chave] = None if valor is None else str(valor)
 
     partes = [f"{k}={v}" for k, v in metricas.items() if v is not None]
-    for chave in ("natureza", "por", "em", "vence", "fonte"):
+    for chave in ("nature", "by", "on", "expires", "source"):
         if reservadas.get(chave) is not None:
             valor = str(reservadas[chave])
             partes.append(f'{chave}="{valor}"' if " " in valor else f"{chave}={valor}")
-    for chave in ("motivo", "derruba"):
+    for chave in ("reason", "breaks"):
         if reservadas.get(chave) is not None:
             partes.append(f'{chave}="{reservadas[chave]}"')
 

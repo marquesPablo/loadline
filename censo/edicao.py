@@ -137,7 +137,7 @@ def gerar(hoje: date | None = None) -> tuple[Path, Path]:
     A = L.append
     A(f"# Estado do ecossistema de agentes de IA — edição {numero}")
     A("")
-    A(f"<!-- measured: censo.edicao={numero} natureza=contagem em={hoje.isoformat()} vence=nunca fonte=censo/edicoes/ -->")
+    A(f"<!-- measured: censo.edicao={numero} nature=count on={hoje.isoformat()} expires=never source=censo/edicoes/ -->")
     A("")
     A(
         "Gerado por `censo/edicao.py` a partir de `censo/ecossistema.json` — nenhum número aqui "

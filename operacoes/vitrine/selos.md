@@ -9,7 +9,7 @@ Cole no fim do seu `README.md` (ou `CLAUDE.md`/`AGENTS.md`). Troque `AAAA-MM-DD`
 
 Toda skill sob `.claude/skills/` passa na vitrine — nome batendo com a pasta,
 gatilho de uso e gatilho negativo declarados.
-<!-- measured: vitrine.reprovas=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=vitrine -->
+<!-- measured: vitrine.reprovas=0 nature=relation on=AAAA-MM-DD expires=30d source=vitrine -->
 ```
 
 **Por que `relacao` e não `contagem`.** Uma grandeza de contagem anda quando alguém escreve — subiu,
@@ -22,15 +22,15 @@ operação, não uma medida, e por isso é um `arbitrated:`, com dono:
 
 ```markdown
 O prazo de reconferência das skills é 30 dias.
-<!-- arbitrated: vitrine.prazo=30 por="quem adotou a operação" em=AAAA-MM-DD vence=180d
-     derruba="um repositório em que skills novas apareçam toda semana, ou nenhuma em meses" -->
+<!-- arbitrated: vitrine.prazo=30 by="quem adotou a operação" on=AAAA-MM-DD expires=180d
+     breaks="um repositório em que skills novas apareçam toda semana, ou nenhuma em meses" -->
 ```
 
 ## O completo (as duas)
 
 ```markdown
-<!-- measured: vitrine.skills=N natureza=contagem em=AAAA-MM-DD vence=90d fonte=.claude/skills -->
-<!-- measured: vitrine.reprovas=0 natureza=relacao em=AAAA-MM-DD vence=30d fonte=vitrine -->
+<!-- measured: vitrine.skills=N nature=count on=AAAA-MM-DD expires=90d source=.claude/skills -->
+<!-- measured: vitrine.reprovas=0 nature=relation on=AAAA-MM-DD expires=30d source=vitrine -->
 ```
 
 Não sabe qual `N` escrever? Não escreva. Rode `python -m loadline . --selar` e a ferramenta escreve
