@@ -188,16 +188,29 @@ def _manifesto_raiz(alvo: Path) -> str:
     return ""
 
 
+#: Every place a repository can register a hook, merged into one.
+#: `.claude/settings.json` is what an INSTALL writes on the user's machine; a
+#: repository distributed as a PLUGIN never has it, and ships `hooks/hooks.json`
+#: instead. Reading only the first said "no `PreToolUse` configured" about a
+#: harness carrying eight of them, four of which refuse.
+_FONTES_DE_HOOK = (
+    Path(".claude") / "settings.json",
+    Path(".claude") / "settings.local.json",
+    Path(".claude") / "hooks.json",
+    Path("hooks") / "hooks.json",
+)
+
+
 def _ler_settings(alvo: Path) -> dict:
-    """`.claude/settings.json` + `.claude/settings.local.json`, merged.
+    """The hook registration of the target, from every form it can take.
 
     `hooks` merged per event (`PreToolUse`, `PostToolUse`, …): one side's list
-    adds to the other's, because that is how Claude Code applies them — the two
+    adds to the other's, because that is how Claude Code applies them — the
     files coexist, and one does not replace the other.
     """
     fundido: dict = {"hooks": {}}
-    for nome in ("settings.json", "settings.local.json"):
-        caminho = alvo / ".claude" / nome
+    for relativo in _FONTES_DE_HOOK:
+        caminho = alvo / relativo
         if not caminho.exists():
             continue
         try:
@@ -210,25 +223,60 @@ def _ler_settings(alvo: Path) -> dict:
 
 
 _PREFIXO_COMANDO = re.compile(r"^(python3?|node|bash|sh|npx?)\s+", re.IGNORECASE)
+#: Anything in the command line shaped like a script path. Read over the WHOLE
+#: command, never just its first token: a plugin wraps its hook in
+#: `node -e "<bootstrap>" node scripts/hooks/x.js`, and the first token there is
+#: `-e`, which resolves to a file that does not exist.
+_TOKEN_SCRIPT = re.compile(r"[\w.:$/\\{}-]*\.(?:js|mjs|cjs|ts|py|sh|ps1)\b")
+_VARIAVEIS = (
+    "${CLAUDE_PROJECT_DIR}", "$CLAUDE_PROJECT_DIR",
+    "${CLAUDE_PLUGIN_ROOT}", "$CLAUDE_PLUGIN_ROOT",
+)
 
 
 def _scripts_do_evento(settings: dict, alvo: Path, evento: str) -> list[Path]:
-    """The script files an event (`PreToolUse`…) actually invokes."""
+    """The script files an event (`PreToolUse`…) actually invokes.
+
+    A path only counts when it EXISTS under the target — the command line of a
+    plugin bootstrap mentions several, and only some are files. When none does,
+    the first token is kept anyway, so a plain `python hook.py` still reports
+    the path it names even if that path is missing: naming a script that is not
+    there is a finding, not something to swallow.
+    """
     caminhos: list[Path] = []
     for entrada in settings.get("hooks", {}).get(evento, []):
         for h in entrada.get("hooks", []):
             comando = (h.get("command") or "").strip()
             if not comando:
                 continue
-            comando = comando.replace("$CLAUDE_PROJECT_DIR", str(alvo)).strip("\"'")
-            comando = _PREFIXO_COMANDO.sub("", comando).strip("\"'")
-            caminho = Path(comando.split()[0]) if comando.split() else None
-            if caminho is None:
+            for variavel in _VARIAVEIS:
+                comando = comando.replace(variavel, str(alvo))
+            achados = []
+            for encontro in _TOKEN_SCRIPT.finditer(comando):
+                caminho = Path(encontro.group(0).strip("\"'"))
+                if not caminho.is_absolute():
+                    caminho = alvo / caminho
+                if caminho.is_file():
+                    achados.append(caminho)
+            if achados:
+                caminhos.extend(achados)
                 continue
+            simples = _PREFIXO_COMANDO.sub("", comando.strip("\"'")).strip("\"'")
+            partes = simples.split()
+            if not partes:
+                continue
+            caminho = Path(partes[0])
             if not caminho.is_absolute():
                 caminho = alvo / caminho
             caminhos.append(caminho)
-    return caminhos
+    unicos: list[Path] = []
+    vistos: set[str] = set()
+    for caminho in caminhos:
+        chave = str(caminho).lower()
+        if chave not in vistos:
+            vistos.add(chave)
+            unicos.append(caminho)
+    return unicos
 
 
 def _matcher_cobre(settings: dict, alvo: Path, evento: str, ferramentas: frozenset[str]) -> bool:
@@ -437,16 +485,84 @@ _MARCA_SAIDA_DELEGADA = re.compile(
 _MARCA_RETURN2 = re.compile(r"^[ \t]*return\s+2\s*(?:#.*)?$", re.MULTILINE)
 
 
-def _script_falha_fechado(caminho: Path) -> bool:
-    try:
-        texto = caminho.read_text(encoding="utf-8", errors="replace").lower()
-    except OSError:
-        return False
+#: The refusal spelled out in the hook's own output, key next to value. The
+#: JSON a hook PRINTS carries `"permissionDecision"` quoted; the JavaScript that
+#: BUILDS that JSON writes `permissionDecision: 'deny'` — an unquoted key and a
+#: single-quoted value, which is how every hook in the largest catalogue of the
+#: ecosystem is written, and which the quoted-only form did not see.
+_MARCA_DENY_ADJACENTE = (
+    re.compile(r"""["']?permissiondecision["']?\s*[:=]\s*["']deny["']"""),
+    re.compile(r"""["']?decision["']?\s*[:=]\s*["']block["']"""),
+)
+#: A `require`/`import` of a SIBLING file — how a dispatcher reaches the script
+#: that actually refuses. Relative targets only: following a package name walks
+#: into `node_modules` and never comes back.
+_IMPORT_LOCAL = re.compile(
+    r"""(?:require|import)\s*\(?\s*['"](\.{1,2}/[\w./-]+)['"]|"""
+    r"""from\s+['"](\.{1,2}/[\w./-]+)['"]"""
+)
+_SUFIXOS_IMPORT = ("", ".js", ".mjs", ".cjs", ".ts", ".py")
+#: How many `require` hops to follow. In a small harness the refusal is in the
+#: entry script itself — zero hops. In a plugin-shaped one it sits behind a
+#: dispatcher that fans out to leaf hooks, measured at two hops in the largest
+#: catalogue in the ecosystem. Three covers both, and the visited set ends a cycle.
+_IMPORT_PROFUNDIDADE = 3
+_IMPORT_TETO = 200
+
+
+def _nega(texto: str) -> bool:
+    """The shapes of a refusal, in one already-lowercased text."""
     if _MARCA_EXIT2.search(texto):
         return True
     if _MARCA_SAIDA_DELEGADA.search(texto) and _MARCA_RETURN2.search(texto):
         return True
+    if any(padrao.search(texto) for padrao in _MARCA_DENY_ADJACENTE):
+        return True
     return any(a in texto and b in texto for a, b in _MARCA_DENY)
+
+
+def _vizinhos(caminho: Path, texto: str) -> list[Path]:
+    """The sibling files this one requires, resolved on disk."""
+    achados: list[Path] = []
+    for encontro in _IMPORT_LOCAL.finditer(texto):
+        alvo = encontro.group(1) or encontro.group(2)
+        if not alvo:
+            continue
+        base = caminho.parent / alvo
+        for sufixo in _SUFIXOS_IMPORT:
+            candidato = base if not sufixo else base.with_suffix(sufixo)
+            if candidato.is_file():
+                achados.append(candidato)
+                break
+    return achados
+
+
+def _script_falha_fechado(caminho: Path) -> bool:
+    """True when the hook REFUSES — in itself, or in what it dispatches to.
+
+    Stopping at the entry file reads only the harness whose refusal is written
+    in the file the settings name. The moment a project grows past that, the
+    command points at a dispatcher and the refusal is one or two `require`
+    hops away — and a gate that stops at the door reports `0 of 8` about a
+    harness that blocks.
+    """
+    vistos: set[str] = set()
+    fila: list[tuple[Path, int]] = [(caminho, 0)]
+    while fila and len(vistos) < _IMPORT_TETO:
+        atual, profundidade = fila.pop(0)
+        chave = str(atual).lower()
+        if chave in vistos:
+            continue
+        vistos.add(chave)
+        try:
+            texto = atual.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        if _nega(texto.lower()):
+            return True
+        if profundidade < _IMPORT_PROFUNDIDADE:
+            fila.extend((v, profundidade + 1) for v in _vizinhos(atual, texto))
+    return False
 
 
 def _porta_approval(alvo: Path, settings: dict) -> Porta:

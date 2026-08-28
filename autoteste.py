@@ -2101,6 +2101,90 @@ def _cg():
     assert not _pem_tem_corpo(["-----BEGIN PRIVATE KEY-----"], 0)
 
 
+# ------------------ placar, gate 5: o hook de PLUGIN, e a recusa atrás do dispatcher ---
+
+@check("CH", "gate 5 reads `hooks/hooks.json` and follows the dispatcher to the refusal")
+def _ch():
+    """Achado em 2026-08-28, rodando o placar contra um catálogo de 68 agentes.
+
+    Veredito emitido: "no `PreToolUse` configured". O alvo tem OITO, e quatro
+    dos scripts que eles disparam recusam de verdade. Três cegueiras somadas, e
+    cada uma sozinha já bastava:
+
+    1. O gate lia só `.claude/settings.json` — o arquivo que uma INSTALAÇÃO
+       escreve na máquina do usuário. Um repositório distribuído como PLUGIN
+       não o tem, e registra em `hooks/hooks.json`.
+    2. O comando real é `node -e "<bootstrap>" node scripts/x.js`, e o código
+       pegava o PRIMEIRO token depois do binário — ali, `-e`.
+    3. E a recusa mora dois `require` adiante do dispatcher. Parar na porta
+       devolve `0 of 8` sobre um harness que barra.
+    """
+    from placar.portas import _ler_settings, _script_falha_fechado, _scripts_do_evento
+
+    with tempfile.TemporaryDirectory() as tmp:
+        raiz = Path(tmp)
+        (raiz / "hooks").mkdir()
+        (raiz / "scripts").mkdir()
+        (raiz / "hooks" / "hooks.json").write_text(
+            json.dumps(
+                {
+                    "hooks": {
+                        "PreToolUse": [
+                            {
+                                "matcher": "Bash",
+                                "hooks": [
+                                    {
+                                        "type": "command",
+                                        # A forma real: bootstrap embutido, e o
+                                        # caminho de verdade DEPOIS dele.
+                                        "command": 'node -e "require(\'boot\')" node scripts/dispatcher.js',
+                                    }
+                                ],
+                            }
+                        ]
+                    }
+                }
+            ),
+            encoding="utf-8",
+        )
+        (raiz / "scripts" / "dispatcher.js").write_text(
+            "const { run } = require('./folha');\nmodule.exports = { run };\n", encoding="utf-8"
+        )
+        #: A forma REAL, copiada do catálogo medido: chave sem aspas, valor com
+        #: aspas simples. Ler só `"permissionDecision"` entre aspas — a forma do
+        #: JSON impresso — não vê o JavaScript que MONTA esse JSON.
+        (raiz / "scripts" / "folha.js").write_text(
+            "process.stdout.write(JSON.stringify({\n"
+            "  hookSpecificOutput: { permissionDecision: 'deny' }\n"
+            "}));\n",
+            encoding="utf-8",
+        )
+
+        settings = _ler_settings(raiz)
+        scripts = _scripts_do_evento(settings, raiz, "PreToolUse")
+        assert scripts, (
+            "`hooks/hooks.json` é como um plugin registra hook; ignorá-lo faz o "
+            "gate 5 dizer que não há aprovação humana onde há oito"
+        )
+        assert any(s.name == "dispatcher.js" for s in scripts), (
+            f"o primeiro token do comando é `-e`, não o script: {[s.name for s in scripts]}"
+        )
+        assert any(_script_falha_fechado(s) for s in scripts), (
+            "a recusa está um `require` adiante do dispatcher — parar na porta "
+            "devolve 0 de N sobre um harness que barra"
+        )
+
+        #: Controle negativo — dispatcher que fana para folha que só observa
+        #: continua reprovando. O conserto não pode virar "achou require, passou".
+        (raiz / "scripts" / "folha.js").write_text(
+            "process.stdout.write('ok');\n", encoding="utf-8"
+        )
+        assert not any(_script_falha_fechado(s) for s in scripts), (
+            "seguir require não é o mesmo que encontrar recusa — sem deny na "
+            "folha, o gate 5 tem de continuar reprovando"
+        )
+
+
 def main() -> int:
     print("loadline autoteste — each check reintroduces the defect it catches\n")
     ordem = sorted(
