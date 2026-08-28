@@ -213,23 +213,25 @@ it is that third list that decides whether a green means anything.
 
 ## Who already does something similar
 
-Checked on 2026-08-20 and re-checked on 2026-08-26, reading each one's public page. None was
-cloned or run.
+Checked on 2026-08-20, re-checked on 2026-08-26, and again on 2026-08-28, reading each one's public
+page. None was cloned or run.
 
 | Project | What it does | Where it stops |
 |---|---|---|
 | [`agents-lint`](https://github.com/giacomo/agents-lint) | a path that does not exist, a dead script, a deprecated package, a missing section | one file at a time; does not see the roster |
 | `AgentLint` | 33 checks on five axes, over one `AGENTS.md` | structural and stylistic audit of one file |
 | `AgentLinter` | clarity, structure, security, memory | prompt quality, not an executable boundary |
+| [`claudelint`](https://github.com/pdugan20/claudelint) | validates one agent file's frontmatter — name, description, tools, model config | one file at a time; no roster comparison, same axis as `AgentLint` |
 | [`drift`](https://www.driftdev.sh/) | anchors a markdown spec in the code and fails CI | document × code, and never agent × agent |
 | [`agent-pd`](https://github.com/varmabudharaju/agent-pd) | audits the main agent + every subagent **at runtime**, tamper-evident, detects redundancy and self-permissioning | runs the agent to audit it — does not read a file at rest, and does not compare the DESCRIPTION of two agents |
 | [`agent-audit`](https://github.com/scadastrangelove/agent-audit) | 296 imported security rules over agent homes and repositories with skills/MCP | per-agent security forensics; does not see overlap between agents |
+| [`config-drift-checker`](https://github.com/jameskomo/config-drift-checker) | runs live eval cases against your actual agent, across releases, and alerts on regression | **calls a model to run the eval** — tracks one setup over time, never compares two agents against each other |
 
 **They all lint one file, or audit one agent at a time, static or at runtime. None compares the
 description of one agent against another and emits a gate over the SET.** That is the difference, and it
 is the only one that matters here — and it is narrower than it looks: `agent-pd` already covers part
-of the same ground (redundancy, self-permissioning) at runtime, and that list has less than a week
-of life before it needs re-checking.
+of the same ground (redundancy, self-permissioning) at runtime, and this list gained two entries in the
+two days between the last check and this one — re-check it again before you rely on it.
 
 ---
 
