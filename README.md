@@ -263,11 +263,11 @@ of life before it needs re-checking.
 
 ```console
 $ python autoteste.py
-82 checks declared · 82 run · 0 outside the denominator
+86 checks declared · 86 run · 0 outside the denominator
 PASSED
 ```
 
-<!-- measured: nucleo.checks=82 nucleo.fora=0 nature=count on=2026-08-26 expires=never source=autoteste.py -->
+<!-- measured: nucleo.checks=86 nucleo.fora=0 nature=count on=2026-08-28 expires=never source=autoteste.py -->
 
 **Every check reintroduces the defect it exists to catch.** A check that only confirms the happy path
 passes the same if the mechanism is removed — it proves nothing, and its cost is giving someone the
