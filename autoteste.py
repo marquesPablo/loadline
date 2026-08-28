@@ -2055,6 +2055,52 @@ def _cf():
             )
 
 
+# ------------------------- placar, gate 2: a chave é o corpo, não o marcador ---
+
+@check("CG", "gate 2 does not call a PEM placeholder a leak — and still catches a real key")
+def _cg():
+    """Achado duas vezes, e consertado na segunda.
+
+    Em 2026-08-24 o placar apontou "chave privada em claro" num exemplo de
+    `Secret` do Kubernetes de um catálogo de terceiro; foi registrado como
+    falso positivo e não consertado. Em 2026-08-28 ele apontou de novo — desta
+    vez o arquivo de auditoria que DOCUMENTAVA o falso positivo, porque para
+    documentá-lo foi preciso citar o bloco. O controle sabotou a si mesmo.
+
+    A causa é estrutural: a chave privada é o único formato multi-linha da
+    lista, e o filtro de placeholder lia UMA linha. A palavra que inocentaria o
+    trecho está sempre noutra linha que o marcador `BEGIN`.
+    """
+    from placar.portas import _pem_tem_corpo
+
+    placeholder = [
+        "tls.key: |",
+        "  -----BEGIN PRIVATE KEY-----",
+        "  ...",
+        "  -----END PRIVATE KEY-----",
+    ]
+    assert not _pem_tem_corpo(placeholder, 1), (
+        "`...` entre os dois marcadores é o jeito canônico de escrever exemplo "
+        "de Secret; chamar isso de vazamento queima o laudo inteiro"
+    )
+
+    #: Controle negativo — chave DE VERDADE tem de continuar sendo acusada.
+    #: Sem esta metade, o conserto acima seria só desligar o gate 2.
+    real = [
+        "-----BEGIN PRIVATE KEY-----",
+        "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC7VJTUt9Us8cKj",
+        "MzEfYyjiWA4R4/M2bS1GB4t7NXp98C3SC6dVMvDuictGeurT8jNbvJZHtCSuYEvu",
+        "-----END PRIVATE KEY-----",
+    ]
+    assert _pem_tem_corpo(real, 0), (
+        "corpo base64 de verdade sob o marcador é vazamento e tem de reprovar o "
+        "gate 2 — o conserto do falso positivo não pode virar cegueira"
+    )
+
+    #: E o `BEGIN` sem `END` nenhum: janela limitada, e sem corpo não acusa.
+    assert not _pem_tem_corpo(["-----BEGIN PRIVATE KEY-----"], 0)
+
+
 def main() -> int:
     print("loadline autoteste — each check reintroduces the defect it catches\n")
     ordem = sorted(

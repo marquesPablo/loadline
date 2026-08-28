@@ -287,6 +287,34 @@ _SUFIXOS_TEXTO = {
     ".md", ".env", ".sh", ".ps1", ".txt", ".cfg", ".ini", ".rb", ".go", ".java",
 }
 
+#: The private key is the one entry above that spans MORE THAN ONE LINE, and
+#: judging it by the `BEGIN` marker alone is what makes every didactic example
+#: score as a leak: a Kubernetes `Secret` snippet writes the two markers with a
+#: literal `...` between them, and the word that would clear it — `example`,
+#: `placeholder` — sits on a different line than the one being read.
+#: The marker is not the secret. The body is.
+_PEM_CORPO = re.compile(r"[A-Za-z0-9+/=]{16,}")
+_PEM_FIM = re.compile(r"-----END [A-Z ]*PRIVATE KEY-----")
+#: The smallest real private key in the wild — an EC P-256 in PEM — carries
+#: about 220 base64 characters. 100 sits below every real key and far above
+#: every placeholder, which carries `...`, `<your-key>`, or nothing at all.
+_PEM_MINIMO = 100
+#: How far under the marker to look for the body. A 4096-bit RSA key in PEM is
+#: about 50 lines; past that, the `BEGIN` had no `END` belonging to it.
+_PEM_JANELA = 60
+
+
+def _pem_tem_corpo(linhas: list[str], indice: int) -> bool:
+    """True when a real key body sits under the `BEGIN` marker at `indice`."""
+    corpo = 0
+    for linha in linhas[indice + 1 : indice + 1 + _PEM_JANELA]:
+        despido = linha.strip()
+        if _PEM_FIM.search(despido):
+            break
+        if _PEM_CORPO.fullmatch(despido):
+            corpo += len(despido)
+    return corpo >= _PEM_MINIMO
+
 
 def _porta_identity(alvo: Path) -> Porta:
     arquivos, truncado, puladas = _arquivos_de_texto(alvo, sufixos=_SUFIXOS_TEXTO)
@@ -296,14 +324,18 @@ def _porta_identity(alvo: Path) -> Porta:
             texto = caminho.read_text(encoding="utf-8", errors="replace")
         except OSError:
             continue
-        for numero, linha in enumerate(texto.splitlines(), start=1):
+        linhas = texto.splitlines()
+        for numero, linha in enumerate(linhas, start=1):
             if _PLACEHOLDER.search(linha):
                 continue
             for nome, padrao in _SEGREDOS:
-                if padrao.search(linha):
-                    rel = caminho.relative_to(alvo)
-                    achados.append(f"{rel}:{numero}  {nome}, in the clear")
-                    break
+                if not padrao.search(linha):
+                    continue
+                if nome == "private key" and not _pem_tem_corpo(linhas, numero - 1):
+                    continue
+                rel = caminho.relative_to(alvo)
+                achados.append(f"{rel}:{numero}  {nome}, in the clear")
+                break
     grave = bool(achados)
     resumo = f"{len(achados)} secret(s) in the clear found" if grave else "no secret in the clear found"
     if truncado:
