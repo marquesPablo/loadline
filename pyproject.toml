@@ -9,6 +9,7 @@ description = "Reads the agent folder you already have and finds what only shows
 readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
+authors = [{ name = "Pablo Afonso Marques" }]
 keywords = [
     "agents",
     "agent-spec",
@@ -45,7 +46,10 @@ forja = "forja.__main__:main"
 loadline = "loadline.__main__:main"
 
 [project.urls]
+Homepage = "https://github.com/marquesPablo/loadline"
 Repository = "https://github.com/marquesPablo/loadline"
+"Bug Tracker" = "https://github.com/marquesPablo/loadline/issues"
+Changelog = "https://github.com/marquesPablo/loadline/blob/main/CHANGELOG.md"
 
 [tool.hatch.build.targets.wheel]
 packages = ["loadline", "forja", "censo", "vitrine", "blind", "placar", "evidencia"]
@@ -66,8 +70,13 @@ include = [
     "/sondas.py",
     "/autoteste.py",
     "/vendorizar.py",
+    "/comunidade",
     "/action.yml",
     "/README.md",
     "/LACUNAS.md",
     "/LICENSE",
+    "/CONTRIBUTING.md",
+    "/CODE_OF_CONDUCT.md",
+    "/SECURITY.md",
+    "/CHANGELOG.md",
 ]

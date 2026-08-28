@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: How to contribute
+    url: https://github.com/marquesPablo/loadline/blob/main/CONTRIBUTING.md
+    about: Bug fixes, doc changes, and the checklist for proposing a domain probe.
+  - name: Report a vulnerability
+    url: https://github.com/marquesPablo/loadline/security/advisories/new
+    about: Anything that could be exploited before a fix is out — not a public issue.

@@ -1,0 +1,83 @@
+# The proof the tool sells: it runs against itself on every push.
+#
+# A repository-hygiene tool whose own repository it never checks is asking you
+# to trust a claim it does not test. This workflow runs the negative controls,
+# then points every tool at the target where its answer is meaningful.
+
+name: dogfood
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  self:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: the negative controls must all pass
+        run: python autoteste.py
+
+      - name: the tool's own seals must not have drifted
+        run: |
+          set +e
+          python -m loadline .
+          codigo=$?
+          set -e
+          # 0 = every seal matches the probe
+          # 2 = the seals match, and the repo still has prose numbers it
+          #     deliberately leaves unsealed (see the README, section on loadline/)
+          # 1 = a seal drifted from what the probe measures now — that is the failure
+          if [ "$codigo" = "1" ]; then
+            echo "::error::a seal in this repository drifted — run the probe and re-seal"
+            exit 1
+          fi
+
+      - name: the tool's own junction / gitignore boundary must be clean
+        run: python -m blind .
+
+      - name: the skill linter must survive its own negative controls
+        run: python -m vitrine.controles
+
+      - name: the survey must still discriminate — the example roster is bad on purpose
+        run: |
+          set +e
+          python -m forja exemplos/roster-de-exemplo
+          codigo=$?
+          set -e
+          # exit 1 is the CORRECT answer here: the example roster ships four
+          # hand-written agents with no machine-readable declaration. A survey
+          # that passed it would be measuring nothing.
+          if [ "$codigo" != "1" ]; then
+            echo "::error::forja returned $codigo on the example roster — expected 1 (it is bad on purpose)"
+            exit 1
+          fi
+
+      - name: the seven gates must still discriminate on that same roster
+        run: |
+          set +e
+          python -m placar exemplos/roster-de-exemplo
+          codigo=$?
+          set -e
+          if [ "$codigo" != "1" ]; then
+            echo "::error::placar returned $codigo on the example roster — expected 1"
+            exit 1
+          fi
+
+  action:
+    # Runs the composite Action this repository ships, in diagnostic mode
+    # (fail-on: nenhuma — it never breaks the job), so the Action's own wiring
+    # is exercised on every push instead of only when someone else adopts it.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./
+        with:
+          caminho: .
+          falhar-em: nenhuma
