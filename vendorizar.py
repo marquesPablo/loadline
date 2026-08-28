@@ -1,34 +1,34 @@
-"""Gera `vendorizado/forja.py` — a vistoria inteira, sem clone, baixável por `curl -O`.
+"""Generates `vendorizado/forja.py` — the whole survey, no clone, downloadable via `curl -O`.
 
-nature: fix — este gerador só concatena código real do pacote `forja`
-(nunca reescreve nada à mão) e falha alto se o resultado não compilar. Um
-vendorizado que "quase" funciona é pior que nenhum: alguém confiou nele sem
-instalar mais nada.
+nature: fix — this generator only concatenates real code from the `forja`
+package (it never rewrites anything by hand) and fails loud if the result does
+not compile. A vendored file that "almost" works is worse than none: someone
+trusted it without installing anything else.
 
-Por que isto existe: `git clone` é a menor fricção que este projeto já pede, e
-ainda é maior que a de concorrentes que rodam por `npx` sem clone nenhum
-(medido em 20/08 — 13 estrelas, fricção menor). Isto não reduz a fricção da
-FORJA inteira — reduz a fricção da PRIMEIRA leitura, a vistoria, que é a
-demonstração de 30 segundos do README. Compilar spec → artefato continua
-exigindo o pacote de verdade (usa `censo/ecossistema.json`, que não faz
-sentido soltar avulso).
+Why this exists: `git clone` is the smallest friction this project already
+asks for, and it is still bigger than the friction of competitors that run via
+`npx` with no clone at all (measured on 08/20 — 13 stars, less friction). This
+does not reduce the friction of the WHOLE FORGE — it reduces the friction of
+the FIRST reading, the survey, which is the README's 30-second demo. Compiling
+spec → artifact still requires the real package (it uses
+`censo/ecossistema.json`, which makes no sense to ship standalone).
 
-    python vendorizar.py            # escreve vendorizado/forja.py
-    python vendorizar.py --conferir # não escreve; sai 1 se o arquivo divergir
+    python vendorizar.py            # writes vendorizado/forja.py
+    python vendorizar.py --conferir # does not write; exits 1 if the file diverges
 
-Depois de publicado (repositório público — gate à parte, `ADR-104`/`ADR-119`):
+Once published (public repository — a separate gate):
 
     curl -O https://raw.githubusercontent.com/marquesPablo/loadline/main/vendorizado/forja.py
-    python forja.py /caminho/do/seu/projeto
+    python forja.py /path/to/your/project
 
-Zero dependência, porque `forja/spec.py` e `forja/vistoria.py` já são zero
-dependência — o vendorizado herda a mesma propriedade, e o check BZ prova
-isso rodando o arquivo GERADO, nunca só compilando ele.
+Zero dependencies, because `forja/spec.py` and `forja/vistoria.py` are already
+zero dependencies — the vendored file inherits the same property, and check BZ
+proves it by running the GENERATED file, never just compiling it.
 
-A técnica é a mesma de `operacoes/juntar.py`: `from __future__ import
-annotations` só pode ser a PRIMEIRA instrução do arquivo, e concatenar dois
-módulos com `cat` (ou `+`) põe o segundo no meio — este gerador hasteia uma
-cópia só, no topo, e remove as demais.
+The technique is the same as `operacoes/juntar.py`: `from __future__ import
+annotations` can only be the FIRST statement in the file, and concatenating two
+modules with `cat` (or `+`) puts the second one in the middle — this generator
+hoists a single copy, at the top, and drops the rest.
 """
 
 from __future__ import annotations
@@ -48,10 +48,11 @@ _CLI = '''
 
 # --------------------------------------------------------------- CLI -------
 #
-# A parte que NÃO veio do pacote: um wrapper fino, só para este arquivo poder
-# rodar sozinho. É a mesma lógica de `forja/__main__.py::_vistoria`, sem
-# `--adotar`/`--html`/`--baseline` — este arquivo é só a LEITURA, a demo de
-# 30 segundos do README. Para o resto, `pip install` ou `git clone` de verdade.
+# The part that did NOT come from the package: a thin wrapper, only so this
+# file can run on its own. It is the same logic as
+# `forja/__main__.py::_vistoria`, with no `--adotar`/`--html`/`--baseline` —
+# this file is only the READING, the README's 30-second demo. For the rest,
+# a real `pip install` or `git clone`.
 
 import sys as _sys
 from datetime import date as _date
@@ -73,22 +74,22 @@ def main(argv: list[str] | None = None) -> int:
 
     pasta = achar_pasta(raiz)
     if pasta is None:
-        print(f"vistoria · {raiz} · em {hoje}")
+        print(f"survey · {raiz} · on {hoje}")
         print("=" * LARGURA)
-        print("Não achei pasta de agentes aqui. Procurei, nesta ordem:")
+        print("No agents folder found here. Looked, in this order:")
         for relativo in PASTAS:
             print(f"     {raiz / relativo}")
         print()
-        print("RECUSADO — não li nada, e não vou devolver verde por isso.      (exit 2)")
+        print("REFUSED — read nothing, and will not return green for that.    (exit 2)")
         return 2
 
     roster = ler_roster(pasta)
     if not roster:
-        print(f"vistoria · {pasta} · em {hoje}")
+        print(f"survey · {pasta} · on {hoje}")
         print("=" * LARGURA)
-        print("A pasta existe e não há nenhum agente dentro dela.")
+        print("The folder exists and there is no agent inside it.")
         print()
-        print("RECUSADO — zero agente lido não é zero defeito.                 (exit 2)")
+        print("REFUSED — zero agents read is not zero defects.                 (exit 2)")
         return 2
 
     achados = vistoriar(roster)
@@ -97,12 +98,12 @@ def main(argv: list[str] | None = None) -> int:
 
     print()
     if not achados:
-        print("PASSA — todo agente lido declara as seis coisas.                (exit 0)")
+        print("PASS — every agent read declares the six things.                (exit 0)")
         return 0
-    print("REPROVA                                                        (exit 1)")
+    print("FAIL                                                           (exit 1)")
     print()
-    print("  Este é o `forja.py` vendorizado — só a vistoria. `--adotar`, `--html`,")
-    print("  `--baseline` e a compilação de spec → artefato exigem o pacote inteiro:")
+    print("  This is the vendored `forja.py` — the survey only. `--adotar`, `--html`,")
+    print("  `--baseline` and spec → artifact compilation need the whole package:")
     print("  `git clone https://github.com/marquesPablo/loadline && cd loadline`.")
     return 1
 
@@ -114,13 +115,13 @@ if __name__ == "__main__":
 
 def gerar() -> str:
     partes = [
-        '"""forja.py — vendorizado, só a vistoria: lê os agentes que você já tem.\n\n'
-        "Gerado por `vendorizar.py` a partir do pacote `forja` de verdade — editar este\n"
-        "arquivo à mão é editar uma cópia; o original mora em `forja/spec.py` e\n"
-        '`forja/vistoria.py`. Zero dependência: só a biblioteca padrão do Python 3.10+.\n\n'
-        "    python forja.py /caminho/do/seu/projeto\n\n"
-        'O pacote inteiro (compilação de spec, `--adotar`, `--html`, `--baseline`,\n'
-        "modo comparação) está em https://github.com/marquesPablo/loadline\n"
+        '"""forja.py — vendored, survey only: reads the agents you already have.\n\n'
+        "Generated by `vendorizar.py` from the real `forja` package — editing this\n"
+        "file by hand edits a copy; the original lives in `forja/spec.py` and\n"
+        "`forja/vistoria.py`. Zero dependencies: only the Python 3.10+ standard library.\n\n"
+        "    python forja.py /path/to/your/project\n\n"
+        'The whole package (spec compilation, `--adotar`, `--html`, `--baseline`,\n'
+        "comparison mode) is at https://github.com/marquesPablo/loadline\n"
         '"""\n',
         "from __future__ import annotations\n",
     ]
@@ -150,25 +151,25 @@ def main(argv: list[str] | None = None) -> int:
 
     gerado = gerar()
 
-    # Falha alto, nunca calado: um vendorizado que não compila é o pior dos
-    # dois mundos — parece instalável e não roda. `compile()`, não `ast.parse`
-    # — o parser aceita `from __future__` fora do topo; quem reprova é o
-    # compilador (a mesma lição do check BJ/`operacoes/juntar.py`).
+    # Fails loud, never silent: a vendored file that does not compile is the
+    # worst of both worlds — it looks installable and does not run. `compile()`,
+    # not `ast.parse` — the parser accepts `from __future__` outside the top;
+    # the compiler is what fails it (the same lesson as check BJ/`operacoes/juntar.py`).
     compile(gerado, str(SAIDA), "exec")
 
     if conferir:
         atual = SAIDA.read_text(encoding="utf-8") if SAIDA.is_file() else None
         if atual == gerado:
-            print(f"em dia  {SAIDA} bate com o pacote `forja` de verdade")
+            print(f"in sync  {SAIDA} matches the real `forja` package")
             return 0
-        print(f"DESATUALIZADO  {SAIDA} diverge do pacote `forja` — rode `python vendorizar.py`")
+        print(f"STALE  {SAIDA} diverges from the `forja` package — run `python vendorizar.py`")
         return 1
 
     SAIDA.parent.mkdir(parents=True, exist_ok=True)
     SAIDA.write_text(gerado, encoding="utf-8")
-    print(f"✓ {SAIDA}  ·  {len(gerado.encode('utf-8'))} bytes, zero dependência")
+    print(f"✓ {SAIDA}  ·  {len(gerado.encode('utf-8'))} bytes, zero dependencies")
     print()
-    print("  Confira com:  python vendorizado/forja.py exemplos/roster-de-exemplo")
+    print("  Check with:  python vendorizado/forja.py exemplos/roster-de-exemplo")
     return 0
 
 
