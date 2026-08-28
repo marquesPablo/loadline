@@ -1,14 +1,14 @@
-"""Autoteste — cada check reintroduz o defeito que ele existe para pegar.
+"""Self-test — every check reintroduces the defect it exists to catch.
 
-loadline-ignore-file: este arquivo escreve selos de mentira de propósito.
-Julgá-los seria afirmar coisas que ninguém quis afirmar.
+loadline-ignore-file: this file writes lying seals on purpose.
+Judging them would be asserting things nobody meant to assert.
 
-Rode: `python autoteste.py`
+Run: `python autoteste.py`
 
-Um check que só confirma o caminho feliz não prova nada: ele passa igual se o
-mecanismo for removido. Aqui cada letra **quebra alguma coisa** e exige que o
-motor reprove. Se um destes ficar verde depois de você tirar o mecanismo, o
-check é decorativo e deve ser jogado fora.
+A check that only confirms the happy path proves nothing: it passes the same
+if the mechanism is removed. Here every letter **breaks something** and
+requires the engine to fail. If one of these stays green after you remove the
+mechanism, the check is decorative and should be thrown away.
 """
 
 from __future__ import annotations
@@ -39,7 +39,7 @@ from loadline import (
     varrer,
 )
 
-try:  # os checks imprimem na decoração, antes de qualquer main()
+try:  # the checks print in the decorator, before any main()
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 except (AttributeError, ValueError, OSError):
     pass
@@ -52,10 +52,10 @@ HOJE = date(2026, 8, 16)
 _falhas: list[str] = []
 _passes = 0
 
-#: Checks que EXISTEM e NÃO rodam nesta corrida, com o motivo de cada um.
-#: Está vazio hoje, e é declarado mesmo assim: o denominador de uma suíte é
-#: `executados + fora`, e uma suíte que só imprime quantos passaram esconde
-#: exatamente o check que alguém desligou. Fora do denominador é fora à vista.
+#: Checks that EXIST and do NOT run in this pass, with the reason for each one.
+#: It is empty today, and is declared even so: a suite's denominator is
+#: `run + excluded`, and a suite that only prints how many passed hides
+#: exactly the check someone switched off. Outside the denominator is out in the open.
 FORA: list[tuple[str, str]] = []
 
 
@@ -84,7 +84,7 @@ def _selo(texto: str):
 
 # ---------------------------------------------------------------- gramática
 
-@check("A", "selo com métrica e SEM `natureza` é RECUSADO, não aceito calado")
+@check("A", "a seal with a metric and NO `nature` is REFUSED, not accepted silently")
 def _a():
     try:
         _selo("<!-- measured: x.y=3 on=2026-08-16 -->")
@@ -97,7 +97,7 @@ def _a():
     )
 
 
-@check("B", "`natureza` fora do vocabulário fechado é RECUSADA")
+@check("B", "`nature` outside the closed vocabulary is REFUSED")
 def _b():
     try:
         _selo("<!-- measured: x.y=3 nature=talvez on=2026-08-16 -->")
@@ -106,7 +106,7 @@ def _b():
     raise AssertionError("aceitou `natureza=talvez`; o vocabulário não é fechado de verdade")
 
 
-@check("C", "`frozen:` sem `motivo` é RECUSADO")
+@check("C", "`frozen:` with no `reason` is REFUSED")
 def _c():
     try:
         _selo('<!-- frozen: x.y=3 on=2020-01-01 -->')
@@ -116,7 +116,7 @@ def _c():
     raise AssertionError("congelar sem dizer por quê é o mesmo que apagar a medida")
 
 
-@check("D", "`vence` malformado vira UNPROVEN, nunca MATCHES")
+@check("D", "a malformed `expires` becomes UNPROVEN, never MATCHES")
 def _d():
     registro.limpar()
     sonda("x.y", origem="teste")(lambda: 3)
@@ -126,7 +126,7 @@ def _d():
 
 # ------------------------------------------------------- os dois vermelhos
 
-@check("E", "divergência de CONTAGEM manda RESSELAR")
+@check("E", "a COUNT divergence says RE-SEAL")
 def _e():
     registro.limpar()
     sonda("x.y", origem="teste")(lambda: 9)
@@ -136,7 +136,7 @@ def _e():
     assert "re-seal" in a.acao.lower(), f"ação errada: {a.acao}"
 
 
-@check("F", "divergência de RELAÇÃO é DEFEITO e manda PARAR — não resselar")
+@check("F", "a RELATION divergence is a DEFECT and says STOP — not re-seal")
 def _f():
     registro.limpar()
     sonda("x.y", origem="teste")(lambda: 9)
@@ -151,7 +151,7 @@ def _f():
 
 # ------------------------------------------------------------- vencimento
 
-@check("G", "valor CERTO + prazo vencido = EXPIRED (o motivo de este projeto existir)")
+@check("G", "RIGHT value + expired deadline = EXPIRED (the reason this project exists)")
 def _g():
     registro.limpar()
     sonda("x.y", origem="teste")(lambda: 3)
@@ -165,7 +165,7 @@ def _g():
     assert a.escrito == a.medido == "3", "o valor batia; o que venceu foi a conferência"
 
 
-@check("H", "`vence=nunca` não vence, mesmo antigo")
+@check("H", "`expires=never` does not expire, even when old")
 def _h():
     registro.limpar()
     sonda("x.y", origem="teste")(lambda: 3)
@@ -175,7 +175,7 @@ def _h():
 
 # --------------------------------------------------- não medido ≠ zero
 
-@check("I", "métrica sem sonda vira UNPROVEN, NUNCA MATCHES")
+@check("I", "a metric with no probe becomes UNPROVEN, NEVER MATCHES")
 def _i():
     registro.limpar()
     a = julgar(_selo("<!-- measured: nao.existe=3 nature=count on=2026-08-16 -->"), HOJE)[0]
@@ -183,7 +183,7 @@ def _i():
     assert not a.verde, "não medido virou verde — é o defeito de contar ausência como zero"
 
 
-@check("J", "sonda que ESTOURA vira UNPROVEN, e nunca passa como verde")
+@check("J", "a probe that BLOWS UP becomes UNPROVEN, and never passes as green")
 def _j():
     registro.limpar()
 
@@ -196,7 +196,7 @@ def _j():
     assert "o disco sumiu" in a.detalhe, f"engoliu o erro: {a.detalhe}"
 
 
-@check("K", "TypeError de DENTRO da sonda não é confundido com aridade errada")
+@check("K", "a TypeError from INSIDE the probe is not confused with wrong arity")
 def _k():
     registro.limpar()
 
@@ -213,7 +213,7 @@ def _k():
 
 # --------------------------------------------------------------- espécime
 
-@check("L", "região de espécime NÃO é julgada — nem a que documenta selo malformado")
+@check("L", "a specimen region is NOT judged — not even one that documents a malformed seal")
 def _l():
     registro.limpar()
     with tempfile.TemporaryDirectory() as tmp:
@@ -227,7 +227,7 @@ def _l():
     assert not r.malformados, f"reprovou um espécime: {r.malformados}"
 
 
-@check("M", "fora da cerca, o MESMO selo É julgado — a cerca não é buraco geral")
+@check("M", "outside the fence, the SAME seal IS judged — the fence is not a general hole")
 def _m():
     registro.limpar()
     with tempfile.TemporaryDirectory() as tmp:
@@ -243,7 +243,7 @@ def _m():
 
 # ----------------------------------------------------------- anti-espelho
 
-@check("N", "toda sonda registrada DECLARA de onde tira o valor")
+@check("N", "every registered probe DECLARES where it takes the value from")
 def _n():
     registro.limpar()
     import sondas  # noqa: F401  — registra as sondas de verdade do projeto
@@ -257,7 +257,7 @@ def _n():
     )
 
 
-@check("O", "congelado não é recomputado, e carrega o motivo até o relatório")
+@check("O", "a frozen one is not recomputed, and carries the reason through to the report")
 def _o():
     registro.limpar()
     a = julgar(_selo('<!-- frozen: x.y=3 on=2020-01-01 reason="launch history" -->'), HOJE)[0]
@@ -266,7 +266,7 @@ def _o():
     assert "launch history" in a.acao
 
 
-@check("P", "o relatório declara o DENOMINADOR: arquivo sem selo nenhum é contado")
+@check("P", "the report declares the DENOMINATOR: a file with no seal at all is counted")
 def _p():
     registro.limpar()
     with tempfile.TemporaryDirectory() as tmp:
@@ -279,7 +279,7 @@ def _p():
     )
 
 
-@check("Q", "resselar reescreve o selo INTEIRO, nunca só metade dele")
+@check("Q", "re-sealing rewrites the WHOLE seal, never just half of it")
 def _q():
     from loadline import escrever
 
@@ -369,14 +369,14 @@ def _recusa(mudar, regra: str) -> None:
     )
 
 
-@check("R", "ferramenta de REDE sem `dominios_permitidos` é RECUSADA (R1)")
+@check("R", "a NETWORK tool with no `dominios_permitidos` is REFUSED (R1)")
 def _r():
     _recusa(lambda d: d["fronteira"].pop("dominios_permitidos"), "R1")
     # e a lista VAZIA tem de valer o mesmo que a ausência — senão é porta dos fundos
     _recusa(lambda d: d["fronteira"].__setitem__("dominios_permitidos", []), "R1")
 
 
-@check("S", "ferramenta de ESCRITA sem `saida_cercada` é RECUSADA (R2)")
+@check("S", "a WRITE tool with no `saida_cercada` is REFUSED (R2)")
 def _s():
     def pedir_escrita(d):
         d["fronteira"]["ferramentas"] = ["Read", "Write"]
@@ -385,22 +385,22 @@ def _s():
     _recusa(pedir_escrita, "R2")
 
 
-@check("T", "spec sem `nunca_usar` é RECUSADA — sem anti-descrição o orquestrador chuta (R3)")
+@check("T", "a spec with no `nunca_usar` is REFUSED — with no anti-description the orchestrator guesses (R3)")
 def _t():
     _recusa(lambda d: d["agente"].__setitem__("nunca_usar", []), "R3")
 
 
-@check("U", "spec sem `lacunas` é RECUSADA — agente sem limite declarado é lido como sem limite (R4)")
+@check("U", "a spec with no `lacunas` is REFUSED — an agent with no declared limit is read as having no limit (R4)")
 def _u():
     _recusa(lambda d: d["prova"].__setitem__("lacunas", []), "R4")
 
 
-@check("V", "spec com ZERO caso de golden set é RECUSADA (R5)")
+@check("V", "a spec with ZERO golden-set cases is REFUSED (R5)")
 def _v():
     _recusa(lambda d: d["prova"].__setitem__("golden", []), "R5")
 
 
-@check("X", "golden derivado de DENTRO da saída do agente é RECUSADO — é check espelho (R6)")
+@check("X", "a golden derived from INSIDE the agent's output is REFUSED — it is a mirror check (R6)")
 def _x():
     def espelhar(d):
         d["fronteira"]["ferramentas"] = ["Read", "Write"]
@@ -424,12 +424,12 @@ def _x():
     )
 
 
-@check("Y", "`toca_alvo` sem autorização de engajamento é RECUSADO (R7)")
+@check("Y", "`toca_alvo` with no engagement authorization is REFUSED (R7)")
 def _y():
     _recusa(lambda d: d["fronteira"].__setitem__("toca_alvo", True), "R7")
 
 
-@check("Z", "a vacina de vírus de ideia está em TODO artefato de prompt, e o detector a perde se ela sair")
+@check("Z", "the idea-virus vaccine is in EVERY prompt artifact, and the detector loses it if it is removed")
 def _z():
     spec = ler(EXEMPLO)
     artefatos = compilar(spec)
@@ -468,7 +468,7 @@ def _hook_no_disco() -> tuple[Path, str]:
     return alvo, spec.slug
 
 
-@check("AA", "o hook GERADO nega de verdade: domínio fora da cerca volta `deny` do subprocesso")
+@check("AA", "the GENERATED hook really denies: a domain outside the fence returns `deny` from the subprocess")
 def _aa():
     hook, slug = _hook_no_disco()
     r = _rodar_hook(
@@ -483,7 +483,7 @@ def _aa():
     )
 
 
-@check("AB", "o hook GERADO libera dentro da cerca — a cerca não virou muro geral")
+@check("AB", "the GENERATED hook allows inside the fence — the fence did not become a general wall")
 def _ab():
     hook, slug = _hook_no_disco()
     r = _rodar_hook(
@@ -497,7 +497,7 @@ def _ab():
     )
 
 
-@check("AC", "sufixo forjado NÃO é coberto: `github.com.mau.site` não cai sob `github.com`")
+@check("AC", "a forged suffix is NOT covered: `github.com.mau.site` does not fall under `github.com`")
 def _ac():
     hook, slug = _hook_no_disco()
     r = _rodar_hook(
@@ -511,7 +511,7 @@ def _ac():
     )
 
 
-@check("AD", "evento ilegível NEGA — o guarda falha FECHADO, não aberto")
+@check("AD", "an unreadable event DENIES — the guard fails CLOSED, not open")
 def _ad():
     hook, slug = _hook_no_disco()
     saida = subprocess.run(
@@ -524,7 +524,7 @@ def _ad():
     )
 
 
-@check("AE", "a forja é DETERMINÍSTICA, e o carimbo segue a SPEC — não o relógio")
+@check("AE", "the forge is DETERMINISTIC, and the stamp follows the SPEC — not the clock")
 def _ae():
     spec = ler(EXEMPLO)
     a, b = compilar(spec), compilar(ler(EXEMPLO))
@@ -555,7 +555,7 @@ def _ae():
     )
 
 
-@check("AF", "CENSO.md é gerado, e editar a fonte sem regerar ACUSA (natureza=relacao)")
+@check("AF", "CENSO.md is generated, and editing the source without regenerating ACCUSES (nature=relation)")
 def _af():
     sys.path.insert(0, str(Path(__file__).parent))
     from censo import gerar as g  # noqa: PLC0415
@@ -591,7 +591,7 @@ def _af():
     assert g.FONTE.read_bytes() == original, "o check não devolveu a fonte byte a byte"
 
 
-@check("AG", "censo AUSENTE não vira censo VAZIO — as duas coisas dizem o oposto")
+@check("AG", "an ABSENT census does not become an EMPTY census — the two say opposite things")
 def _ag():
     ausente = _conselho.carregar(Path(tempfile.mkdtemp()) / "nao-existe.json")
     assert ausente is None, "censo ausente virou dicionário — 'não consultei' viraria '0 peças'"
@@ -602,7 +602,7 @@ def _ag():
     )
 
 
-@check("AH", "ferramenta fora do vocabulário é EXIBIDA, não tratada como inofensiva")
+@check("AH", "a tool outside the vocabulary is SHOWN, not treated as harmless")
 def _ah():
     caminho = _spec_de(
         lambda d: d["fronteira"].__setitem__(
@@ -618,7 +618,7 @@ def _ah():
     )
 
 
-@check("AI", "selo dentro de STRING de `.py` é espécime — o emissor não sabota a si mesmo")
+@check("AI", "a seal inside a `.py` STRING is a specimen — the emitter does not sabotage itself")
 def _ai():
     fonte = (
         "def emitir(n):\n"
@@ -641,7 +641,7 @@ def _ai():
     )
 
 
-@check("AJ", "e o MESMO selo, num COMENTÁRIO do mesmo arquivo, É julgado — a cerca não é buraco geral")
+@check("AJ", "and the SAME seal, in a COMMENT of the same file, IS judged — the fence is not a general hole")
 def _aj():
     registro.limpar()
     sonda("emissor.x")(lambda: 4)
@@ -660,7 +660,7 @@ def _aj():
     assert achados[0].veredito == DRIFTED and achados[0].escrito == "1", achados[0]
 
 
-@check("AK", "`.py` que não parseia NÃO vira espécime — falhar calado é pior que falhar alto")
+@check("AK", "a `.py` that does not parse does NOT become a specimen — failing silently is worse than failing loud")
 def _ak():
     registro.limpar()
     sonda("quebrado.x")(lambda: 1)
@@ -674,7 +674,7 @@ def _ak():
     )
 
 
-@check("AL", "o confronto prosa × selo ACUSA o número da frase que nenhum selo cobre")
+@check("AL", "the prose × seal confrontation ACCUSES the number in a sentence no seal covers")
 def _al():
     """O defeito real deste repositório entre 2026-08-16 e 2026-08-20, reintroduzido.
 
@@ -705,7 +705,7 @@ $ python autoteste.py
     assert r.reprova, "com a frase errada, a corrida tem de reprovar"
 
 
-@check("AM", "o confronto NÃO morde artigo, pronome, nem prosa sem número")
+@check("AM", "the confrontation does NOT bite an article, a pronoun, or prose with no number")
 def _am():
     """Um detector que grita no texto certo é desligado na primeira semana.
 
@@ -740,7 +740,7 @@ more than one, and they are the reason this exists.
     )
 
 
-@check("AN", "`eco=nao` dispensa o bloco, e a dispensa sai NOMEADA no relatório")
+@check("AN", "`eco=nao` waives the block, and the waiver comes out NAMED in the report")
 def _an():
     """Dispensa silenciosa é furo. Dispensa declarada é exceção."""
     registro.limpar()
@@ -767,7 +767,7 @@ def _an():
 # ------------------------------- a terceira marca de selo, e a terceira lista
 
 
-@check("AO", "`arbitrated:` sem `por=` é MALFORMADO — escolha sem dono é palpite")
+@check("AO", "`arbitrated:` with no `por=` is MALFORMED — a choice with no owner is a guess")
 def _ao():
     try:
         _selo("<!-- arbitrated: retry.max=3 on=2026-08-16 expires=90d -->")
@@ -780,7 +780,7 @@ def _ao():
         )
 
 
-@check("AP", "`arbitrated:` no prazo é verde, e NÃO chama sonda nenhuma")
+@check("AP", "`arbitrated:` within the deadline is green, and calls NO probe")
 def _ap():
     registro.limpar()  # nenhuma sonda registrada: se ele medir, estoura
     selo = _selo('<!-- arbitrated: retry.max=3 by="plataforma" on=2026-08-16 expires=90d -->')
@@ -794,7 +794,7 @@ def _ap():
     )
 
 
-@check("AQ", "`arbitrated:` EXPIRED reprova — escolha sem prazo é escolha esquecida")
+@check("AQ", "an EXPIRED `arbitrated:` fails — a choice with no deadline is a forgotten choice")
 def _aq():
     selo = _selo('<!-- arbitrated: teto=10 by="board" on=2026-08-16 expires=30d -->')
     achados = julgar(selo, hoje=date(2026, 12, 1))
@@ -807,7 +807,7 @@ def _aq():
     )
 
 
-@check("AR", "repositório SEM SELO NENHUM sai com código 2, e não com 0")
+@check("AR", "a repository with NO SEAL AT ALL exits with code 2, not with 0")
 def _ar():
     # Este é o defeito reintroduzido de propósito: até o conserto,
     # ele, esta mesma árvore devolvia `PASSA` e código 0, com as afirmações
@@ -835,7 +835,7 @@ Temos 12 endpoints e 3 servicos.
     assert r.veredito_da_corrida == "NO DENOMINATOR", r.veredito_da_corrida
 
 
-@check("AS", "o que o `--selar` escreve volta a ser lido pelo próprio leitor")
+@check("AS", "what `--selar` writes is read back by the reader itself")
 def _as():
     with tempfile.TemporaryDirectory() as tmp:
         alvo = Path(tmp) / "README.md"
@@ -887,7 +887,7 @@ Temos 12 endpoints.
     assert not de_novo, "selar duas vezes não pode escrever de novo onde já há selo"
 
 
-@check("AT", "o reconhecedor de BLOCO enxerga as três marcas, não duas")
+@check("AT", "the BLOCK recognizer sees the three marks, not two")
 def _at():
     # Defeito real, achado em 2026-08-20 ao implementar a terceira marca: o
     # `_PADRAO` de `selo.py` ganhou `arbitrado` e a cópia da alternação em
@@ -924,7 +924,7 @@ Temos 40 testes.
 RAIZ_DA_CASA = Path(__file__).parent
 
 
-@check("AU", "toda operação da prateleira compila na forja, e spec sem anti-descrição é RECUSADA")
+@check("AU", "every operation on the shelf compiles in the forge, and a spec with no anti-description is REFUSED")
 def _au():
     from forja import ler
     from forja.spec import Recusa, validar
@@ -969,7 +969,7 @@ def _au():
 
 
 
-@check("AV", "os sondas.py da prateleira podem ser concatenados: nenhum padrão colide")
+@check("AV", "the shelf's sondas.py can be concatenated: no pattern collides")
 def _av():
     # A `operacoes/README.md` promete que `cat op1/sondas.py op2/sondas.py` funciona.
     # Uma promessa dessas envelhece calada: basta alguém escolher um nome de métrica
@@ -1004,7 +1004,7 @@ def _av():
 
 
 
-@check("AW", "a sonda da anatomia ESTOURA quando uma operação fica incompleta")
+@check("AW", "the anatomy probe BLOWS UP when an operation is left incomplete")
 def _aw():
     # Cinco arquivos por operação, sempre com o mesmo nome: é o que faz alguém
     # aprender uma e saber as quatro. A sonda é de RELAÇÃO — ela não anda quando
@@ -1042,7 +1042,7 @@ def _aw():
 
 
 
-@check("AX", "o servidor MCP da `cerebro-local` sobe como SUBPROCESSO, responde, e RECUSA `../`")
+@check("AX", "the `cerebro-local` MCP server comes up as a SUBPROCESS, responds, and REFUSES `../`")
 def _ax():
     # Lógica em processo passa e protocolo trava. Este check roda o servidor como
     # processo de verdade, fala JSON-RPC por stdin e lê stdout — que é a única
@@ -1097,7 +1097,7 @@ def _ax():
     assert texto.startswith("REFUSED"), f"a travessia NÃO foi recusada: {texto[:120]}"
 
 
-@check("AY", "fonte declarada que não existe ESTOURA — «não medido» nunca vira zero")
+@check("AY", "a declared source that does not exist BLOWS UP — «not measured» never becomes zero")
 def _ay():
     # A tese do projeto inteiro, aplicada à prateleira: um `0` devolvido porque
     # ninguém olhou é indistinguível de um `0` medido. As operações que declaram
@@ -1156,7 +1156,7 @@ def _ay():
     registro.limpar()
 
 
-@check("AZ", "a cerca emitida NEGA fora do caminho declarado, e DEIXA PASSAR dentro")
+@check("AZ", "the emitted fence DENIES outside the declared path, and LETS THROUGH inside")
 def _az():
     # Uma cerca que nega tudo é indistinguível de uma quebrada, e a primeira
     # coisa que alguém faz com ela é desligá-la. Por isso as duas direções.
@@ -1218,7 +1218,7 @@ def _az():
 
 
 
-@check("BA", "alvo que NÃO existe é recusado com código 2 — nunca `PASSA` com código 0")
+@check("BA", "a target that does NOT exist is refused with code 2 — never `PASS` with code 0")
 def _ba():
     # O defeito que este check trava era real e estava no ponto de entrada: um
     # caminho inexistente varria zero arquivo, não achava afirmação nenhuma, e
@@ -1281,7 +1281,7 @@ Lacunas: nao mede o que esta fora do disco. Golden: resposta esperada escrita a 
 """
 
 
-@check("BB", "agente que NÃO diz o que nunca faz é acusado; o que diz, não é")
+@check("BB", "an agent that does NOT say what it never does is accused; one that does, is not")
 def _bb():
     with tempfile.TemporaryDirectory() as tmp:
         pasta = _roster(tmp, {"completo.md": AGENTE_COMPLETO})
@@ -1298,7 +1298,7 @@ def _bb():
         )
 
 
-@check("BC", "dois que se confundem são acusados — e param quando um NOMEIA o outro")
+@check("BC", "two that get confused are accused — and stop when one NAMES the other")
 def _bc():
     gemeo = """---
 name: {slug}
@@ -1333,7 +1333,7 @@ Lacunas: nenhuma medida fora do disco. Golden: resposta esperada a mao.
         )
 
 
-@check("BD", "`tools:` AUSENTE é lido como TODAS as ferramentas, nunca como nenhuma")
+@check("BD", "an ABSENT `tools:` is read as ALL tools, never as none")
 def _bd():
     with tempfile.TemporaryDirectory() as tmp:
         sem_tools = AGENTE_COMPLETO.replace("tools: Read, Grep" + chr(10), "")
@@ -1347,7 +1347,7 @@ def _bd():
         assert "V7" in _regras(pasta)
 
 
-@check("BE", "pasta que NÃO EXISTE é recusa com código 2, e nunca verde")
+@check("BE", "a folder that does NOT EXIST is a refusal with code 2, and never green")
 def _be():
     with tempfile.TemporaryDirectory() as tmp:
         codigo = forja_main([str(Path(tmp) / "nao-existe")])
@@ -1357,7 +1357,7 @@ def _be():
         )
 
 
-@check("BF", "pasta VAZIA é recusa com código 2 — zero agente lido não é zero defeito")
+@check("BF", "an EMPTY folder is a refusal with code 2 — zero agents read is not zero defects")
 def _bf():
     with tempfile.TemporaryDirectory() as tmp:
         (Path(tmp) / ".claude" / "agents").mkdir(parents=True)
@@ -1368,7 +1368,7 @@ def _bf():
         )
 
 
-@check("BG", "markdown solto na pasta NÃO vira agente, e não infla o denominador")
+@check("BG", "loose markdown in the folder does NOT become an agent, and does not inflate the denominator")
 def _bg():
     with tempfile.TemporaryDirectory() as tmp:
         pasta = _roster(
@@ -1382,7 +1382,7 @@ def _bg():
         )
 
 
-@check("BH", "cerca em arquivo IRMÃO conta — a vistoria não acusa a saída do compilador")
+@check("BH", "a fence in a SIBLING file counts — the survey does not accuse the compiler's output")
 def _bh():
     escreve = """---
 name: escritor
@@ -1407,7 +1407,7 @@ Lacunas: nao mede fora do disco. Golden: resposta esperada a mao.
         )
 
 
-@check("BI", "`--adotar` escreve ao lado dos agentes do LEITOR, não no clone da ferramenta")
+@check("BI", "`--adotar` writes next to the READER's agents, not in the tool's clone")
 def _bi():
     # O defeito reintroduzido: a saída era relativa ao diretório corrente. Quem
     # clonasse a ferramenta e a apontasse para o próprio projeto veria as specs
@@ -1451,7 +1451,7 @@ def _juntar():
     return modulo
 
 
-@check("BJ", "juntar duas operações com `cat` QUEBRA, e o `juntar.py` conserta todos os pares")
+@check("BJ", "joining two operations with `cat` BREAKS, and `juntar.py` fixes every pair")
 def _bj():
     import itertools
 
@@ -1484,7 +1484,7 @@ def _bj():
             raise AssertionError(f"`juntar.py` produziu arquivo inválido para {a}+{b}: {exc}")
 
 
-@check("BK", "`juntar.py` RECUSA colisão de padrão de métrica, e não escreve nada")
+@check("BK", "`juntar.py` REFUSES a metric-pattern collision, and writes nothing")
 def _bk():
     _j = _juntar()
 
@@ -1518,7 +1518,7 @@ def _bk():
 from blind import controles as _blindctl  # noqa: E402
 
 
-@check("BL", "os controles negativos do `blind` passam, e REPROVAM se o detector emudecer")
+@check("BL", "the `blind` negative controls pass, and FAIL if the detector goes silent")
 def _bl():
     assert _blindctl.main() == 0, "os 5 controles do blind têm de passar limpos, com fixture real"
 
@@ -1537,7 +1537,7 @@ def _bl():
         _blindctl.detectar = original
 
 
-@check("BM", "`python -m blind` tem o mesmo contrato de saída dos outros pontos de entrada")
+@check("BM", "`python -m blind` has the same exit contract as the other entry points")
 def _bm():
     from blind.__main__ import main as _blind_cli
 
@@ -1555,7 +1555,7 @@ def _bm():
         )
 
 
-@check("BN", "cerca declarada só no FRONTMATTER conta — V3 não acusa quem faz certo")
+@check("BN", "a fence declared only in the FRONTMATTER counts — V3 does not accuse whoever does it right")
 def _bn():
     # O defeito, medido em 2026-08-24 sobre o roster do P3G4ZUZ: `saida_cercada`
     # é literalmente uma das marcas de `DIZ_ONDE_ESCREVE`, mas `_contem` só olha
@@ -1611,7 +1611,7 @@ Lacunas: nao mede fora do disco. Golden: resposta esperada a mao.
 from evidencia import pagina as _pagina  # noqa: E402
 
 
-@check("BO", "`evidencia.pagina` é autocontida — nenhuma tag que busca recurso externo, e a cor segue o código")
+@check("BO", "`evidencia.pagina` is self-contained — no tag that fetches an external resource, and the color follows the code")
 def _bo():
     ok = _pagina("teste", "alvo", "2026-08-24", ["✅ PASS"], 0)
     reprova = _pagina("teste", "alvo", "2026-08-24", ["⛔ FAIL"], 1)
@@ -1639,7 +1639,7 @@ def _bo():
     assert 'class="grave"' in corpo_colorido and 'class="aviso"' in corpo_colorido and 'class="ok"' in corpo_colorido
 
 
-@check("BP", "`python -m forja . --html ARQUIVO` escreve, e o arquivo carrega o MESMO achado do terminal")
+@check("BP", "`python -m forja . --html FILE` writes, and the file carries the SAME finding as the terminal")
 def _bp():
     with tempfile.TemporaryDirectory() as tmp:
         raiz = Path(tmp)
@@ -1674,7 +1674,7 @@ Lacunas: nao mede fora do disco. Golden: resposta esperada escrita a mao.
 """
 
 
-@check("BQ", "`--baseline` sem arquivo gravado RECUSA (exit 2), e nunca finge que nada mudou")
+@check("BQ", "`--baseline` with no saved file REFUSES (exit 2), and never pretends nothing changed")
 def _bq():
     with tempfile.TemporaryDirectory() as tmp:
         raiz = Path(tmp)
@@ -1684,7 +1684,7 @@ def _bq():
         assert codigo == 2, "sem baseline gravado, `--baseline` tinha de recusar — nunca comparar com o vazio"
 
 
-@check("BR", "`--baseline --gravar` escreve, e a rodada seguinte só acusa o que É NOVO")
+@check("BR", "`--baseline --gravar` writes, and the next run only accuses what IS NEW")
 def _br():
     with tempfile.TemporaryDirectory() as tmp:
         raiz = Path(tmp)
@@ -1714,7 +1714,7 @@ def _br():
         )
 
 
-@check("BS", "baseline corrompido (JSON inválido) é lido como AUSENTE, não como estourar")
+@check("BS", "a corrupted baseline (invalid JSON) is read as ABSENT, not as blowing up")
 def _bs():
     with tempfile.TemporaryDirectory() as tmp:
         raiz = Path(tmp)
@@ -1731,7 +1731,7 @@ def _bs():
 from forja import explicar as _explicar_mod  # noqa: E402
 
 
-@check("BT", "`--explain` de todo achado real (V1–V7) cita algo lido de README.md e de LACUNAS.md")
+@check("BT", "`--explain` of every real finding (V1–V7) cites something read from README.md and from LACUNAS.md")
 def _bt():
     for regra in _explicar_mod.CODIGOS:
         linhas = _explicar_mod.explicar(regra)
@@ -1741,7 +1741,7 @@ def _bt():
         assert "⚠️ could not read" not in texto, f"{regra}: README mudou de forma e a citação quebrou"
 
 
-@check("BU", "`--explain` de código fora do vocabulário fechado é RECUSADO, e lista os sete válidos")
+@check("BU", "`--explain` of a code outside the closed vocabulary is REFUSED, and lists the seven valid ones")
 def _bu():
     try:
         _explicar_mod.explicar("V9")
@@ -1754,7 +1754,7 @@ def _bu():
     assert forja_main(["--explain", "V9"]) == 2
 
 
-@check("BV", "`--explain` MUDA se a doutrina mudar — não é uma cópia congelada num terceiro lugar")
+@check("BV", "`--explain` CHANGES if the doctrine changes — it is not a frozen copy in a third place")
 def _bv():
     original = _explicar_mod.README.read_text(encoding="utf-8")
     try:
@@ -1778,7 +1778,7 @@ def _bv():
 from forja import comparar as _comparar_mod  # noqa: E402
 
 
-@check("BW", "`forja repoA repoB` agrega numa tabela só, e um alvo sem pasta de agentes aparece com erro nomeado")
+@check("BW", "`forja repoA repoB` aggregates into a single table, and a target with no agents folder shows up with a named error")
 def _bw():
     with tempfile.TemporaryDirectory() as tmp_a, tempfile.TemporaryDirectory() as tmp_b:
         _roster(tmp_a, {"completo.md": AGENTE_COMPLETO})
@@ -1815,7 +1815,7 @@ def _bw():
             )
 
 
-@check("BX", "um único diretório continua vistoria normal — o modo comparação só liga com DOIS alvos ou mais")
+@check("BX", "a single directory stays a normal survey — comparison mode only turns on with TWO targets or more")
 def _bx():
     with tempfile.TemporaryDirectory() as tmp:
         _roster(tmp, {"completo.md": AGENTE_COMPLETO})
@@ -1846,7 +1846,7 @@ def _carregar_vendorizado():
     return modulo
 
 
-@check("BY", "`vendorizado/forja.py` no disco bate com o que `vendorizar.py` geraria AGORA")
+@check("BY", "`vendorizado/forja.py` on disk matches what `vendorizar.py` would generate NOW")
 def _by():
     import vendorizar as _vz
 
@@ -1875,7 +1875,7 @@ def _by():
         )
 
 
-@check("BZ", "`forja.py` vendorizado RODA sozinho (sem o pacote `forja`) e é BIT A BIT igual ao pacote de verdade")
+@check("BZ", "the vendored `forja.py` RUNS on its own (without the `forja` package) and is BIT FOR BIT identical to the real package")
 def _bz():
     modulo = _carregar_vendorizado()
 
@@ -1918,7 +1918,7 @@ def _gate():
     return modulo
 
 
-@check("CA", "`falhar-em=nenhuma` nunca quebra o job, mesmo com as três ferramentas acusando algo")
+@check("CA", "`falhar-em=nenhuma` never breaks the job, even with all three tools accusing something")
 def _ca():
     gate = _gate()
     assert gate.decidir("nenhuma", {"forja": 1, "placar": 1, "loadline": 2}) == 0, (
@@ -1927,7 +1927,7 @@ def _ca():
     )
 
 
-@check("CB", "`falhar-em` reprova só pela(s) ferramenta(s) NOMEADA(S) — as outras acusarem não pesa")
+@check("CB", "`falhar-em` fails only for the NAMED tool(s) — the others accusing does not count")
 def _cb():
     gate = _gate()
     codigos = {"forja": 1, "placar": 0, "loadline": 0}
@@ -1943,7 +1943,7 @@ def _cb():
     )
 
 
-@check("CC", "`falhar-em` com ferramenta fora do vocabulário fechado RECUSA — nunca ignora em silêncio")
+@check("CC", "`falhar-em` with a tool outside the closed vocabulary REFUSES — never ignores it silently")
 def _cc():
     gate = _gate()
     try:
@@ -1957,7 +1957,7 @@ def _cc():
     assert gate.main(["vitrine", "0", "0", "0"]) == 2
 
 
-@check("CD", "a CLI do gate propaga o código de saída de `decidir`, e recusa entrada não-numérica")
+@check("CD", "the gate CLI propagates the exit code from `decidir`, and refuses non-numeric input")
 def _cd():
     gate = _gate()
     assert gate.main(["nenhuma", "1", "1", "1"]) == 0
@@ -1968,7 +1968,7 @@ def _cd():
     )
 
 
-@check("CE", "o confronto NÃO morde identificador de versão de DUAS partes (`Apache-2.0`, `Python 3.14`)")
+@check("CE", "the confrontation does NOT bite a TWO-part version identifier (`Apache-2.0`, `Python 3.14`)")
 def _ce():
     """Achado em 2026-08-25, escrevendo uma ficha do censo: a regra `RUIDO` de
 

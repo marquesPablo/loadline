@@ -1,9 +1,9 @@
 name: loadline
 description: >-
-  forja (vistoria do roster de agentes), placar (as sete portas) e loadline
-  (afirmação × selo) rodados contra o repositório de quem adota. Zero Docker,
-  zero serviço externo, zero chave de API, zero infra própria — só a stdlib
-  do Python, no runner de quem chama.
+  forja (the agent roster survey), placar (the seven gates) and loadline
+  (claim × seal) run against the adopter's repository. Zero Docker, zero
+  external service, zero API key, zero infrastructure of its own — only the
+  Python stdlib, on the caller's runner.
 author: marquesPablo
 branding:
   icon: shield
@@ -11,31 +11,31 @@ branding:
 
 inputs:
   caminho:
-    description: 'Pasta a varrer, relativa à raiz do repositório que chama esta Action.'
+    description: 'Folder to scan, relative to the root of the repository calling this Action.'
     required: false
     default: '.'
   falhar-em:
     description: >-
-      Quais ferramentas devem quebrar o job quando acusam algo: combinação
-      separada por vírgula de "forja,placar,loadline", ou "nenhuma" para só
-      relatar. Default "nenhuma" — a primeira rodada é diagnóstico, não gate;
-      quem adota liga o gate quando decidir que está pronto.
+      Which tools should break the job when they accuse something: a
+      comma-separated combination of "forja,placar,loadline", or "nenhuma" to
+      only report. Default "nenhuma" — the first run is a diagnosis, not a gate;
+      the adopter turns the gate on when they decide it is ready.
     required: false
     default: 'nenhuma'
   html:
-    description: 'Se "true", cada ferramenta também escreve um relatório HTML autocontido (loadline-<ferramenta>.html), publicado como artefato do job.'
+    description: 'If "true", each tool also writes a self-contained HTML report (loadline-<tool>.html), published as a job artifact.'
     required: false
     default: 'false'
 
 outputs:
   codigo-forja:
-    description: 'Código de saída da vistoria da forja (0 passa · 1 reprova · 2 recusa).'
+    description: 'Exit code of the forja survey (0 pass · 1 fail · 2 refused).'
     value: ${{ steps.forja.outputs.codigo }}
   codigo-placar:
-    description: 'Código de saída do placar (0 sete de sete · 1 alguma porta reprova · 2 sem harness).'
+    description: 'Exit code of placar (0 seven of seven · 1 some gate fails · 2 no harness).'
     value: ${{ steps.placar.outputs.codigo }}
   codigo-loadline:
-    description: 'Código de saída do loadline (0 tudo verde · 1 reprova · 2 sem denominador).'
+    description: 'Exit code of loadline (0 all green · 1 fail · 2 no denominator).'
     value: ${{ steps.loadline.outputs.codigo }}
 
 runs:
@@ -46,7 +46,7 @@ runs:
       with:
         python-version: '3.11'
 
-    - name: forja — vistoria do roster de agentes
+    - name: forja — the agent roster survey
       id: forja
       shell: bash
       run: |
@@ -58,7 +58,7 @@ runs:
         fi
         echo "codigo=$?" >> "$GITHUB_OUTPUT"
 
-    - name: placar — as sete portas
+    - name: placar — the seven gates
       id: placar
       shell: bash
       run: |
@@ -70,7 +70,7 @@ runs:
         fi
         echo "codigo=$?" >> "$GITHUB_OUTPUT"
 
-    - name: loadline — afirmação × selo
+    - name: loadline — claim × seal
       id: loadline
       shell: bash
       run: |
@@ -82,7 +82,7 @@ runs:
         fi
         echo "codigo=$?" >> "$GITHUB_OUTPUT"
 
-    - name: relatórios HTML como artefato do job
+    - name: HTML reports as a job artifact
       if: ${{ inputs.html == 'true' }}
       uses: actions/upload-artifact@v4
       with:
@@ -90,7 +90,7 @@ runs:
         path: loadline-*.html
         if-no-files-found: warn
 
-    - name: aplica o gate declarado em `falhar-em`
+    - name: apply the gate declared in `falhar-em`
       shell: bash
       run: |
         python "${{ github.action_path }}/acao/gate.py" "${{ inputs.falhar-em }}" \
