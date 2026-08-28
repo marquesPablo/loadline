@@ -1,9 +1,9 @@
 # loadline
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="art/mark-dark.png">
-  <source media="(prefers-color-scheme: light)" srcset="art/mark-light.png">
-  <img alt="loadline" src="art/mark-light.png" width="475">
+  <source media="(prefers-color-scheme: dark)" srcset="art/banner-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="art/banner-light.png">
+  <img alt="loadline — your repo's load line" src="art/banner-light.png" width="840">
 </picture>
 
 *A load line is the mark on a ship's hull that says how much it can carry before it is unsafe to
