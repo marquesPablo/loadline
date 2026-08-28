@@ -392,6 +392,18 @@ _MARCA_DENY = (
 )
 _MARCA_EXIT2 = re.compile(r"sys\.exit\(\s*2\s*\)|exit\(\s*2\s*\)|process\.exit\(\s*2\s*\)")
 
+#: The same deny, written ONE INDIRECTION AWAY. The entry point hands the
+#: process exit code to a function — `raise SystemExit(main())`, `sys.exit(run())`,
+#: `process.exit(main())` — and the refusal is a bare `return 2` inside it.
+#: Neither half proves anything alone: plenty of functions return 2, and plenty
+#: of entry points delegate without ever denying. Together they are the exact
+#: `exit 2` the line above already accepts, and reading only the literal form
+#: scored a hook set that denies in production 0 of 4.
+_MARCA_SAIDA_DELEGADA = re.compile(
+    r"(?:raise\s+systemexit|sys\.exit|process\.exit)\(\s*[a-z_][a-z0-9_.]*\(\s*\)\s*\)"
+)
+_MARCA_RETURN2 = re.compile(r"^[ \t]*return\s+2\s*(?:#.*)?$", re.MULTILINE)
+
 
 def _script_falha_fechado(caminho: Path) -> bool:
     try:
@@ -399,6 +411,8 @@ def _script_falha_fechado(caminho: Path) -> bool:
     except OSError:
         return False
     if _MARCA_EXIT2.search(texto):
+        return True
+    if _MARCA_SAIDA_DELEGADA.search(texto) and _MARCA_RETURN2.search(texto):
         return True
     return any(a in texto and b in texto for a, b in _MARCA_DENY)
 

@@ -1996,6 +1996,65 @@ def _ce():
     )
 
 
+# ------------------------------- placar, gate 5: o deny escrito com indireção ---
+
+@check("CF", "gate 5 reads the deny delegated to a function (`SystemExit(main())` + `return 2`)")
+def _cf():
+    """Achado em 2026-08-28, rodando o placar contra o repositório do próprio autor.
+
+    Os quatro hooks `PreToolUse` de lá negam de verdade — um deles barrou um
+    comando na mesma sessão em que isto foi escrito — e o gate 5 pontuou
+    `0 of 4 PreToolUse script(s) show a deny decision`. Motivo: eles não
+    escrevem `sys.exit(2)`, escrevem `return 2` de dentro de um `main()` que o
+    interpretador consome em `raise SystemExit(main())`. É o MESMO código de
+    saída, uma indireção adiante, e o detector lia só a forma literal.
+
+    Falso negativo é o defeito caro aqui: o gate 5 acusando um harness que
+    protege é pior que não existir, porque o veredito é publicável.
+    """
+    from placar.portas import _script_falha_fechado
+
+    delegado = (
+        "def main() -> int:\n"
+        "    if permitido:\n"
+        "        return 0\n"
+        "    print(motivo, file=sys.stderr)\n"
+        "    return 2\n"
+        "\n"
+        'if __name__ == "__main__":\n'
+        "    raise SystemExit(main())\n"
+    )
+    #: Controle negativo 1 — delega a saída e NUNCA nega. Um hook que só observa
+    #: não é aprovação, e continua tendo de reprovar o gate 5.
+    so_observa = (
+        "def main() -> int:\n"
+        "    registrar(evento)\n"
+        "    return 0\n"
+        "\n"
+        'if __name__ == "__main__":\n'
+        "    raise SystemExit(main())\n"
+    )
+    #: Controle negativo 2 — devolve 2 de uma função qualquer, sem entrada que
+    #: transforme isso em código de saída. `return 2` sozinho não é recusa.
+    return2_solto = "def quantos_lados() -> int:\n    return 2\n"
+
+    with tempfile.TemporaryDirectory() as tmp:
+        casos = {
+            "delegado.py": (delegado, True),
+            "so_observa.py": (so_observa, False),
+            "return2_solto.py": (return2_solto, False),
+        }
+        for nome, (fonte, esperado) in casos.items():
+            alvo = Path(tmp) / nome
+            alvo.write_text(fonte, encoding="utf-8")
+            obtido = _script_falha_fechado(alvo)
+            assert obtido is esperado, (
+                f"{nome}: gate 5 devolveu {obtido}, esperado {esperado} — "
+                "`return 2` consumido por `SystemExit(main())` é o mesmo deny "
+                "que `sys.exit(2)`; `return 2` solto e delegação sem recusa não são"
+            )
+
+
 def main() -> int:
     print("loadline autoteste — each check reintroduces the defect it catches\n")
     ordem = sorted(
