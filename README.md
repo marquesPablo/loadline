@@ -1,9 +1,9 @@
 # loadline
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="art/mark-dark.png">
-  <source media="(prefers-color-scheme: light)" srcset="art/mark-light.png">
-  <img alt="loadline" src="art/mark-light.png" width="475">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/marquesPablo/loadline/main/art/mark-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/marquesPablo/loadline/main/art/mark-light.png">
+  <img alt="loadline" src="https://raw.githubusercontent.com/marquesPablo/loadline/main/art/mark-light.png" width="475">
 </picture>
 
 *A load line is the mark on a ship's hull that says how much it can carry before it is unsafe to
