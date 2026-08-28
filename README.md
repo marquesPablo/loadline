@@ -1,5 +1,16 @@
 # loadline
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="art/mark-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="art/mark-light.png">
+  <img alt="loadline" src="art/mark-light.png" width="475">
+</picture>
+
+*A load line is the mark on a ship's hull that says how much it can carry before it is unsafe to
+sail — TF, F, T, S, W, WNA, one line per condition, checked against the water on the day. This tool
+is the same mark, for a claim in a repository: the seal says what the number was; the probe checks
+it against the disk today.*
+
 **You have more than one AI agent in your repository. Nobody looks at the set.**
 
 There is a tool to review **one** `AGENTS.md`. There is none that reads your whole
@@ -144,6 +155,14 @@ $ python -m forja /path/to/your/project
 
 There is no second step.
 
+**Skip the clone entirely.** The survey alone — no `--adotar`, no `--html`, no comparison mode —
+ships as one standalone file, zero dependencies, bit-for-bit generated from the real package:
+
+```console
+$ curl -O https://raw.githubusercontent.com/marquesPablo/loadline/main/vendorizado/forja.py
+$ python forja.py /path/to/your/project
+```
+
 ---
 
 ## CI — no infra of its own, no Docker, just the adopter's runner
@@ -258,6 +277,10 @@ two days between the last check and this one — re-check it again before you re
   AUTHORITY · FAILURE · APPROVAL · TRACEABILITY · CONTAINMENT), each checked with disk evidence,
   never opinion. Failing IDENTITY, AUTHORITY or CONTAINMENT is NO-GO. `python -m placar .`
   <!-- measured: placar.portas=7 nature=count on=2026-08-23 expires=never source=placar/portas.py -->
+- [`vitrine/`](vitrine/) — an agent decides to load your skill by reading two fields, `name` and
+  `description`, before it ever opens the file. Most of Anthropic's own official skill marketplace
+  does not declare when **not** to use a skill — measured in [`vitrine/LACUNAS.md`](vitrine/LACUNAS.md).
+  `python -m vitrine <path>`
 
 ---
 
