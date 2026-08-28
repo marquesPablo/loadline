@@ -165,6 +165,32 @@ $ python forja.py /path/to/your/project
 
 ---
 
+## The commands
+
+Each one is `python -m <name> <path>` — point it at a repo, or at `.` from inside one. No flags to
+start. All five share one exit-code contract: **`0`** everything holds · **`1`** a real finding ·
+**`2`** it could not evaluate (no roster, no seals) and says why — `2` is never a failure.
+
+| Run | It answers | Green (`0`) when |
+|---|---|---|
+| `python -m forja <path>` | the roster survey — what only shows up from the third agent on | every agent declares the six things |
+| `python -m loadline <path>` | claim × seal — is each written number still true against the disk today | every seal matches its probe |
+| `python -m placar <path>` | the seven "would you ship this agent?" gates, on disk evidence | seven of seven |
+| `python -m blind <path>` | the junction / symlink / `.gitignore` boundary a naive scan crosses silently | nothing is hidden across it |
+| `python -m vitrine <path>` | every `SKILL.md` — name matches the folder, when-to-use and when-**not**-to declared | every skill is visible to the router |
+
+Then, when the survey found something:
+
+```console
+$ python -m forja --adotar            # one agente.toml per agent, filled from your files, ? in every hole
+$ python -m forja build/specs/NAME.toml   # compile a spec → the 7 artifacts, incl. the hook that denies
+```
+
+`python -m loadline . --selar` writes the missing seals for you to sign; `--html FILE` on any of the
+five writes a self-contained report next to the terminal output.
+
+---
+
 ## CI — no infra of its own, no Docker, just the adopter's runner
 
 A composite Action runs `forja`, `placar` and `loadline` in full on your own runner —
