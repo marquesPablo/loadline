@@ -364,10 +364,46 @@ def _pem_tem_corpo(linhas: list[str], indice: int) -> bool:
     return corpo >= _PEM_MINIMO
 
 
+#: Paths whose credential-shaped strings are FIXTURES, not leaks. Every scanner
+#: in the field allowlists these by default, and this project learned why the
+#: hard way: the four "leaks" it found in the largest catalogue of the ecosystem
+#: were the INPUTS of that project's own secret-detector tests. Accusing someone
+#: of leaking what they ship a scanner to catch discredits the whole report.
+_SEGMENTOS_DE_TESTE = frozenset(
+    {"test", "tests", "__tests__", "spec", "specs", "fixtures", "__fixtures__", "testdata"}
+)
+_NOME_DE_TESTE = re.compile(r"(^test[_.-]|[_.-]test\.|\.spec\.|[_.-]spec\.)", re.IGNORECASE)
+#: The NAME rule applies to code only. `commands/go-test.md` is documentation
+#: for a command, not a fixture, and a credential in a `.md` is as real as one
+#: anywhere else. Measured on the largest catalogue of the ecosystem: the name
+#: rule on its own swept 38 documentation files out of the scan — in
+#: `commands/`, `docs/` and `skills/` — which is how an allowlist meant to kill
+#: four false positives turns into a hole.
+_SUFIXOS_DE_CODIGO = frozenset(
+    {".js", ".mjs", ".cjs", ".ts", ".tsx", ".jsx", ".py", ".rb", ".go", ".java", ".sh", ".ps1"}
+)
+
+
+def _e_arquivo_de_teste(caminho: Path, raiz: Path) -> bool:
+    try:
+        partes = caminho.relative_to(raiz).parts
+    except ValueError:
+        partes = caminho.parts
+    if any(p.lower() in _SEGMENTOS_DE_TESTE for p in partes[:-1]):
+        return True
+    if caminho.suffix.lower() not in _SUFIXOS_DE_CODIGO:
+        return False
+    return bool(_NOME_DE_TESTE.search(caminho.name))
+
+
 def _porta_identity(alvo: Path) -> Porta:
     arquivos, truncado, puladas = _arquivos_de_texto(alvo, sufixos=_SUFIXOS_TEXTO)
     achados: list[str] = []
+    de_teste = 0
     for caminho in arquivos:
+        if _e_arquivo_de_teste(caminho, alvo):
+            de_teste += 1
+            continue
         try:
             texto = caminho.read_text(encoding="utf-8", errors="replace")
         except OSError:
@@ -386,6 +422,10 @@ def _porta_identity(alvo: Path) -> Porta:
                 break
     grave = bool(achados)
     resumo = f"{len(achados)} secret(s) in the clear found" if grave else "no secret in the clear found"
+    if de_teste:
+        # The denominator, out in the open: a gate that quietly stops reading
+        # part of the tree is the same defect as one that reads nothing.
+        resumo += f" — {de_teste} test/fixture file(s) not scanned"
     if truncado:
         resumo += f" — ⚠️ scan stopped at {len(arquivos)} files, there may be more outside the window"
     resumo += _nota_puladas(puladas)
@@ -485,15 +525,6 @@ _MARCA_SAIDA_DELEGADA = re.compile(
 _MARCA_RETURN2 = re.compile(r"^[ \t]*return\s+2\s*(?:#.*)?$", re.MULTILINE)
 
 
-#: The refusal spelled out in the hook's own output, key next to value. The
-#: JSON a hook PRINTS carries `"permissionDecision"` quoted; the JavaScript that
-#: BUILDS that JSON writes `permissionDecision: 'deny'` — an unquoted key and a
-#: single-quoted value, which is how every hook in the largest catalogue of the
-#: ecosystem is written, and which the quoted-only form did not see.
-_MARCA_DENY_ADJACENTE = (
-    re.compile(r"""["']?permissiondecision["']?\s*[:=]\s*["']deny["']"""),
-    re.compile(r"""["']?decision["']?\s*[:=]\s*["']block["']"""),
-)
 #: A `require`/`import` of a SIBLING file — how a dispatcher reaches the script
 #: that actually refuses. Relative targets only: following a package name walks
 #: into `node_modules` and never comes back.
@@ -508,6 +539,17 @@ _SUFIXOS_IMPORT = ("", ".js", ".mjs", ".cjs", ".ts", ".py")
 #: catalogue in the ecosystem. Three covers both, and the visited set ends a cycle.
 _IMPORT_PROFUNDIDADE = 3
 _IMPORT_TETO = 200
+
+
+#: The refusal spelled out in the hook's own output, key next to value. The
+#: JSON a hook PRINTS carries `"permissionDecision"` quoted; the JavaScript that
+#: BUILDS that JSON writes `permissionDecision: 'deny'` — an unquoted key and a
+#: single-quoted value, which is how every hook in the largest catalogue of the
+#: ecosystem is written, and which the quoted-only form did not see.
+_MARCA_DENY_ADJACENTE = (
+    re.compile(r"""["']?permissiondecision["']?\s*[:=]\s*["']deny["']"""),
+    re.compile(r"""["']?decision["']?\s*[:=]\s*["']block["']"""),
+)
 
 
 def _nega(texto: str) -> bool:

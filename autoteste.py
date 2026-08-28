@@ -2107,17 +2107,16 @@ def _cg():
 def _ch():
     """Achado em 2026-08-28, rodando o placar contra um catálogo de 68 agentes.
 
-    Veredito emitido: "no `PreToolUse` configured". O alvo tem OITO, e quatro
-    dos scripts que eles disparam recusam de verdade. Três cegueiras somadas, e
-    cada uma sozinha já bastava:
+    Dois defeitos somados, e cada um sozinho já bastava para o veredito sair
+    errado:
 
-    1. O gate lia só `.claude/settings.json` — o arquivo que uma INSTALAÇÃO
-       escreve na máquina do usuário. Um repositório distribuído como PLUGIN
-       não o tem, e registra em `hooks/hooks.json`.
-    2. O comando real é `node -e "<bootstrap>" node scripts/x.js`, e o código
-       pegava o PRIMEIRO token depois do binário — ali, `-e`.
-    3. E a recusa mora dois `require` adiante do dispatcher. Parar na porta
-       devolve `0 of 8` sobre um harness que barra.
+    1. O gate lia só `.claude/settings.json`. Esse arquivo é o que uma
+       INSTALAÇÃO escreve na máquina do usuário — um repositório distribuído
+       como PLUGIN não o tem, e registra em `hooks/hooks.json`. Veredito
+       emitido: "no `PreToolUse` configured", sobre um harness com oito.
+    2. E mesmo achando o registro, o comando aponta para um dispatcher. A
+       recusa mora dois `require` adiante. Parar na porta devolve `0 of 8`
+       sobre um harness que barra.
     """
     from placar.portas import _ler_settings, _script_falha_fechado, _scripts_do_evento
 
@@ -2182,6 +2181,72 @@ def _ch():
         assert not any(_script_falha_fechado(s) for s in scripts), (
             "seguir require não é o mesmo que encontrar recusa — sem deny na "
             "folha, o gate 5 tem de continuar reprovando"
+        )
+
+
+# ---------------------- placar, gate 2: a fixture não é vazamento, e se declara ---
+
+@check("CI", "gate 2 does not read test fixtures as leaks — and says how many it skipped")
+def _ci():
+    """Achado em 2026-08-28: os quatro "segredos em claro" apontados no maior
+
+    catálogo do ecossistema eram as ENTRADAS dos testes do detector de segredos
+    do próprio projeto. Acusar alguém de vazar exatamente aquilo que ele
+    publica um scanner para pegar é o tipo de erro que desqualifica o laudo
+    inteiro — e o laudo é a peça publicável desta ferramenta.
+
+    Todo scanner de campo tem essa allowlist por padrão. O que este não tinha
+    era ela E a declaração do denominador: pular em silêncio é o mesmo defeito
+    de não ler nada.
+    """
+    from placar.portas import _e_arquivo_de_teste, _porta_identity
+
+    raiz = Path("/proj")
+    for relativo in (
+        "tests/hooks/x.test.js",
+        "src/__tests__/y.js",
+        "spec/z.js",
+        "app/foo.spec.ts",
+        "test_bar.py",
+        "fixtures/creds.json",
+    ):
+        assert _e_arquivo_de_teste(raiz / relativo, raiz), f"{relativo} é fixture"
+    for relativo in (
+        "src/app.js",
+        "hooks/guarda.py",
+        "docs/contest.md",
+        "src/latest.py",
+        #: A regra de NOME vale para código, nunca para prosa: estes três são
+        #: documentação de comando, e a versão larga da allowlist varreu 38
+        #: arquivos assim para fora da varredura no catálogo medido.
+        "commands/go-test.md",
+        "docs/react-test.md",
+        "skills/spec-driven/rust-test.md",
+    ):
+        assert not _e_arquivo_de_teste(raiz / relativo, raiz), (
+            f"{relativo} é código de produção ou documentação — a allowlist não "
+            "pode engolir o arquivo onde um segredo de verdade vazaria"
+        )
+
+    #: E de ponta a ponta: chave real em teste não acusa, a MESMA chave em
+    #: produção acusa, e o resumo declara quantos arquivos ficaram de fora.
+    chave = 'const k = "AKIAABCDEFGHIJKLMNOP";\n'
+    with tempfile.TemporaryDirectory() as tmp:
+        alvo = Path(tmp)
+        (alvo / ".claude").mkdir()
+        (alvo / "tests").mkdir()
+        (alvo / "tests" / "detector.test.js").write_text(chave, encoding="utf-8")
+        porta = _porta_identity(alvo)
+        assert not porta.grave, f"fixture não é vazamento: {porta.itens}"
+        assert "1 test/fixture file(s) not scanned" in porta.resumo, (
+            f"pular em silêncio é o defeito que esta casa mede: {porta.resumo}"
+        )
+
+        (alvo / "app.js").write_text(chave, encoding="utf-8")
+        porta = _porta_identity(alvo)
+        assert porta.grave, (
+            "a MESMA chave fora de teste é vazamento — o conserto do falso "
+            "positivo não pode virar cegueira"
         )
 
 
