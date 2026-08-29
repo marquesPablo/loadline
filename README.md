@@ -18,8 +18,11 @@ There is a tool to review **one** `AGENTS.md`. There is none that reads your who
 
 > *Do two of these fight over the same dispatch? Does any reach the whole disk? What does none of them cover?*
 
-One command, no configuration, nothing to write. Clone, and run it against the example roster that
-ships with it — or swap the path for your own project:
+<img src="art/terminal-demo.png" alt="forja run against the example roster: two agents whose fence is only written in prose, and two agents fighting over the same dispatch" width="760">
+
+That is the real output, unedited, against the example roster this repository ships with. One
+command, no configuration, nothing to write — run it yourself, or swap the path for your own
+project:
 
 ```console
 $ git clone https://github.com/marquesPablo/loadline && cd loadline

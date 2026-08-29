@@ -3,6 +3,21 @@
 Thanks for looking. This project is small on purpose, and it stays small by decision, not by
 accident.
 
+## Get it running locally
+
+No dependencies means no environment to build.
+
+```console
+$ git clone https://github.com/marquesPablo/loadline && cd loadline
+$ python autoteste.py                           # the whole negative-control suite, a few seconds
+$ python -m loadline .                          # the tool, checked against itself
+$ python -m forja exemplos/roster-de-exemplo     # the survey, against the example roster
+```
+
+That is the whole toolchain — no virtualenv, no `pip install`, no build step. Python 3.10+ and the
+standard library are enough. If `autoteste.py` is not green on a clean clone, that is a bug in the
+project, not in your setup — open an issue with the output.
+
 ## The one rule
 
 **Every new behavior comes in with a negative control** — a check in `autoteste.py` that
