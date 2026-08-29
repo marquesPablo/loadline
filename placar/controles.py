@@ -4,9 +4,10 @@
 
 A verifier that has never been seen accusing is worth nothing: it may be quiet
 because the world is clean, or because it does not look. Each control builds a
-REAL synthetic repository (real frontmatter, real `settings.json`, real
-junction via `mklink /J`), runs the gate, and requires the expected verdict —
-it fails when it should, and goes quiet when the defect is gone.
+REAL synthetic repository (real frontmatter, real `settings.json`, a real
+junction on Windows or a real directory symlink everywhere else), runs the
+gate, and requires the expected verdict — it fails when it should, and goes
+quiet when the defect is gone.
 
 Fails with exit 1. No dependency, no network, no model.
 """
@@ -22,10 +23,41 @@ from pathlib import Path
 
 from .portas import avaliar
 
+_WINDOWS = os.name == "nt"
+
 
 def _escrever(caminho: Path, texto: str) -> None:
     caminho.parent.mkdir(parents=True, exist_ok=True)
     caminho.write_text(texto, encoding="utf-8")
+
+
+def _junction(link: Path, alvo: Path) -> bool:
+    """Same split as `blind/controles.py::_junction` — a real junction on
+    Windows, a real directory symlink everywhere else. Either is a reparse
+    point a naive scan does not cross, which is the only thing C11 needs."""
+    alvo.mkdir(parents=True, exist_ok=True)
+    link.parent.mkdir(parents=True, exist_ok=True)
+    if _WINDOWS:
+        r = subprocess.run(
+            ["cmd", "/c", "mklink", "/J", str(link), str(alvo)],
+            capture_output=True, text=True, stdin=subprocess.DEVNULL,
+        )
+        return r.returncode == 0
+    try:
+        os.symlink(alvo, link, target_is_directory=True)
+        return True
+    except OSError:
+        return False
+
+
+def _desfazer_junction(link: Path) -> None:
+    try:
+        if _WINDOWS:
+            os.rmdir(link)
+        else:
+            os.unlink(link)
+    except OSError:
+        pass
 
 
 def _agente(nome: str, tools: str = "Read", extra: str = "") -> str:
@@ -166,19 +198,12 @@ def main() -> int:
         _escrever(r11 / "CLAUDE.md", "# project\n")
         _escrever(alvo11 / "segredo.py", 'K = "AKIAZZZZZZZZZZZZZZZZ"\n')
         link11 = r11 / "vinculo"
-        link11.parent.mkdir(parents=True, exist_ok=True)
-        criou11 = subprocess.run(
-            ["cmd", "/c", "mklink", "/J", str(link11), str(alvo11)],
-            capture_output=True, text=True, stdin=subprocess.DEVNULL,
-        ).returncode == 0
+        criou11 = _junction(link11, alvo11)
         if criou11:
             c11 = _por_id(r11, "IDENTITY")
             achou_atras = any("segredo.py" in item for item in c11.itens)
             avisou = "boundary" in c11.resumo.lower() or "junction" in c11.resumo.lower()
-            try:
-                os.rmdir(link11)
-            except OSError:
-                pass
+            _desfazer_junction(link11)
             checar("C11  IDENTITY does NOT read what is behind a junction", not achou_atras, "found the secret behind the junction - crossed it silently")
             checar("C11  IDENTITY warns that a boundary was skipped", avisou, "did not name the skipped boundary in the summary")
         else:

@@ -4,10 +4,10 @@
 
 A detector that has never been seen accusing is worth nothing: it may be quiet
 because the world is clean, or because it does not look. Each control below
-builds a REAL boundary (a real junction via `mklink /J`, a real `.gitignore`
-inside a real `git init`), requires the finding, undoes the defect, and
-requires the silence — or the downgrade from ⛔ to ⚠️, when that is what should
-change.
+builds a REAL boundary (a real junction via `mklink /J` on Windows, a real
+directory symlink everywhere else, a real `.gitignore` inside a real
+`git init`), requires the finding, undoes the defect, and requires the
+silence — or the downgrade from ⛔ to ⚠️, when that is what should change.
 
 Fails with exit 1. No dependency, no network, no model.
 """
@@ -23,22 +23,38 @@ from pathlib import Path
 from .limites import detectar
 
 
+_WINDOWS = os.name == "nt"
+
+
 def _junction(link: Path, alvo: Path) -> bool:
+    """A real reparse point a naive scan does not cross: a junction on Windows
+    (`mklink /J`), a directory symlink everywhere else — `blind/limites.py`
+    treats both as the same boundary, Cause 1, so either proves the control."""
     alvo.mkdir(parents=True, exist_ok=True)
     link.parent.mkdir(parents=True, exist_ok=True)
-    r = subprocess.run(
-        ["cmd", "/c", "mklink", "/J", str(link), str(alvo)],
-        capture_output=True, text=True, stdin=subprocess.DEVNULL,
-    )
-    return r.returncode == 0
+    if _WINDOWS:
+        r = subprocess.run(
+            ["cmd", "/c", "mklink", "/J", str(link), str(alvo)],
+            capture_output=True, text=True, stdin=subprocess.DEVNULL,
+        )
+        return r.returncode == 0
+    try:
+        os.symlink(alvo, link, target_is_directory=True)
+        return True
+    except OSError:
+        return False
 
 
 def _desfazer_junction(link: Path) -> None:
-    # `os.rmdir` on a junction removes only the REPARSE POINT — never the target.
-    # If this used `shutil.rmtree`, Windows would follow the link and delete the
-    # target from outside.
+    # `os.rmdir` on a Windows junction removes only the REPARSE POINT — never
+    # the target. A POSIX symlink is not a directory as far as `rmdir` is
+    # concerned, and needs `unlink` instead — using the wrong one raises on
+    # the other platform, which is exactly the bug this split fixes.
     try:
-        os.rmdir(link)
+        if _WINDOWS:
+            os.rmdir(link)
+        else:
+            os.unlink(link)
     except OSError:
         pass
 
