@@ -14,7 +14,7 @@ from __future__ import annotations
 
 
 # ====================================================================
-# forja\spec.py
+# forja/spec.py
 # ====================================================================
 
 """An agent's spec, and the eight refusals that stop a bad one from compiling.
@@ -250,7 +250,7 @@ def ler(caminho: str | Path) -> Spec:
 
 
 # ====================================================================
-# forja\vistoria.py
+# forja/vistoria.py
 # ====================================================================
 
 """Survey: reads the agents YOU ALREADY HAVE, and says what the SYSTEM is missing.

@@ -129,7 +129,11 @@ def gerar() -> str:
         texto = fonte.read_text(encoding="utf-8")
         texto = _FUTURE.sub("", texto, count=1)
         texto = _IMPORT_RELATIVO.sub("", texto, count=1)
-        partes.append(f"\n# {'=' * 68}\n# {fonte.relative_to(RAIZ)}\n# {'=' * 68}\n")
+        # `.as_posix()`, never a bare Path stringified: `Path.__str__` renders
+        # with the HOST's separator, and a header comment generated on Windows
+        # embeds a literal backslash that a Linux regeneration never produces —
+        # measured, this is exactly the divergence check BY exists to catch.
+        partes.append(f"\n# {'=' * 68}\n# {fonte.relative_to(RAIZ).as_posix()}\n# {'=' * 68}\n")
         partes.append(texto.strip("\n"))
         partes.append("\n")
     partes.append(_CLI.strip("\n") + "\n")
